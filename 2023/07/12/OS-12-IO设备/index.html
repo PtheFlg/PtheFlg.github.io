@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="IO设备">
+<meta property="og:type" content="article">
+<meta property="og:title" content="12.IO设备">
+<meta property="og:url" content="http://example.com/2023/07/12/OS-12-IO%E8%AE%BE%E5%A4%87/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="IO设备">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708202210.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708202626.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708202712.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708203452.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708203636.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708204209.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708205013.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708205230.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708210736.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708211528.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709153444.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709155108.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709155718.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709155835.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709162240.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709162945.png">
+<meta property="article:published_time" content="2023-07-12T15:36:35.000Z">
+<meta property="article:modified_time" content="2023-07-12T15:37:25.831Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708202210.png">
+
+<link rel="canonical" href="http://example.com/2023/07/12/OS-12-IO%E8%AE%BE%E5%A4%87/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>12.IO设备 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/12/OS-12-IO%E8%AE%BE%E5%A4%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          12.IO设备
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-07-12 23:36:35 / 修改时间：23:37:25" itemprop="dateCreated datePublished" datetime="2023-07-12T23:36:35+08:00">2023-07-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>IO设备</p>
+<span id="more"></span>
+
+<h1 id="1-IO-设备基本概念"><a href="#1-IO-设备基本概念" class="headerlink" title="1. IO 设备基本概念"></a>1. IO 设备基本概念</h1><p>IO设备就是可以将数据输入到计算机或者可以接受计算机输出数据的外部设备，属于计算机中的硬件部件。</p>
+<p>UNIX 系统将外部设备抽象成一种特殊的文件，用户可以使用与文件相同的方式对外部设备进行操作。比如对文件 Write 操作就是向外部设备写出数据，Read 操作就是从键盘中读入数据。</p>
+<p>IO 设备按使用特性分类：</p>
+<ul>
+<li>人机交互类外部设备，比如鼠标键盘，数据传输速度慢</li>
+<li>存储设备，比如外接硬盘，光盘等，数据传输速度快</li>
+<li>网络通讯设备，比如 TPLINK，速度介于上面二者之间</li>
+</ul>
+<p>IO设备按传输速率分类：</p>
+<ul>
+<li>低速设备，还是鼠标键盘</li>
+<li>中速设备，比如激光打印机</li>
+<li>高速设备，比如磁盘</li>
+</ul>
+<p>IO设备按照信息交换单位分类（重点）：</p>
+<ul>
+<li>块设备，比如磁盘，OS可以通过块来进行寻址访问</li>
+<li>字符设备，比如鼠标键盘，数据传输的基本单位是字符，在 IO 时通常采用中断驱动方式</li>
+</ul>
+<h1 id="2-IO-控制器"><a href="#2-IO-控制器" class="headerlink" title="2. IO 控制器"></a>2. IO 控制器</h1><h2 id="2-1-IO-控制器概念"><a href="#2-1-IO-控制器概念" class="headerlink" title="2.1 IO 控制器概念"></a>2.1 IO 控制器概念</h2><p>俩概念：</p>
+<ul>
+<li>IO设备机械部件：主要用于执行具体的 IO操作。比如显示器，鼠标键盘这种的。</li>
+<li>IO设备电子部件：通常是以块插入主板扩展槽的印刷电路板</li>
+</ul>
+<p>上面说到的 IO 设备电子部件就是 IO控制器，他是 CPU 和 IO 设备机械部件之间的中介，用于实现 CPU 对设备的控制。</p>
+<p>IO 控制器的功能：</p>
+<ul>
+<li>接受和识别 CPU 发出的命令，比如 CPU 发来的 read&#x2F;write 指令，IO控制器就需要相应的控制寄存器来存放指令和参数</li>
+<li>向 CPU 报告设备状态，IO控制器中就会有状态寄存器，用于记录 IO 设备当前的状态，比如 1 代表空闲，0 表示忙碌</li>
+<li>数据交换，所以 IO 控制器中就需要提供数据寄存器，这个东西和内存中的 MDR 一个道理，用于暂存和 CPU 交互的数据。</li>
+<li>地址识别。说的可不是磁盘啊，上面说到 IO 控制器中可能有各种各样的寄存器，就需要给这些寄存器编址。IO控制器通过 CPU 提供的“地址”来判断 CPU 要操作哪个寄存器。</li>
+</ul>
+<h2 id="2-2-IO-控制器组成"><a href="#2-2-IO-控制器组成" class="headerlink" title="2.2 IO 控制器组成"></a>2.2 IO 控制器组成</h2><p>直接上图：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708202210.png" alt="image.png"></p>
+<p>解释一下：</p>
+<ul>
+<li>CPU 会通过地址线 和 控制线告诉 IO 逻辑，我现在要操作哪一个 IO 设备，具体要干啥</li>
+<li>比如 CPU 向 IO 设备中输出数据，就先将数据暂存到 数据寄存器中，然后具体指令暂存到 控制寄存器中。</li>
+<li>IO 设备及时的将自己的状态发送给 IO 逻辑，然后IO逻辑将状态信息发送到状态寄存器中。</li>
+</ul>
+<p>细节：</p>
+<ul>
+<li>一个 IO逻辑可以对应多个 IO 设备</li>
+<li>既然有多个 IO 设备，则 各种类型的寄存器肯定会有多个，有的计算机会让这些寄存器占用内存中的一部分，称为<font color='red'>内存映像I&#x2F;O</font>；另一些计算机则会采用 IO 专用地址，即<font color='red'>寄存器独立编制</font>.</li>
+</ul>
+<h2 id="2-3-内存映像-I-x2F-O-VS-寄存器独立编址"><a href="#2-3-内存映像-I-x2F-O-VS-寄存器独立编址" class="headerlink" title="2.3 内存映像 I&#x2F;O VS 寄存器独立编址"></a>2.3 内存映像 I&#x2F;O VS 寄存器独立编址</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708202626.png" alt="image.png"></p>
+<h2 id="2-4-总结"><a href="#2-4-总结" class="headerlink" title="2.4 总结"></a>2.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708202712.png" alt="image.png"></p>
+<h1 id="3-I-x2F-O-控制方式"><a href="#3-I-x2F-O-控制方式" class="headerlink" title="3. I&#x2F;O 控制方式"></a>3. I&#x2F;O 控制方式</h1><p>就是说用什么方式来控制 IO 设备进行数据的读写。总共四种方式：</p>
+<ul>
+<li>程序直接控制方式</li>
+<li>中断驱动方式</li>
+<li>DMA 方式</li>
+<li>通道控制方式</li>
+</ul>
+<p>对于不同的方式，要着重看他们的几个问题：</p>
+<ul>
+<li>完成一次读写操作的流程</li>
+<li>CPU 敢于的频率</li>
+<li>数据传送的单位</li>
+<li>数据的流向</li>
+<li>主要优点和缺点</li>
+</ul>
+<h2 id="3-1-程序直接控制方式"><a href="#3-1-程序直接控制方式" class="headerlink" title="3.1 程序直接控制方式"></a>3.1 程序直接控制方式</h2><p>总结来说就是：轮询。</p>
+<h3 id="3-1-1-操作流程"><a href="#3-1-1-操作流程" class="headerlink" title="3.1.1 操作流程"></a>3.1.1 操作流程</h3><p>因为 IO 设备比 CPU 慢很多，CPU 向 IO 逻辑发送了读指令，请求读取 IO 设备，但是这个时候 IO 设备还没准备好，状态寄存器为1未就绪，然后 CPU 就会一直轮询状态寄存器。</p>
+<p>当 IO 设备准备好了，就会向控制器的数据寄存器发送数据，同时将自己的状态同步到状态寄存器中改为0，CPU 发现状态为0，就会将数据从控制器的数据寄存器读入到CPU的寄存器，然后再将数据写入内存。</p>
+<p>所以这里数据不能直接到内存，数据必须经过 CPU 的寄存器才能到内存。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708203452.png" alt="image.png"></p>
+<p>流程图如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708203636.png" alt="image.png"></p>
+<h3 id="3-1-2-CPU-干预频率"><a href="#3-1-2-CPU-干预频率" class="headerlink" title="3.1.2 CPU 干预频率"></a>3.1.2 CPU 干预频率</h3><p>很频繁，这个流程中，数据的接受和发送都需要经过 CPU 寄存器，同时 CPU 在等待 IO 设备的时候需要不停的轮询寄存器。CPU 开销较大。</p>
+<h3 id="3-1-3-数据传送单位"><a href="#3-1-3-数据传送单位" class="headerlink" title="3.1.3 数据传送单位"></a>3.1.3 数据传送单位</h3><p>每次读写一个字。</p>
+<h3 id="3-1-4-数据的流向"><a href="#3-1-4-数据的流向" class="headerlink" title="3.1.4 数据的流向"></a>3.1.4 数据的流向</h3><p>读操作：IO 设备 - CPU - 内存；写操作：内存 - CPU - IO设备。每个字的读写都需要 CPU 介入。</p>
+<h3 id="3-1-5-优缺点"><a href="#3-1-5-优缺点" class="headerlink" title="3.1.5 优缺点"></a>3.1.5 优缺点</h3><p>优点就是实现简单。缺点就是 CPU 和 IO 只能串行工作，CPU 需要一直轮询检查，不能去干别的事，造成了忙等。</p>
+<h2 id="3-2-中断驱动方式"><a href="#3-2-中断驱动方式" class="headerlink" title="3.2 中断驱动方式"></a>3.2 中断驱动方式</h2><p>引入了中断机制。CPU 发出读写请求后，将等待 IO 的进程阻塞。当 IO 完成后，IO 控制器向 CPU 发送中断信号，然后 CPU 检测到了，保存运行环境，然后执行中断处理程序。</p>
+<h3 id="3-2-1-操作流程"><a href="#3-2-1-操作流程" class="headerlink" title="3.2.1 操作流程"></a>3.2.1 操作流程</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708204209.png" alt="image.png"></p>
+<p>注意：</p>
+<ul>
+<li>CPU 会在每个指令周期的末位检查中断</li>
+<li>中断处理过程需要保存当前进程的运行环境，这个过程存在开销。所以如果中断发生的过于频繁就会降低系统性能。</li>
+</ul>
+<h3 id="3-2-2-CPU-干预频率"><a href="#3-2-2-CPU-干预频率" class="headerlink" title="3.2.2 CPU 干预频率"></a>3.2.2 CPU 干预频率</h3><p>每次 IO 操作开始之前、完成后需要 CPU 介入，其他时间 CPU 可以干别的事儿。</p>
+<h3 id="3-2-3-数据传送单位"><a href="#3-2-3-数据传送单位" class="headerlink" title="3.2.3 数据传送单位"></a>3.2.3 数据传送单位</h3><p>每次读写一个字</p>
+<h3 id="3-2-4-数据的流向"><a href="#3-2-4-数据的流向" class="headerlink" title="3.2.4 数据的流向"></a>3.2.4 数据的流向</h3><p>读：IO - CPU - 内存；写：内存 - CPU - IO设备。这个和之前一样，仍旧需要 CPU 寄存器介入。</p>
+<h3 id="3-2-5-优缺点"><a href="#3-2-5-优缺点" class="headerlink" title="3.2.5 优缺点"></a>3.2.5 优缺点</h3><p>优点就是 CPU 不用忙等，不用轮询，效率会更高，CPU 和 IO 设备可以实现并行。缺点就是每个字的传输仍旧需要 CPU 的介入，同时频繁的中断会消耗 CPU 时间。</p>
+<h2 id="3-3-DMA-方式"><a href="#3-3-DMA-方式" class="headerlink" title="3.3 DMA 方式"></a>3.3 DMA 方式</h2><p>DMA（Direct Memory Access，直接存储器存取）。主要用于块设备的 IO 控制。</p>
+<p>改进：</p>
+<ul>
+<li>数据的传送单位是 “块”。不再是一个字一个字传送</li>
+<li>数据的流向直接从设备放入内存，或者从内存直接放入设备，不需要 CPU 介入</li>
+<li>仅在传送一个或多个数据块的开始和结束时，才需要 CPU 干预。</li>
+</ul>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708205013.png" alt="image.png"></p>
+<p>这种方式需要一个专门的 DMA 控制器。</p>
+<h3 id="3-3-1-DMA-控制器"><a href="#3-3-1-DMA-控制器" class="headerlink" title="3.3.1 DMA 控制器"></a>3.3.1 DMA 控制器</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708205230.png" alt="image.png"></p>
+<p>解释一下：</p>
+<ul>
+<li>DR 数据寄存器 Data Register，暂存内存和IO设备交互的数据</li>
+<li>MAR，老熟人了，输入时，MAR 表示数据应该放到内存中的什么位置；输出时 MAR 表示要输出的数据放到内存的什么位置</li>
+<li>DC 数据计数器 Data Counter，表示剩余要读写的字节数</li>
+<li>CR 命令&#x2F;状态寄存器 Command Register，用于存放 CPU 发来的 IO 命令或者设备的状态信息。</li>
+</ul>
+<p>这些寄存器同样不止一个。同时需要注意的是：DMA 读取数据不是直接一块一块读，其实也是一个字节一个字节的读，将每个字写入 DR 然后放入内存，然后循环到一整块都完成读写。</p>
+<p>操作流程之前已经有图了，这里不说了。</p>
+<h3 id="3-3-2-CPU-干预频率"><a href="#3-3-2-CPU-干预频率" class="headerlink" title="3.3.2 CPU 干预频率"></a>3.3.2 CPU 干预频率</h3><p>仅在传送一个或者多个块的开始和结束时，才需要 CPU 干预。也就是说 CPU 只需要告诉 DMA 控制器我要读入了，CPU 就不用管了，然后 DMA 读完以后再跟 CPU 说一声就行了。</p>
+<h3 id="3-3-3-数据传送单位"><a href="#3-3-3-数据传送单位" class="headerlink" title="3.3.3 数据传送单位"></a>3.3.3 数据传送单位</h3><p>每次读写一个块或者多个块。每次读写的只能是连续的多个块，这些块读入内存后必须连续。</p>
+<h3 id="3-3-4-数据的流向"><a href="#3-3-4-数据的流向" class="headerlink" title="3.3.4 数据的流向"></a>3.3.4 数据的流向</h3><p>这回不用 CPU 了，IO 和 内存直接传输。</p>
+<h3 id="3-3-5-优缺点"><a href="#3-3-5-优缺点" class="headerlink" title="3.3.5 优缺点"></a>3.3.5 优缺点</h3><p>优点：数据传送以块为单位，CPU 介入频率降低。数据的传送不再需要 CPU 寄存器的介入，效率提高。</p>
+<p>缺点：一次只能读写一个或者多个连续的块，还是有点慢。</p>
+<h2 id="3-4-通道控制方式"><a href="#3-4-通道控制方式" class="headerlink" title="3.4 通道控制方式"></a>3.4 通道控制方式</h2><p>通道就是一种硬件，可以理解成简化版的 CPU。通道可以识别并执行一系列的通道指令。</p>
+<h3 id="3-4-1-操作流程"><a href="#3-4-1-操作流程" class="headerlink" title="3.4.1 操作流程"></a>3.4.1 操作流程</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708210736.png" alt="image.png"></p>
+<p>简单说，就是 CPU 想要读取一堆数据，CPU 就会给出一个通道程序，通道程序可以理解成一个批处理，里面通道的任务清单，一批的通道指令。</p>
+<p>然后 CPU 就会告诉通道，我要操作哪个 IO 设备，你需要去内存的哪个地方找通道程序，然后 CPU 就干别的去了。</p>
+<p>通道就会执行通道程序，然后按要求将数据从 IO 设备读入内存。读完了以后照旧跟 CPU 说一声，发出中断信号，然后 CPU 处理。</p>
+<p>所以说通道是一个简化版的 CPU，通道也可以执行指令，但是指令非常单一，并且通道程序放在主机内存中，也就是说通道与 CPU 共享内存。</p>
+<h3 id="3-4-2-CPU-干预频率"><a href="#3-4-2-CPU-干预频率" class="headerlink" title="3.4.2 CPU 干预频率"></a>3.4.2 CPU 干预频率</h3><p>极低，通道根据 CPU 的指示执行相应的通道程序，只有完成一组数据块的读写后才需要发出中断信号，请求 CPU 干预。</p>
+<h3 id="3-4-3-数据传送单位"><a href="#3-4-3-数据传送单位" class="headerlink" title="3.4.3 数据传送单位"></a>3.4.3 数据传送单位</h3><p>每次读写一组数据。也就是执行通道程序内的一组指令。</p>
+<h3 id="3-4-4-数据的流向"><a href="#3-4-4-数据的流向" class="headerlink" title="3.4.4 数据的流向"></a>3.4.4 数据的流向</h3><p>同样，在通道的控制下，IO 设备和 内存直接传送。</p>
+<h3 id="3-4-5-优缺点"><a href="#3-4-5-优缺点" class="headerlink" title="3.4.5 优缺点"></a>3.4.5 优缺点</h3><p>缺点：实现复杂，需要专门的通道硬件支持</p>
+<p>优点：CPU、通道、IO设备可并行工作，资源利用率高</p>
+<h2 id="3-5-总结"><a href="#3-5-总结" class="headerlink" title="3.5 总结"></a>3.5 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708211528.png" alt="image.png"></p>
+<h1 id="4-IO-软件层次结构"><a href="#4-IO-软件层次结构" class="headerlink" title="4. IO 软件层次结构"></a>4. IO 软件层次结构</h1><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709153444.png" alt="image.png"></p>
+<h2 id="4-1-用户层软件"><a href="#4-1-用户层软件" class="headerlink" title="4.1 用户层软件"></a>4.1 用户层软件</h2><p>用户层软件实现了与用户交互的接口，用户可以直接使用该层提供的、与 IO 操作相关的库函数对设备进行操作。比如 C 语言的 printf。</p>
+<p>设备独立性软件为上层提供系统调用，用户层软件将用户请求比如 printf 翻译成格式化的 IO 请求，并通过 “系统调用”请求操作系统内核的服务。</p>
+<p>简单说，用户层软件为用户提供库函数，然后将用户请求翻译成系统调用比如 write，系统调用由设备独立性软件提供。所以设备独立性软件也叫系统调用处理层。</p>
+<h2 id="4-2-设备独立性软件"><a href="#4-2-设备独立性软件" class="headerlink" title="4.2 设备独立性软件"></a>4.2 设备独立性软件</h2><p>也叫设备无关性软件。与设备的硬件特性无关的功能都在这一层实现。除了对上层提供系统调用外，还有一个主要功能是对设备的保护，原理类似文件保护，因为有些系统会将IO设备看作特殊的文件。</p>
+<p>第三个主要功能是差错处理，但是差错的类型很多，这里不说了。</p>
+<p>第四个功能是设备的分配和回收，因为很多设备也是一种临界资源。</p>
+<p>第五个功能是数据缓冲区管理</p>
+<p>第六个功能是建立设备名到物理设备名的映射关系；根据设备类型选择调用相应的驱动程序。</p>
+<p>这个单独说一下，比如说我们看到的打印机1，打印机2，指的就是逻辑设备名，我们指定打印机2开始工作，OS 需要根据这个逻辑名去找到真实的物理设备，并找到这个设备的驱动程序。</p>
+<p>设备独立性软件里面要根据设备的逻辑名找到对应的驱动程序入口，怎么做到的？类比文件管理，操作系统会构建一张 <strong>逻辑设备表 LUT</strong> 来实现的：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709155108.png" alt="image.png"></p>
+<p>如果整个系统只有一张 LUT，就会出现之前文件里面的问题，即用户之间不同设备不能同名，所以系统会给每个用户都建立一张 LUT。LUT 就放在用户管理进程的 PCB 中。</p>
+<h2 id="4-3-设备驱动程序"><a href="#4-3-设备驱动程序" class="headerlink" title="4.3 设备驱动程序"></a>4.3 设备驱动程序</h2><p>就是说操作系统不能直接操作IO设备，因为不同型号的IO设备内部构造不一定一样，需要 IO 设备的厂家向OS提供一个设备驱动程序用来操作该 IO 设备。</p>
+<p>所以说设备独立性软件不能直接操作设备，只能通过调用设备驱动程序的方式来操作设备。</p>
+<p>驱动程序一般会一个独立进程的方式存在。</p>
+<h2 id="4-4-中断处理程序"><a href="#4-4-中断处理程序" class="headerlink" title="4.4 中断处理程序"></a>4.4 中断处理程序</h2><p>当 IO 设备任务完成时，IO控制器会发送一个中断信号，系统会根据中断信号的类型找到相应的中断处理程序并执行。流程如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709155718.png" alt="image.png"></p>
+<p>中断处理程序 和 设备驱动程序 都会直接和硬件交互。</p>
+<h2 id="4-5-总结"><a href="#4-5-总结" class="headerlink" title="4.5 总结"></a>4.5 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709155835.png" alt="image.png"></p>
+<h1 id="5-输入-x2F-输出应用程序接口"><a href="#5-输入-x2F-输出应用程序接口" class="headerlink" title="5. 输入&#x2F;输出应用程序接口"></a>5. 输入&#x2F;输出应用程序接口</h1><p>简单说，设备独立性软件向用户层软件提供接口，但是根据IO设备的不同，一个接口不能实现全部的功能，比如对于块设备，可以想像用户层软件提供 read write 接口，需要指明要读写的地址。但是如果用操作键盘这类字符型设备，write 或者 read 就不行了。</p>
+<p>故设备独立性软件需要给用户层软件提供不同的接口来应对不同的设备。</p>
+<h2 id="5-1-字符设备接口"><a href="#5-1-字符设备接口" class="headerlink" title="5.1 字符设备接口"></a>5.1 字符设备接口</h2><p>提供 get &#x2F; put 系统调用：向字符设备读&#x2F;写一个字符。</p>
+<h2 id="5-2-块设备接口"><a href="#5-2-块设备接口" class="headerlink" title="5.2 块设备接口"></a>5.2 块设备接口</h2><p>提供 read &#x2F; write 系统调用：向块设备的读写指针位置读&#x2F;写多个字符。seek 系统调用：修改读写指针位置。</p>
+<h2 id="5-3-网络设备接口"><a href="#5-3-网络设备接口" class="headerlink" title="5.3 网络设备接口"></a>5.3 网络设备接口</h2><p>也叫<strong>网络套接字（socket）接口</strong>。socket 系统调用：创建一个网络套接字，需要指明网络协议。bind：将套接字绑定到某个本地端口。connect：将套接字链接到远程地址。read&#x2F;write：从套接字读&#x2F;写数据。</p>
+<p>这个详细看看流程：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709162240.png" alt="image.png"></p>
+<ol>
+<li>主机2 要进行网络通讯，就会调用 socket 系统调用，创建一个套接字 socket（其实就是在内核空间申请一片空间，用于进行数据收发），然后内核空间会给用户空间返回一个描述符，可以理解成指向 socket 的指针。</li>
+<li>然后调用 bind 系统调用，将套接字绑定到主机的一个端口，比如 6666。然后主机2 就可以等待被链接。</li>
+<li>主机1按照同样的流程创建套接字并绑定 211 端口。</li>
+<li>主机1 调用 connect 系统调用，将两个套接字链接到一起，咋连的先甭管了。</li>
+<li>主机1 要向主机2 发送数据，数据已经在用户空间准备好了，就可以调用 write 系统调用。设备独立性软件接收到 write 指令，就会将数据包从用户态复制到内核态中的套接字缓冲区里面。这一步是设备独立性软件负责的。</li>
+<li>设备独立性软件会调用网卡的“网络控制器驱动程序”，将数据从缓冲区复制到网卡，然后实现数据发送。</li>
+<li>主机2的网卡接收到数据，IO 控制器就会发送中断，中断处理程序调用 “网络控制器驱动程序” 将数据从网卡拿到套接字缓冲区中。</li>
+<li>然后主机2的用户就可以调用 read 系统调用，指明我要从 fd 对应的 套接字中拿数据，设备独立性软件就会将数据从套接字中拿到用户态。</li>
+</ol>
+<h2 id="5-4-阻塞-x2F-非阻塞-IO"><a href="#5-4-阻塞-x2F-非阻塞-IO" class="headerlink" title="5. 4 阻塞&#x2F;非阻塞 IO"></a>5. 4 阻塞&#x2F;非阻塞 IO</h2><p>阻塞IO：应用程序发出 IO 系统调用，进程需要转为阻塞态等待IO设备响应。比如字符设备接口，从键盘拿一个字符，就需要等待，典型的 scanf 函数。</p>
+<p>非阻塞IO：应用程序发出 IO 系统调用，系统调用可迅速返回，进程无需等待。比如 块设备接口，向磁盘中写数据 write。设备独立性软件只需要将数据先复制到内核态即可，用户进程无需等待，然后内核态慢慢往磁盘里面写。</p>
+<h1 id="6-设备驱动程序接口"><a href="#6-设备驱动程序接口" class="headerlink" title="6. 设备驱动程序接口"></a>6. 设备驱动程序接口</h1><p>如果不同的IO设备的驱动程序向设备独立性软件提供的接口不统一，则调用会麻烦。所以操作系统就会给出一套标准接口规范，IO设备的厂商必须实现规范才能让设备在系统上运行。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709162945.png" alt="image.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/07/12/OS-11-%E6%96%87%E4%BB%B6%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84/" rel="prev" title="11.文件层次结构">
+      <i class="fa fa-chevron-left"></i> 11.文件层次结构
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/12/OS-13-IO%E6%A0%B8%E5%BF%83%E5%AD%90%E7%B3%BB%E7%BB%9F/" rel="next" title="13.IO核心子系统">
+      13.IO核心子系统 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-IO-%E8%AE%BE%E5%A4%87%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-text">1. IO 设备基本概念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-IO-%E6%8E%A7%E5%88%B6%E5%99%A8"><span class="nav-text">2. IO 控制器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-IO-%E6%8E%A7%E5%88%B6%E5%99%A8%E6%A6%82%E5%BF%B5"><span class="nav-text">2.1 IO 控制器概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-IO-%E6%8E%A7%E5%88%B6%E5%99%A8%E7%BB%84%E6%88%90"><span class="nav-text">2.2 IO 控制器组成</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E5%86%85%E5%AD%98%E6%98%A0%E5%83%8F-I-x2F-O-VS-%E5%AF%84%E5%AD%98%E5%99%A8%E7%8B%AC%E7%AB%8B%E7%BC%96%E5%9D%80"><span class="nav-text">2.3 内存映像 I&#x2F;O VS 寄存器独立编址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%E6%80%BB%E7%BB%93"><span class="nav-text">2.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-I-x2F-O-%E6%8E%A7%E5%88%B6%E6%96%B9%E5%BC%8F"><span class="nav-text">3. I&#x2F;O 控制方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E7%A8%8B%E5%BA%8F%E7%9B%B4%E6%8E%A5%E6%8E%A7%E5%88%B6%E6%96%B9%E5%BC%8F"><span class="nav-text">3.1 程序直接控制方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-1-%E6%93%8D%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="nav-text">3.1.1 操作流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-2-CPU-%E5%B9%B2%E9%A2%84%E9%A2%91%E7%8E%87"><span class="nav-text">3.1.2 CPU 干预频率</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-3-%E6%95%B0%E6%8D%AE%E4%BC%A0%E9%80%81%E5%8D%95%E4%BD%8D"><span class="nav-text">3.1.3 数据传送单位</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-4-%E6%95%B0%E6%8D%AE%E7%9A%84%E6%B5%81%E5%90%91"><span class="nav-text">3.1.4 数据的流向</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-5-%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-text">3.1.5 优缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E4%B8%AD%E6%96%AD%E9%A9%B1%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-text">3.2 中断驱动方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-1-%E6%93%8D%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="nav-text">3.2.1 操作流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-2-CPU-%E5%B9%B2%E9%A2%84%E9%A2%91%E7%8E%87"><span class="nav-text">3.2.2 CPU 干预频率</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-3-%E6%95%B0%E6%8D%AE%E4%BC%A0%E9%80%81%E5%8D%95%E4%BD%8D"><span class="nav-text">3.2.3 数据传送单位</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-4-%E6%95%B0%E6%8D%AE%E7%9A%84%E6%B5%81%E5%90%91"><span class="nav-text">3.2.4 数据的流向</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-5-%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-text">3.2.5 优缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-DMA-%E6%96%B9%E5%BC%8F"><span class="nav-text">3.3 DMA 方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-1-DMA-%E6%8E%A7%E5%88%B6%E5%99%A8"><span class="nav-text">3.3.1 DMA 控制器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-2-CPU-%E5%B9%B2%E9%A2%84%E9%A2%91%E7%8E%87"><span class="nav-text">3.3.2 CPU 干预频率</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-3-%E6%95%B0%E6%8D%AE%E4%BC%A0%E9%80%81%E5%8D%95%E4%BD%8D"><span class="nav-text">3.3.3 数据传送单位</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-4-%E6%95%B0%E6%8D%AE%E7%9A%84%E6%B5%81%E5%90%91"><span class="nav-text">3.3.4 数据的流向</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-5-%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-text">3.3.5 优缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-%E9%80%9A%E9%81%93%E6%8E%A7%E5%88%B6%E6%96%B9%E5%BC%8F"><span class="nav-text">3.4 通道控制方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-1-%E6%93%8D%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="nav-text">3.4.1 操作流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-2-CPU-%E5%B9%B2%E9%A2%84%E9%A2%91%E7%8E%87"><span class="nav-text">3.4.2 CPU 干预频率</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-3-%E6%95%B0%E6%8D%AE%E4%BC%A0%E9%80%81%E5%8D%95%E4%BD%8D"><span class="nav-text">3.4.3 数据传送单位</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-4-%E6%95%B0%E6%8D%AE%E7%9A%84%E6%B5%81%E5%90%91"><span class="nav-text">3.4.4 数据的流向</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-5-%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-text">3.4.5 优缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-%E6%80%BB%E7%BB%93"><span class="nav-text">3.5 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-IO-%E8%BD%AF%E4%BB%B6%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84"><span class="nav-text">4. IO 软件层次结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E7%94%A8%E6%88%B7%E5%B1%82%E8%BD%AF%E4%BB%B6"><span class="nav-text">4.1 用户层软件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E8%AE%BE%E5%A4%87%E7%8B%AC%E7%AB%8B%E6%80%A7%E8%BD%AF%E4%BB%B6"><span class="nav-text">4.2 设备独立性软件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F"><span class="nav-text">4.3 设备驱动程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86%E7%A8%8B%E5%BA%8F"><span class="nav-text">4.4 中断处理程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E6%80%BB%E7%BB%93"><span class="nav-text">4.5 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E8%BE%93%E5%85%A5-x2F-%E8%BE%93%E5%87%BA%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E6%8E%A5%E5%8F%A3"><span class="nav-text">5. 输入&#x2F;输出应用程序接口</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E6%8E%A5%E5%8F%A3"><span class="nav-text">5.1 字符设备接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E5%9D%97%E8%AE%BE%E5%A4%87%E6%8E%A5%E5%8F%A3"><span class="nav-text">5.2 块设备接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E7%BD%91%E7%BB%9C%E8%AE%BE%E5%A4%87%E6%8E%A5%E5%8F%A3"><span class="nav-text">5.3 网络设备接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-4-%E9%98%BB%E5%A1%9E-x2F-%E9%9D%9E%E9%98%BB%E5%A1%9E-IO"><span class="nav-text">5. 4 阻塞&#x2F;非阻塞 IO</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E6%8E%A5%E5%8F%A3"><span class="nav-text">6. 设备驱动程序接口</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

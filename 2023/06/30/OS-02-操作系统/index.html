@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="操作系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="02.操作系统">
+<meta property="og:url" content="http://example.com/2023/06/30/OS-02-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="操作系统">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616163352.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616165006.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616165337.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616165425.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616170342.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616170934.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616171751.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616172203.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616172333.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616172949.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616173054.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616175224.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616175454.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616175731.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616180219.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616180256.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616180900.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616180834.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616181654.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616183023.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616183342.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616184114.png">
+<meta property="article:published_time" content="2023-06-30T03:06:00.000Z">
+<meta property="article:modified_time" content="2023-07-12T15:34:52.192Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230616163352.png">
+
+<link rel="canonical" href="http://example.com/2023/06/30/OS-02-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>02.操作系统 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/30/OS-02-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          02.操作系统
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-30 11:06:00" itemprop="dateCreated datePublished" datetime="2023-06-30T11:06:00+08:00">2023-06-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-07-12 23:34:52" itemprop="dateModified" datetime="2023-07-12T23:34:52+08:00">2023-07-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>操作系统</p>
+<span id="more"></span>
+
+<h1 id="1-操作系统运行机制"><a href="#1-操作系统运行机制" class="headerlink" title="1. 操作系统运行机制"></a>1. 操作系统运行机制</h1><h2 id="1-1-两种程序"><a href="#1-1-两种程序" class="headerlink" title="1.1 两种程序"></a>1.1 两种程序</h2><p>两种程序分为：应用程序和内核程序。</p>
+<p>应用程序很好理解，就是跑在OS上的程序，比如QQ，微信，程序猿开发的一些程序等等。而开发操作系统的开发人员，开发的就是内核程序，很多的内核程序组成了操作系统内核，或者简称内核（Kernel），内核是OS最重要最核心的部分，也是最接近硬件的部分，甚至可以说一个OS只需要内核就够了，比如 Docker，一个 Linux 容器可以只包含了 Linux 内核。</p>
+<h2 id="1-2-两种指令"><a href="#1-2-两种指令" class="headerlink" title="1.2 两种指令"></a>1.2 两种指令</h2><p>首先明确一个概念，指令指的是CPU执行的二进制的那一串一串的玩意，详细的可以在计算机组成原理里面学到，而我们执行的那些 cd ls 啥的都是我们之前说的命令接口。</p>
+<p>CPU有一些比较牛逼的指令比如清空内存这类的，这类功能肯定不是谁想用谁就用的，只能是OS的管理者——操作系统内核才有资格执行这种指令。所以CPU就分了两种指令：特权指令和非特权指令。普通应用程序只能使用“非特权指令”，比如加减指令这些。而更危险的特权指令只能由内核程序来发送。</p>
+<p>但是CPU只负责一条一条的执行指令，CPU出厂的时候就已经定好了特权指令，他确实可以分辨特权指令，但是他怎么知道这个指令是内核发来的还是应用程序发来的？</p>
+<h2 id="1-3-CPU-两种状态"><a href="#1-3-CPU-两种状态" class="headerlink" title="1.3 CPU 两种状态"></a>1.3 CPU 两种状态</h2><p>CPU有两种状态，“内核态” 与 “用户态”，用户态时，CPU只能执行非特权指令，内核态时，CPU就可以执行特权指令了。</p>
+<p>同时，CPU里面有一个寄存器叫 <strong>程序状态字寄存器（PSW）</strong>，其中又个二进制位，1表示当前时内核态，0表示用户态。</p>
+<p>两种状态还有个别名：内核态 &#x3D; 核心态 &#x3D; 管态； 用户态 &#x3D; 目态。</p>
+<h2 id="1-4-CPU状态切换"><a href="#1-4-CPU状态切换" class="headerlink" title="1.4 CPU状态切换"></a>1.4 CPU状态切换</h2><p>流程如下：</p>
+<ul>
+<li>刚开机时，CPU状态是内核态，操作系统的内核程序先上CPU运行</li>
+<li>开完机以后，内核程序会向CPU发送一条特权指令，将PSW从1改成0，进而变成用户态，操作系统就会让出CPU的使用权。</li>
+<li>然后就可以执行其他的应用程序。</li>
+<li>假设，这个应用程序被黑了，被植入了一条特权指令，CPU读取到这个特权指令后，检查PSW发现自己是用户态，不能执行该指令，就引发一个<strong>中断信号</strong>。</li>
+<li>CPU检测到中断信号后，会立即变成<strong>核心态</strong>，并停止运行当前的应用程序，转而运行处理中断信号的内核程序。也就是<strong>中断</strong>会使操作系统重新夺回CPU的控制权。</li>
+<li>操作系统处理完了中断时间后，再将CPU使用权交给别的应用程序。</li>
+</ul>
+<p>两种状态切换：</p>
+<ul>
+<li>内核态-&gt;用户态：执行一条特权指令即可，操作系统会让出CPU使用权</li>
+<li>用户态-&gt;内核态：由“中断”引发，硬件自动完成变态过程，触发中断信号以为着操作系统将强行夺回CPU的使用权。</li>
+</ul>
+<h2 id="1-5-总结"><a href="#1-5-总结" class="headerlink" title="1.5 总结"></a>1.5 总结</h2><p>一张图：<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616163352.png" alt="image.png"></p>
+<h1 id="2-中断和异常"><a href="#2-中断和异常" class="headerlink" title="2. 中断和异常"></a>2. 中断和异常</h1><h2 id="2-1-中断的作用"><a href="#2-1-中断的作用" class="headerlink" title="2.1 中断的作用"></a>2.1 中断的作用</h2><p>上面就说过了，操作系统内核程序是整个操作系统的管理者，在合适的情况下，操作系统会将CPU使用权让给应用程序，“中断”则是<strong>让操作系统内核夺回CPU使用权</strong>的唯一途径。</p>
+<p>如果没有“中断”机制，CPU就会一直运行一个程序，还怎么并发？</p>
+<h2 id="2-2-中断的分类"><a href="#2-2-中断的分类" class="headerlink" title="2.2 中断的分类"></a>2.2 中断的分类</h2><p>分为两类：内中断和外中断。</p>
+<p><strong>内中断</strong></p>
+<p>上面说的黑客例子就是一个内中断，CPU在用户态接收了一个特权指令进而引发内中断。CPU如果执行的指令是非法的，或者指令的某些参数是非法的，比如除以0，就会引发内中断。</p>
+<p>另一种情况就是，我们的应用程序要调用操作系统的一些功能，就需要发送一条特殊的指令——<strong>陷入指令</strong>，意味着应用程序主动将CPU控制权还给操作系统内核，让操作系统帮我干一些事儿。陷入指令也会引发内中断。当然需要注意的是，陷入指令并不是特权指令。</p>
+<p><strong>外中断</strong></p>
+<p>中断和CPU当前的指令没有关系，中断信号来源于CPU<strong>外部</strong>。比如时钟中断，这个东西就是实现了CPU时间片轮转。现在有两个程序A和B，程序A执行了50ms了，时钟一看差不多该转了，就会给CPU发送一个始终中断信号，然后CPU就会切换到内核态执行时钟中断的内核程序，这个内核程序就可以让CPU待会去执行程序B而非程序A。</p>
+<p>其他的比如IO设备，打印机。打印完成后打印机就会发送一个中断信号，这个来源于CPU外部，也属于外中断。</p>
+<p>用一张图来说明：<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616165006.png" alt="image.png"></p>
+<p>这里可以看到，异常也就是内中断，而如果我们直接说中断，大部分情况下说的都是外中断。</p>
+<h2 id="2-3-中断机制的基本原理"><a href="#2-3-中断机制的基本原理" class="headerlink" title="2.3 中断机制的基本原理"></a>2.3 中断机制的基本原理</h2><p>不同的中断信号，需要不同的中断处理程序来处理，比如时钟中断，就得用相应的处理程序去进行时间片轮转。当CPU检测到中断信号后，会根据中断信号的类型去查询“中断向量表”，以此来找到相应的中断处理程序在内存中的存放位置。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616165337.png" alt="image.png"></p>
+<h2 id="2-4-总结"><a href="#2-4-总结" class="headerlink" title="2.4 总结"></a>2.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616165425.png" alt="image.png"></p>
+<h1 id="3-系统调用"><a href="#3-系统调用" class="headerlink" title="3. 系统调用"></a>3. 系统调用</h1><h2 id="3-1-什么是系统调用"><a href="#3-1-什么是系统调用" class="headerlink" title="3.1 什么是系统调用"></a>3.1 什么是系统调用</h2><p>我们之前说过：操作系统向上提供了一些简单易用的服务。主要包括命令接口和程序接口。其中程序接口由一组系统调用组成。</p>
+<p>”系统调用“是操作系统提供给应用程序使用的接口，可以理解为一种可供应用程序调用的特殊函数，<strong>应用程序可以通过系统调用来请求获得操作系统内核的服务</strong>。</p>
+<p>编程语言的库函数和系统调用的区别：系统调用向上层提供服务，让上层程序可以请求内核服务，这个上层程序有可能就是库函数，很多库函数就使用了系统调用，然后进行封装，让我们调用的更加方便。</p>
+<p>但是并不是所有的库函数都用了系统调用，比如C语言的 abs 函数就没用，其他的一些比如创建一个新文件这类的函数，肯定就会用到系统调用。<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616170342.png" alt="image.png"></p>
+<h2 id="3-2-系统调用重要性"><a href="#3-2-系统调用重要性" class="headerlink" title="3.2 系统调用重要性"></a>3.2 系统调用重要性</h2><p>这么个场景：用 WPS 和 office 同时打印论文，如果两个进程都可以直接调用IO设备，并发的使用打印机，那么两个论文就会混在一起了。</p>
+<p>所以，将这类共享资源交给操作系统内核进行统一管理，并向上提供“系统调用”，用户进程想要使用打印机，只能通过系统调用向操作系统内核发出请求，然后内核再对哥哥请求进行协调处理，该阻塞阻塞。</p>
+<h2 id="3-3-什么功能要用到系统调用"><a href="#3-3-什么功能要用到系统调用" class="headerlink" title="3.3 什么功能要用到系统调用"></a>3.3 什么功能要用到系统调用</h2><p>很简单，凡是与共享资源有关的操作（存储分配、IO操作、文件管理），都必须通过系统调用的方式向操作系统内核提出服务请求，由操作系统内核代为完成。这样可以保证系统的稳定性和安全性，防止用户进行非法操作。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616170934.png" alt="image.png"></p>
+<h2 id="3-4-系统调用过程"><a href="#3-4-系统调用过程" class="headerlink" title="3.4 系统调用过程"></a>3.4 系统调用过程</h2><p>这个就很有意思了，假设我们的C语言要开辟一个新进程：</p>
+<ul>
+<li>首先，向CPU发送一条指令，将fork存到CPU的寄存器中</li>
+<li>然后，再向CPU发送一条指令，将具体的参数存到寄存器中</li>
+<li>发送陷入指令（trap），CPU一看trap指令就会发生内中断，然后调用处理trap的内核程序，这个内核程序就会将寄存器中存的参数取出来，一看，奥，你要执行fork，然后具体参数是多少多少，然后内核程序给你执行</li>
+<li>执行完了以后，回到用户态。</li>
+</ul>
+<p>需要注意的是，陷入指令是用户态执行的，然后立即引发一个内中断，CPU进入内核态；发送系统调用请求是在用户态，而对系统调用的相应处理是在核心态下进行。</p>
+<p>顺带：陷入指令 &#x3D; trap 指令 &#x3D; 访管指令</p>
+<h2 id="3-6-总结"><a href="#3-6-总结" class="headerlink" title="3.6 总结"></a>3.6 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616171751.png" alt="image.png"></p>
+<h1 id="4-操作系统体系结构"><a href="#4-操作系统体系结构" class="headerlink" title="4. 操作系统体系结构"></a>4. 操作系统体系结构</h1><h2 id="4-1-内核结构"><a href="#4-1-内核结构" class="headerlink" title="4.1 内核结构"></a>4.1 内核结构</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616172203.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616172333.png" alt="image.png"><br>上面的三种东西，时钟，中断，原语，这三个东西和硬件最为紧密，是一定要放在内核中的。但是下面三个 进程、存储器、设备，不会直接涉及到硬件，所以有些操作系统并不会将他们放到内核中。</p>
+<p>这就引出两种操作系统设计方法；</p>
+<ul>
+<li>将所有内容包含在内核中，包括 进程、寄存器、设备管理，就叫大内核。</li>
+<li>只保留时钟，中断，原语等核心功能，这种设计就叫微内核。</li>
+</ul>
+<p>微内核情况下，核心功能跑在内核态，其他的进程管理、寄存器管理、设备管理就会跑在用户态。</p>
+<h2 id="4-2-两种内核的区别"><a href="#4-2-两种内核的区别" class="headerlink" title="4.2 两种内核的区别"></a>4.2 两种内核的区别</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616172949.png" alt="image.png"></p>
+<p>主要就是变态这块有点区别，剩下的没啥。</p>
+<h2 id="4-3-大小内核总结"><a href="#4-3-大小内核总结" class="headerlink" title="4.3 大小内核总结"></a>4.3 大小内核总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616173054.png" alt="image.png"></p>
+<h2 id="4-4-分层结构"><a href="#4-4-分层结构" class="headerlink" title="4.4 分层结构"></a>4.4 分层结构</h2><p>这个和Java的什么三层架构很像，操作系统分为多个层，每层可单向调用更低一层提供接口：<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616175224.png" alt="image.png"></p>
+<p>好处就是易于调试，而且想要在两层之间加一层的话也是比较简单的。</p>
+<p>但是缺点就是，层与层的划分有的时候并不明确，比如进程管理和内存管理，两种功能相互调用，在分层结构中就比较难办。同时，A层不能直接调用D层，而是需要依次向下传递调用，效率会比较慢。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616175454.png" alt="image.png"></p>
+<h2 id="4-5-模块化结构"><a href="#4-5-模块化结构" class="headerlink" title="4.5 模块化结构"></a>4.5 模块化结构</h2><p>将操作系统按照功能划分为若干个具有一定独立性的模块。每个模块具有某方面的管理功能，并会定好个模块之间的接口，使各模块之间能通过接口进行通信。还可以进一步将各模块细分为若干个具有一定功能的自模块，同样也规定好各自模块之间的接口。将这种设计方法称为模块-接口法：<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616175731.png" alt="image.png"><br>这里面内核包括主模块和加载模块，主模块包含最主要的功能，没有主模块没法启动，加载模块非必需，可以按照需求动态添加。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616180219.png" alt="image.png"></p>
+<h2 id="4-6-大小内核"><a href="#4-6-大小内核" class="headerlink" title="4.6 大小内核"></a>4.6 大小内核</h2><p>这个就是之前重点在说的，直接看图就行了：<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616180256.png" alt="image.png"></p>
+<h2 id="4-7-外核"><a href="#4-7-外核" class="headerlink" title="4.7 外核"></a>4.7 外核</h2><p>一般情况下，OS给用户分配的都是虚拟的资源，比如虚拟的内存空间，我们看到的内存是连续的，但其实在物理上压根不是连续的。外存就是跳过了虚拟这一步，外存讲究不虚拟，不抽象，直接调用硬件资源给你，让资源管理更加灵活，同时外核也负责保证这些硬件资源的安全。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616180900.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616180834.png" alt="image.png"></p>
+<h1 id="5-操作系统引导"><a href="#5-操作系统引导" class="headerlink" title="5. 操作系统引导"></a>5. 操作系统引导</h1><p>简单说就是怎么开机，我们买回来一块硬盘，装在电脑上，然后分完区，将系统装在C盘上，磁盘就会出现一个东西叫主引导记录：里面记录的磁盘的引导程序和磁盘的分区表。</p>
+<p>同时电脑的内存分为两类：RAM和ROM，ROM断电后是不会消失的，然后我们来看看电脑是怎么开机的。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616181654.png" alt="image.png"></p>
+<ul>
+<li>通电以后，CPU开始工作，CPU执行ROM中的引导程序，主要就是自检，同时指示CPU将磁盘中的主引导记录导入内存</li>
+<li>CPU开始执行磁盘引导程序，磁盘引导程序会根据分区表去判断C盘的位置，然后就可以将C盘的第一部分数据读入内存，也就是引导记录PBR</li>
+<li>这个PBR本质上也是个程序，CPU执行这个PBR，就会找到C盘根目录中的启动管理程序，然后这个程序负责初始化操作系统。</li>
+</ul>
+<h1 id="6-虚拟机"><a href="#6-虚拟机" class="headerlink" title="6. 虚拟机"></a>6. 虚拟机</h1><p>虚拟机：使用虚拟化技术，将一台物理机器虚拟化为堕胎虚拟机起，每个虚拟机起都可以独立运行一个操作系统。</p>
+<p>同义术语：虚拟机管理程序&#x2F;虚拟机监控程序&#x2F;Virtual Machine Monitor（VMM）&#x2F; Hypervisor</p>
+<h2 id="6-1-第一类虚拟机"><a href="#6-1-第一类虚拟机" class="headerlink" title="6.1 第一类虚拟机"></a>6.1 第一类虚拟机</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616183023.png" alt="image.png"></p>
+<p>虚拟机管理程序直接运行在硬件上，然后将硬件资源分配给上层的各个虚拟机。但是这里有个问题，虚拟机以为自己是真实的机器，所以他们也会有虚拟的内核态，就会向真实CPU发送特权指令，但是整个虚拟机其实都是真实机的用户态，怎么办？</p>
+<p>简单，VMM会截获虚拟机发送过来的特权指令，然后将特权指令进行等价转化，让虚拟机以为自己的特权指令执行成功。</p>
+<h2 id="6-2-第二类虚拟机"><a href="#6-2-第二类虚拟机" class="headerlink" title="6.2 第二类虚拟机"></a>6.2 第二类虚拟机</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616183342.png" alt="image.png"></p>
+<h2 id="6-3-两类虚拟机区别"><a href="#6-3-两类虚拟机区别" class="headerlink" title="6.3 两类虚拟机区别"></a>6.3 两类虚拟机区别</h2><p>直接看图吧，没啥说的了：<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230616184114.png" alt="image.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5/" rel="prev" title="01.操作系统基础概念">
+      <i class="fa fa-chevron-left"></i> 01.操作系统基础概念
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-03-%E8%BF%9B%E7%A8%8B/" rel="next" title="03.进程">
+      03.进程 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%BF%90%E8%A1%8C%E6%9C%BA%E5%88%B6"><span class="nav-text">1. 操作系统运行机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E4%B8%A4%E7%A7%8D%E7%A8%8B%E5%BA%8F"><span class="nav-text">1.1 两种程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E4%B8%A4%E7%A7%8D%E6%8C%87%E4%BB%A4"><span class="nav-text">1.2 两种指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-CPU-%E4%B8%A4%E7%A7%8D%E7%8A%B6%E6%80%81"><span class="nav-text">1.3 CPU 两种状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-CPU%E7%8A%B6%E6%80%81%E5%88%87%E6%8D%A2"><span class="nav-text">1.4 CPU状态切换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-5-%E6%80%BB%E7%BB%93"><span class="nav-text">1.5 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E4%B8%AD%E6%96%AD%E5%92%8C%E5%BC%82%E5%B8%B8"><span class="nav-text">2. 中断和异常</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E4%B8%AD%E6%96%AD%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-text">2.1 中断的作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E4%B8%AD%E6%96%AD%E7%9A%84%E5%88%86%E7%B1%BB"><span class="nav-text">2.2 中断的分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E4%B8%AD%E6%96%AD%E6%9C%BA%E5%88%B6%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-text">2.3 中断机制的基本原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%E6%80%BB%E7%BB%93"><span class="nav-text">2.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8"><span class="nav-text">3. 系统调用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E4%BB%80%E4%B9%88%E6%98%AF%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8"><span class="nav-text">3.1 什么是系统调用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E9%87%8D%E8%A6%81%E6%80%A7"><span class="nav-text">3.2 系统调用重要性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E4%BB%80%E4%B9%88%E5%8A%9F%E8%83%BD%E8%A6%81%E7%94%A8%E5%88%B0%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8"><span class="nav-text">3.3 什么功能要用到系统调用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B"><span class="nav-text">3.4 系统调用过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-6-%E6%80%BB%E7%BB%93"><span class="nav-text">3.6 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="nav-text">4. 操作系统体系结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E5%86%85%E6%A0%B8%E7%BB%93%E6%9E%84"><span class="nav-text">4.1 内核结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E4%B8%A4%E7%A7%8D%E5%86%85%E6%A0%B8%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-text">4.2 两种内核的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E5%A4%A7%E5%B0%8F%E5%86%85%E6%A0%B8%E6%80%BB%E7%BB%93"><span class="nav-text">4.3 大小内核总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E5%88%86%E5%B1%82%E7%BB%93%E6%9E%84"><span class="nav-text">4.4 分层结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E6%A8%A1%E5%9D%97%E5%8C%96%E7%BB%93%E6%9E%84"><span class="nav-text">4.5 模块化结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-6-%E5%A4%A7%E5%B0%8F%E5%86%85%E6%A0%B8"><span class="nav-text">4.6 大小内核</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-7-%E5%A4%96%E6%A0%B8"><span class="nav-text">4.7 外核</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%BC%95%E5%AF%BC"><span class="nav-text">5. 操作系统引导</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E8%99%9A%E6%8B%9F%E6%9C%BA"><span class="nav-text">6. 虚拟机</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E7%AC%AC%E4%B8%80%E7%B1%BB%E8%99%9A%E6%8B%9F%E6%9C%BA"><span class="nav-text">6.1 第一类虚拟机</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-%E7%AC%AC%E4%BA%8C%E7%B1%BB%E8%99%9A%E6%8B%9F%E6%9C%BA"><span class="nav-text">6.2 第二类虚拟机</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-3-%E4%B8%A4%E7%B1%BB%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%8C%BA%E5%88%AB"><span class="nav-text">6.3 两类虚拟机区别</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="数据计算.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="03-数据运算">
+<meta property="og:url" content="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-03-%E6%95%B0%E6%8D%AE%E8%BF%90%E7%AE%97/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="数据计算.">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703162230.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703163611.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703163845.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703164149.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703164652.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703165304.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703165617.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703170138.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703170338.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703170740.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703214942.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703215910.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703223606.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703223322.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707090535.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707090759.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707091045.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707091753.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707092741.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707092807.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230702092105.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707094805.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707095223.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707095524.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707095626.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707095713.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707095855.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707163757.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707164554.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707164750.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707225350.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707230028.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707230259.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707230429.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707230644.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707230835.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707231018.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707231326.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707231858.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707231932.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707232957.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230707234130.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708105906.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708110735.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708111523.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708112646.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708114555.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708120520.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708120949.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708160556.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708161539.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708162056.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708162354.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708162515.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708162806.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708163540.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708164802.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708194525.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708195102.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708195245.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230708195734.png">
+<meta property="article:published_time" content="2023-07-21T10:00:19.000Z">
+<meta property="article:modified_time" content="2023-07-21T10:09:21.154Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703162230.png">
+
+<link rel="canonical" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-03-%E6%95%B0%E6%8D%AE%E8%BF%90%E7%AE%97/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>03-数据运算 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-03-%E6%95%B0%E6%8D%AE%E8%BF%90%E7%AE%97/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          03-数据运算
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-07-21 18:00:19 / 修改时间：18:09:21" itemprop="dateCreated datePublished" datetime="2023-07-21T18:00:19+08:00">2023-07-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">计算机组成原理</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>数据计算.</p>
+<span id="more"></span>
+
+<h1 id="1-奇偶校验"><a href="#1-奇偶校验" class="headerlink" title="1. 奇偶校验"></a>1. 奇偶校验</h1><p>数据传输过程中，如何判断数据的正确性，比如计算机A向计算机B发送消息：00 01 10 11，如果最后的11传输过程中变成了 10 ，计算机B如何发现？</p>
+<p>比较简单的就是通过 1 的个数来判断，我们现在就规定发送的每一组数据 1 的个数必须为奇数数，我们就可以给数据添加一位校验位：</p>
+<p><code>00 01 10 11 -&gt; 100 001 010 111</code>，给数据的开头加上一个bit位，强制 1 的个数为奇数，如果 11 变成了 10，110中1的个数为偶数，计算机B就能知道数据错误。这个就叫<font color='red'>奇偶校验</font>.</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703162230.png" alt="image.png"></p>
+<p>计算机如何实现的奇偶校验？</p>
+<p>假如有两个编码：1001101 和 1010111，计算机会通过 异或 运算来得到校验位，如果我们要求这两个数的偶校验的校验位：1 ^ 0 ^ 0 ^ 1 ^ 1 ^ 0 ^ 1 &#x3D; 0，所以偶校验位&#x3D;0；于是 1001101 的偶校验码 &#x3D; 01001101，然后同样使用异或进行奇偶校验，一样的步骤，如果得到 1 说明数据出错。</p>
+<h1 id="2-电路基本原理"><a href="#2-电路基本原理" class="headerlink" title="2. 电路基本原理"></a>2. 电路基本原理</h1><h2 id="2-1-回忆-ALU"><a href="#2-1-回忆-ALU" class="headerlink" title="2.1 回忆 ALU"></a>2.1 回忆 ALU</h2><p>之前说过，ALU 算数逻辑单元，就是用于计算的。支持操作：</p>
+<ul>
+<li>算术运算；加、减、乘、除</li>
+<li>逻辑运算：与、或、非、异或等</li>
+<li>辅助功能：移位、求补</li>
+</ul>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703163611.png" alt="image.png"></p>
+<p>之前老说的机器字长，其实就是下面的输入的两个操作数，也就是说 ALU 最多只能支持几个bit的数进行运算，最终运算结果之前说会存到 X 寄存器中，所以说 X 寄存器的位数 &#x3D;&#x3D; 输入的操作数的位数，也就等于机器字长。</p>
+<h2 id="2-2-最基本的逻辑运算"><a href="#2-2-最基本的逻辑运算" class="headerlink" title="2.2 最基本的逻辑运算"></a>2.2 最基本的逻辑运算</h2><p>就是那几个：与或非、</p>
+<p>先看与或非的情况：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703163845.png" alt="image.png"></p>
+<p>这里也是分优先级的，与的优先级要高于或的优先级，同时 与或 两种运算符和分配律，结合率等，比如 ：AB + CD 就是 A 和 B，C和D 先与，然后两个结果进行或运算。</p>
+<p>再比如：AC + AD，就可以分配率一下：A（C+D），所以电路就有两种设计方法：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703164149.png" alt="image.png"></p>
+<p>左边自然就是 AC + AD 的逻辑，右边就是A（C+D）的逻辑。</p>
+<p>然后再来看看 与非（与取反，只有全1才为0）、或非（或取反，只有全0才为1）、异或（两个不一样为1）、同或（两个一样为1）：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703164652.png" alt="image.png"></p>
+<h2 id="2-3-异或门的应用"><a href="#2-3-异或门的应用" class="headerlink" title="2.3 异或门的应用"></a>2.3 异或门的应用</h2><p>比如之前的奇偶校验就可以用它，一个信息 1001101，求他的偶校验位：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703165304.png" alt="image.png"></p>
+<h1 id="3-加法器设计"><a href="#3-加法器设计" class="headerlink" title="3. 加法器设计"></a>3. 加法器设计</h1><h2 id="3-1-一位全加器"><a href="#3-1-一位全加器" class="headerlink" title="3.1 一位全加器"></a>3.1 一位全加器</h2><p>就是可以计算一个bit加上一个bit的一种电路，就是一位全加器（Full Adder，FA）：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703165617.png" alt="image.png"></p>
+<p>看图我们可以知道，FA 的功能，就是已知两个加数 Ai 和 Bi，还有从低位上来的进位 Ci-1，要求出结果 Si 已经进位 Ci。</p>
+<p>Si 简单，已经说了，只要 A B C 有奇数个 1 即可，就用异或，三个数依次异或就得到了 Si。</p>
+<p>Ci 分两种情况：1. Ai 和 Bi 两个都是 1，那是肯定进位的，Ci 不用考虑，所以 AiBi。2. Ai 和 Bi 有一个是1，然后 Ci-1 也是1，这样也能进位，所以（Ai 异或 Bi）与 Ci。</p>
+<p>最后电路出来长这样：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703170138.png" alt="image.png"></p>
+<p>左边就是 FA 的具体实现，右边就是简化版的封装出来的电路元器件。</p>
+<h2 id="3-2-串行加法器"><a href="#3-2-串行加法器" class="headerlink" title="3.2 串行加法器"></a>3.2 串行加法器</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703170338.png" alt="image.png"></p>
+<p>每次讲两位送入 FA，然后得到 Si 和 Ci，将 Ci 保存到进位位中，提供给下一次操作。如果两个操作数长 N，就要分为 N 次操作，每次一对 bit 进行运算，然后产生 1bit 的和，然后串行的逐位送回寄存器。</p>
+<h2 id="3-3-并行加法器"><a href="#3-3-并行加法器" class="headerlink" title="3.3 并行加法器"></a>3.3 并行加法器</h2><p>其实就是将很多的 FA 串起来，但是后面的 FA 依旧需要等待前面的 FA 提供进位数 Ci-1 才能工作，他们仅仅是可以并行的接收操作数 Ai 和 Bi。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703170740.png" alt="image.png"></p>
+<p>所以这玩意业绩爱哦串行进位的并行加法器。</p>
+<h2 id="3-4-并行进位加法器"><a href="#3-4-并行进位加法器" class="headerlink" title="3.4 并行进位加法器"></a>3.4 并行进位加法器</h2><p>这章并不是很重要，不是重点，听听就行了。</p>
+<h2 id="3-5-补码加减运算器"><a href="#3-5-补码加减运算器" class="headerlink" title="3.5 补码加减运算器"></a>3.5 补码加减运算器</h2><h3 id="3-5-1-基本加法器"><a href="#3-5-1-基本加法器" class="headerlink" title="3.5.1 基本加法器"></a>3.5.1 基本加法器</h3><p>加法器里面实现 n bit 数加上 n bit 数，输出结果并输出进位：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703214942.png" alt="image.png"></p>
+<p>比如 1000 + 0111，前面进位 Cin &#x3D; 1，则：F &#x3D; 0000，Cout 因为进位 &#x3D; 1。最终 Cout 可能被丢弃，只保留 F 。</p>
+<p>如果是 8 bit + 8 bit，就可以两个加法器串起来，前面计算4bit，然后将进位信息给第二个加法器，第二个加法器算后面 4bit，然后两个 F 拼接一下即可。</p>
+<h3 id="3-5-2-补码加减法器"><a href="#3-5-2-补码加减法器" class="headerlink" title="3.5.2 补码加减法器"></a>3.5.2 补码加减法器</h3><p>这个就牛逼了，我们先回忆一下补码怎么运算：</p>
+<ol>
+<li>两个补码相加，直接带着符号位直接按位相加</li>
+<li>两个补码相减，减数取反（所有位取反末位加一）然后相加</li>
+</ol>
+<p>然后在上面加法器的基础上，设计这个补码运算器：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703215910.png" alt="image.png"></p>
+<p>解释一下这个多路选择器，如果发现是加法，多路选择器会收到0信号，打开右边那条路；发现是减法，接收到1信号，打开左边那条路。</p>
+<p>比如，X &#x3D; 1000，Y &#x3D; 0111；两个数相加的话，MUX 走 0 路，0 路会将 Y 直接输送到加法器里面，不做任何处理，同时 MUX 会向 Cin 发送0，也就是末位不做任何处理。</p>
+<p>如果是 X - Y 的话，MUX 走 1 路，1 路会经过一个非门，将 Y 所有位取反，然后发送到加法器。同时向 Cin 发送 1 信号，相当于给 Y 的末位+1 取反。</p>
+<p>说一下，有符号数的运算，和无符号数的运算，底层都是用这一套电路完成的，但是这就出现了问题：</p>
+<h3 id="3-5-3-运算问题"><a href="#3-5-3-运算问题" class="headerlink" title="3.5.3 运算问题"></a>3.5.3 运算问题</h3><p><strong>无符号数运算</strong></p>
+<p>比如算一个无符号整数相加，X&#x3D;3，Y&#x3D;4，相加，那就是X和Y直接输入加法器（两个数都是整数，补码&#x3D;原码），Cin&#x3D;0，则最后得到<code>（0011 + 0100） = 0111 = 7D</code>。没毛病</p>
+<p>但是如果是 X - Y，那么 X 正常输入，Y 要全部取反，Cin &#x3D; 1，则 <code>（0011 + 1011 + 1）= 1111 = 15D</code>。这可就不对了，归根到底就是因为无符号数压根不能表示负数。</p>
+<p><strong>有符号数</strong></p>
+<p>这个也是有问题的，X &#x3D; -8，Y &#x3D; 7。X补 &#x3D; 1000，Y补&#x3D;0111，如果是 X + Y，则按位相加，得到 1111 也就是 -1D（1111可是补码，记得转回来）。</p>
+<p>但是 X - Y 问题就又有了，X补正常输入，Y补全部取反&#x3D;1000，Cin&#x3D;1，所以 <code>X-Y = (1000 + 1000 + 1) = 10001 = 1D</code>，造成这个的原因是符号位运算得2，进位然后抛弃了，结果剩下符号位&#x3D;0，这不就错了。</p>
+<p>这是为啥呀，因为计算机不会管你是有符号数还是无符号数，反正就是经过这个电路一通算，但是针对不同的数，进位方式和判断溢出是不一样的。</p>
+<h3 id="3-5-4-标志位生成"><a href="#3-5-4-标志位生成" class="headerlink" title="3.5.4 标志位生成"></a>3.5.4 标志位生成</h3><p>用四个标志位来判断计算是否发生了进位或者溢出。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703223606.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703223322.png" alt="image.png"></p>
+<p>四个东西大致说一说：</p>
+<p><strong>OF</strong></p>
+<p>OF 用来判断有符号数运算是否发生溢出，其实简单说就是看看符号位有没有发生溢出导致结果正负性错误。计算方法不说了，很好理解。</p>
+<p><strong>SF</strong></p>
+<p>用来表示运算结果的正负，为0表示正，为1表示负。计算方法是取最高位本位和，啥意思，就是上面的一位全加器记得吧，最高位 A + B + Cin 进完位以后留下的那个数，就是 SF。比如 1000 + 1000 &#x3D; 10000。SF 就是第一个0.</p>
+<p><strong>ZF</strong></p>
+<p>计算结果全0，就是0。</p>
+<p><strong>CF</strong></p>
+<p>无符号数加减判断是否发生溢出或者借位，溢出好理解，就是两个无符号数相加然后位数不够了；借位就是小数减大数结果为负，但是无符号数不能表示负数，这就发生了借位。判断方法就是最高位的 Cout 异或 Sub（加减控制信号）。</p>
+<p>如果是加法，Sub &#x3D; 0，最高位 Cout &#x3D; 1，说明进位了，也就是溢出了。如果是减法，Sub &#x3D; 1，最高位按理说是的进位的（记住就行），但是 Cout 却为 0，就说明发生了借位。</p>
+<h1 id="4-移位运算"><a href="#4-移位运算" class="headerlink" title="4. 移位运算"></a>4. 移位运算</h1><p>就是C语言的里面的左移右移<code>2 &lt;&lt; 1</code>。</p>
+<h2 id="4-1-算数移位"><a href="#4-1-算数移位" class="headerlink" title="4.1 算数移位"></a>4.1 算数移位</h2><p>通过改变各个数码位和小数点的相对位置，从而改变各个数码位的位权。可用移位运算实现乘法、除法。</p>
+<h3 id="4-1-1-原码的算数移位"><a href="#4-1-1-原码的算数移位" class="headerlink" title="4.1.1 原码的算数移位"></a>4.1.1 原码的算数移位</h3><p><strong>整数的移位</strong></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707090535.png" alt="image.png"></p>
+<p>左移就是后面的所有数值位往前走一步，所以每一位的位权都会 x 2，所以左移一位 &#x3D; 原数 x 2^1。左移两位就是 x 2^2，左移三位就不一样了，左移三位的话第一个1会移出数值位发生溢出，所以直接舍弃第一个1，变成：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707090759.png" alt="image.png"></p>
+<p>右移同理，右移一位所有位权 x 2^(-1)，则 原数 x 2^(-1)，两位同理，三位就不一样了，最右边的1会移出，同理直接舍弃即可。</p>
+<p><strong>定点数的移位</strong></p>
+<p>这个和上面的规律一模一样，不说了。</p>
+<h3 id="4-1-2-补码的算数移位"><a href="#4-1-2-补码的算数移位" class="headerlink" title="4.1.2 补码的算数移位"></a>4.1.2 补码的算数移位</h3><p>这个课就有点恶心了。如果是正数的话，原反补三码合一，和原码的移位规则一毛一样，不解释。负数就不一样了：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707091045.png" alt="image.png"></p>
+<p>先说反码的移位，反码里面 1 对应原码的 0，所以发生移位时，原码需要补0，反码就需要补1。</p>
+<p>反码是原码整个取反，补码是反码末位+1，那么补码有个规律，从右往左数第一个1的右边，和原码保持一致，左边和反码保持一致：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">原码：1，0010 100</span><br><span class="line">反码：1，1101 011</span><br><span class="line">补码：1，1101 100（这三个和原码一样，前面四位和反码一样）</span><br></pre></td></tr></table></figure>
+<p>所以，如果补码往右移，则前面的反码部分会有空缺，则补1，如果是往左移，最右边的原码部分会有空缺，则补0：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">补码：1，1101 100</span><br><span class="line"></span><br><span class="line">右移1位：1，11101 10 （前面补1）</span><br><span class="line">左移1位：1，101 1000 （后面补0）</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-1-3-总结"><a href="#4-1-3-总结" class="headerlink" title="4.1.3 总结"></a>4.1.3 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707091753.png" alt="image.png"></p>
+<p>计算机如何实现 -20 x 7？可以把 7 理解成 2^0 + 2^1 + 2^2，也就是 -20 乘这仨，计算机就会给-20 分别左移1位，左移两位，然后三个数相加即可。</p>
+<h2 id="4-2-逻辑移位"><a href="#4-2-逻辑移位" class="headerlink" title="4.2 逻辑移位"></a>4.2 逻辑移位</h2><p>可以看作是无符号数的一种算数移位，有符号数移位的时候符号不会跟着移，这个其实就是没有符号位，所有二进制位一块参与移动然后按规则舍弃补0.</p>
+<p>应用场景：比如 RGB 颜色，计算机可以将三个 RGB 整合成一个 int，咋办？三个 3Byte 的空间，R 的值左移16位，跑到最高位，G 的值用另一个 3Byte，左移8位，B 的值用另一个 3Byte，不动。然后三个数相加。</p>
+<h2 id="4-3-循环移位"><a href="#4-3-循环移位" class="headerlink" title="4.3 循环移位"></a>4.3 循环移位</h2><p>这个很简单，就是说左移，左边溢出的那一位，补到最后面空的那一位上，这个可以用在进位中，也就是前面说过的 CF：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707092741.png" alt="image.png"></p>
+<h2 id="4-4-总结"><a href="#4-4-总结" class="headerlink" title="4.4 总结"></a>4.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707092807.png" alt="image.png"></p>
+<h1 id="5-定点数乘法"><a href="#5-定点数乘法" class="headerlink" title="5. 定点数乘法"></a>5. 定点数乘法</h1><h2 id="5-1-原码一位乘法"><a href="#5-1-原码一位乘法" class="headerlink" title="5.1 原码一位乘法"></a>5.1 原码一位乘法</h2><p>这个东西相当恶心，假设我们要算 [x]原 &#x3D; 1.1101，[x]原 &#x3D; 0.1011，计算两个数相乘。符号倒是十分好确定，只需要两个数的符号位异或即可得到。所以我们就要计算 [x绝对值]原 &#x3D; 0.1101 和 [x绝对值]原 &#x3D; 0.1011 两个数的积。</p>
+<h3 id="5-1-1-机器运算"><a href="#5-1-1-机器运算" class="headerlink" title="5.1.1 机器运算"></a>5.1.1 机器运算</h3><p>先回忆一下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230702092105.png" alt="image.png"></p>
+<p>计算 0.1101 x 0.1011，根据寄存器功能，我们把两个数放在X和MQ中：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707094805.png" alt="image.png"></p>
+<p>第一步，就是计算 0.1101 x 0.0001。具体实现就是，看 MQ 的乘法低位（深色的那个）是1，就直接将 X 中的值加到 ACC 中即可，小数点先不管。这时 MQ 中的乘法低位1已经用完了，所以<font color='red'>将 ACC 和 MQ 整体右移，舍弃 MQ 的低位</font>。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707095223.png" alt="image.png"></p>
+<p>这么做的目的是，保存乘积最低位的1，也就是从 ACC 右移到 MQ 中的那个红色的1，同时方便下一次错位相加，也就是左边红框里面的加法。然后循环上面的步骤，现在 MQ 中的低位就是 0.1011 的下一个1，同理是将 X 直接加到 ACC 中，这就实现了红框里面的错位相加，然后同理将 ACC 和 MQ 右移，保存乘积的低位：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707095524.png" alt="image.png"></p>
+<p>这时，MQ 中的低位是0，则 ACC 直接加0，其实就是不动，但是 ACC 和 MQ 还是需要右移一位：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707095626.png" alt="image.png"></p>
+<p>发现 MQ 低位是1，同理 X 加到 ACC 上，得到：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707095713.png" alt="image.png"></p>
+<p>最后 MQ 里面保留的0其实就是符号位，不用管，乘积小数点在0后面，所以得到结果 0.10001111. 最后将符号加上，两个数的符号位异或，得到结果：1.10001111。</p>
+<h3 id="5-1-2-题目"><a href="#5-1-2-题目" class="headerlink" title="5.1.2 题目"></a>5.1.2 题目</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707095855.png" alt="image.png"></p>
+<p>可以看到和上面几乎一样，中间虚线的位置表示的就是右移舍弃 MQ 并保留 ACC 的部分积，然后左边就是在模拟 ACC 和 X 的相加。</p>
+<p>注意这里的符号位用的是双符号位，其实原码乘法不用双符号位，补码采用的，这里是为了统一补码。</p>
+<p>如果是整数相乘的话唯一的区别就是小数点位置，小数点位置会在 MQ 的符号位前面。</p>
+<h2 id="5-2-补码一位乘法"><a href="#5-2-补码一位乘法" class="headerlink" title="5.2 补码一位乘法"></a>5.2 补码一位乘法</h2><p>原码乘法和补码乘法的区别：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707163757.png" alt="image.png"></p>
+<h3 id="5-2-1-乘法器结构"><a href="#5-2-1-乘法器结构" class="headerlink" title="5.2.1 乘法器结构"></a>5.2.1 乘法器结构</h3><p>这个和原码乘法器还有点区别，上面提到了 MQ 里面有一个辅助位，这个辅助位就在 MQ 的最低位后面，所以 MQ 就会多一位，CPU 里面大部分寄存器位数应该是一定的，所以 ACC 和 X 也都会加一位：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707164554.png" alt="image.png"></p>
+<p>还有个区别：原码乘法里面，寄存器X和 MQ 存的都是原码的绝对值，这里是直接将补码存入 X 和 MQ，不取绝对值。ACC 和 X 都是双符号位，MQ 是单符号位。</p>
+<h3 id="5-2-2-计算流程"><a href="#5-2-2-计算流程" class="headerlink" title="5.2.2 计算流程"></a>5.2.2 计算流程</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707164750.png" alt="image.png"></p>
+<p>解释一下：</p>
+<p>第一次，辅助位 - 最低位，就是那俩小下划线后面减前面得-1，根据上面的图，应该将 X 取负（也就是 [-x]补）加到 ACC 上，然后右移。这会导致最低位和辅助位同时更新。</p>
+<p>第二次，辅助位 - 最低位 &#x3D; 0，则用 0 加到 ACC 上，然后右移。</p>
+<p>第三次，辅助位 - 最低位 &#x3D; 1，按照规定，将 X 加到 ACC 上（就是给 ACC 加上 [x]原），然后右移。这里的右移注意：是补码的算数右移，就是说现在 x 的补码是一个负数，算数右移的话左边要补 1 而不是 0 （复习一下，负数补码右移左边补1，左移右边补0）。</p>
+<p>第四次，略</p>
+<p>最后一次，我们发现 MQ 的最低位变成了 MQ 最开始的符号位 0，原码的话就到此为止了，符号位不参与运算，但是这里符号位同样要运算，这也就是为啥说进行完 n 轮加和之后还要进行一次。最后带着符号位运算一次。但是这次运算完不再右移，ACC 和 MQ 共同构成结果（不包含最低位和辅助位）。</p>
+<h1 id="6-定点数除法"><a href="#6-定点数除法" class="headerlink" title="6. 定点数除法"></a>6. 定点数除法</h1><p>这个是定点小数除法，所以规定被除数一定得比除数小，这样商才能是小于1的，如果最后商大于1，定点小数不能表示大于1的部分，就出错了。</p>
+<h2 id="6-1-原码除法运算"><a href="#6-1-原码除法运算" class="headerlink" title="6.1 原码除法运算"></a>6.1 原码除法运算</h2><p>两种方法。如何检测最后的商是否大于1 ？用的就是第一次的商，如果是1的话就会停止。</p>
+<h3 id="6-1-1-恢复余数法"><a href="#6-1-1-恢复余数法" class="headerlink" title="6.1.1 恢复余数法"></a>6.1.1 恢复余数法</h3><p>机器字长 &#x3D; 5，包括一位符号位，数值位 n &#x3D; 4，x &#x3D; 0.1011，y &#x3D; 0.1101，计算 x &#x2F; y；切记切记，计算除法的时候，符号位通过两个数的符号位异或确定，所以<font color='red'>计算时取的是 x 和 y 的绝对值</font>。</p>
+<p>先写出：|x| &#x3D; 0.1011;  |y|&#x3D;0.1101;  [|y|]补 &#x3D; 0.1101; [-|y|]补 &#x3D; 1.0011;</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707225350.png" alt="image.png"></p>
+<p>又把 CPU 搬出来了，这回 X 寄存器里面放的是除数也就是 |y|，切记放的是绝对值，ACC 寄存器里面放的是 |x|，MQ 里面放的是商。</p>
+<p>计算步骤：</p>
+<p>第一步，确定第一位商，CPU 可不会口算，他只会试，假设第一位商 &#x3D; 1，则：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">            1</span><br><span class="line">      |-----------</span><br><span class="line">01101 / 01011</span><br><span class="line">        01101</span><br></pre></td></tr></table></figure>
+<p>他就会出现这种情况，然后两个数相减，也就是被除数减除数（x - y），怎么实现减法？此时 ACC 和 X 寄存器里面的数都是绝对值，所以当作无符号数来算，x - y &#x3D; [x]补 + （[-|y|]补），然后一算得到 11110：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707230028.png" alt="image.png"></p>
+<p>然后发现 11110 是个负数，说明 ACC 里面的被除数小于 X 里面的除数，商 1 是错的，咋办？把商改回0，然后 ACC 加一个 y 的补码恢复到之前状态。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707230259.png" alt="image.png"></p>
+<p>然后将 ACC 和 MQ 整体左移，舍弃ACC最高位，然后 MQ 最后面补 0:</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707230429.png" alt="image.png"></p>
+<p>然后重复上面的操作，假设MQ的最低位商1，然后 ACC - X 判断是否大于0，然后发现结果确实是正数，所以商 1 是对的，保留 ACC 里面的数：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707230644.png" alt="image.png"></p>
+<p>然后左移，重复上面的操作。直到最后商把 MQ 填满：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707230835.png" alt="image.png"></p>
+<p>如果最后商 1 发现不行的话，记得把商还改回 0 。</p>
+<p>手算的话：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707231018.png" alt="image.png"></p>
+<p>计算步骤就是，啥都甭管一上来就减，如果发现差为负数，那就商 0，然后给它加回去，左移。然后再减。商是每次减完以后确定的。</p>
+<h3 id="6-1-2-加减交错法"><a href="#6-1-2-加减交错法" class="headerlink" title="6.1.2 加减交错法"></a>6.1.2 加减交错法</h3><p>就是在上面的基础上优化，前面的先减后加太麻烦了，能不能减完以后即便发现不对，也不往回加了，直接在 ACC 的基础上操作：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707231326.png" alt="image.png"></p>
+<p>如果 ACC 减去 X 发现得负数，直接让商 &#x3D; 0，然后直接算 2a + b 去求下一位商，如果 2a + b 是正的，则 商 &#x3D; 1，ACC 更新为 2a + b；如果是负的，那就重复上面的操作。</p>
+<p>具体操作就是让减完以后负的 ACC 直接左移一位，然后加上 X：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707231858.png" alt="image.png"></p>
+<p>别忘了符号位，和之前一样异或。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707231932.png" alt="image.png"></p>
+<h2 id="6-2-补码除法运算-加减交替法"><a href="#6-2-补码除法运算-加减交替法" class="headerlink" title="6.2 补码除法运算-加减交替法"></a>6.2 补码除法运算-加减交替法</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707232957.png" alt="image.png"></p>
+<p>大致说一句啊，第一步是用 y补 和 x补 来判断是 x + y 还是 x - y，这里显然是 x + y，因为俩人异号。相加完以后得到余数，然后余数再和除数 y补 比较，发现同号，然后商1，左移 然后减去 y补。商 0 的话又是另一回事了。</p>
+<p>然后在最后一步，商的末位恒置为 1，最后的结果就是 10101，余数是 0.0111（余数记得可是双符号位的，MQ 是单符号位）。</p>
+<h1 id="7-C语言数据类型转换"><a href="#7-C语言数据类型转换" class="headerlink" title="7. C语言数据类型转换"></a>7. C语言数据类型转换</h1><p>直接看图吧，没啥好说的：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230707234130.png" alt="image.png"></p>
+<h1 id="8-数据的存储与排列"><a href="#8-数据的存储与排列" class="headerlink" title="8. 数据的存储与排列"></a>8. 数据的存储与排列</h1><h2 id="8-1-大小端模式"><a href="#8-1-大小端模式" class="headerlink" title="8.1 大小端模式"></a>8.1 大小端模式</h2><p>其实很简单，就是一个 int 在内存中如何排列的，比如一个 4 字节的 int：<code>0x 01 23 45 67</code>；转化为二进制就是 <code>0000 0001 0010 0011 0100 0101 0110 0111 B</code>，这个二进制如何在内存中存储。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708105906.png" alt="image.png"></p>
+<p>解释一下为啥小端方式更适合处理：计算机读取肯定是从低地址读到高地址部分，比如 CPU 加法的时候，先读取低地址部分，然后相加，然后再读取高地址部分加和，这样更方便。</p>
+<h2 id="8-2-边界对齐"><a href="#8-2-边界对齐" class="headerlink" title="8.2 边界对齐"></a>8.2 边界对齐</h2><p>现代计算机通常是用字节编址，一个字节会对应一个地址。同时也支持按字、半字、按字节寻址。假设存储字长为 32 bit，那么一个字就是 32 bit，半字就是 16 bit。每次访存只能读写一个字。</p>
+<p>所谓边界对齐，就是说在内存的小端，字节，半字，字必须对齐：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708110735.png" alt="image.png"></p>
+<p>第二行是两个半字，那么第一行哪怕没填满也没关系。</p>
+<p>如何寻址？</p>
+<p>比如我现在要找到 3号字节，那就往后找就行了，没别的。如果我们要找到 2号半字，则 字节1 和 字节2 构成半字0，字节3 和填充位构成半字1，以此类推，最终找到了半字2。</p>
+<p>按字寻址的话，我们要找3号字，那第一行就是字0，第二行字1，第三行字2，最终找到了第四行也就是图里面的 字1。</p>
+<p>给出了字号或者半字号，如何找到起始字节地址？字的话是给字号左移两位，半字的话就是左移一位。</p>
+<p>边界对齐的好处？</p>
+<p>比如我们使用 C 语言定义了一个结构体，三个 char，三个 short，一个 int，就会按照图里面的方式存储，存储到第一个 short 的时候，即使第一个字最后的一个字节还有空余，也不会存储 short，而是直接换行将 short 存到一个半字里面。</p>
+<p>这样的好处就是如果我们读取一个 short ，只需要一次访存即可。但是如果我们用边界不对齐的方式：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708111523.png" alt="image.png"></p>
+<p>读取一个半字就可能需要读取两次内存，第一次读取半字1-1，第二次读取半字1-2。为啥？因为每次访存只能访问一个字，也就是一行。</p>
+<h1 id="9-浮点数"><a href="#9-浮点数" class="headerlink" title="9. 浮点数"></a>9. 浮点数</h1><h2 id="9-1-浮点数表示"><a href="#9-1-浮点数表示" class="headerlink" title="9.1 浮点数表示"></a>9.1 浮点数表示</h2><h3 id="9-1-1-浮点数表示"><a href="#9-1-1-浮点数表示" class="headerlink" title="9.1.1 浮点数表示"></a>9.1.1 浮点数表示</h3><p>定点数不能表示太大的数，范围有限，如何让计算机在有限的字节内存储更大的数据就是浮点数的作用。</p>
+<p>定点数的意思就是说小数点固定，要么在符号位后面，要么隐藏在最后面；浮点数的意思就小数点可以浮动。原理就是科学计数法。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708112646.png" alt="image.png"></p>
+<p>因为计算机是二进制，所以阶码的底通常是2，也有可能是 4 8 这种的；如果是10进制，3.24 * 10^4，意思就是 3.24 的小数点右移4位，或者说3.24 的数值位左移4位。二进制同理，N 就代表 M 的数值位左移 E 位（前提阶符是正的）。</p>
+<p>同时，根据阶码和尾数的bit数，可以确定出两个数的范围。</p>
+<h3 id="9-1-2-浮点数尾数规格化"><a href="#9-1-2-浮点数尾数规格化" class="headerlink" title="9.1.2 浮点数尾数规格化"></a>9.1.2 浮点数尾数规格化</h3><p>比如现在有个浮点数 <code>0,10;0.01001</code>，这个数有 9 bit，超过了 8bit，会导致最后一位 1 丢失导致精度损失，咋办？</p>
+<p>我们发现，这个浮点数的尾数部分的第一位是0，无意义，我们可以将尾数左移一位，那么相应的阶码就该-1，变成 <code>0,01</code>，最后结果不变。</p>
+<p>上面这种方法就叫<strong>左规</strong>。</p>
+<p>还有一种右规，就是将尾数右移保证最高位有效。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708114555.png" alt="image.png"></p>
+<p>比如这个，用双符号位计算，最后发现发生了溢出导致尾数最高位为0，这时就右规一下。</p>
+<h3 id="9-1-3-规格化浮点数的特点"><a href="#9-1-3-规格化浮点数的特点" class="headerlink" title="9.1.3 规格化浮点数的特点"></a>9.1.3 规格化浮点数的特点</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708120520.png" alt="image.png"></p>
+<p>这里特别强调：如果尾数是负数而且用补码表示，则规定尾数的最高位必须是0，这会导致规格化不同，比如将 <code>0.110;1.1110100</code> 规格化，后面的尾数就不能右规，因为负数补码右移高位要补1，不符合高位&#x3D;0的要求，所以要将尾数左规三位变成 <code>1.0100000</code>，然后阶码对应的-3，变成 <code>0.011;1.0100000</code></p>
+<h3 id="9-1-4-总结"><a href="#9-1-4-总结" class="headerlink" title="9.1.4 总结"></a>9.1.4 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708120949.png" alt="image.png"></p>
+<h2 id="9-2-IEEE-754"><a href="#9-2-IEEE-754" class="headerlink" title="9.2 IEEE 754"></a>9.2 IEEE 754</h2><h3 id="9-2-1-再说移码"><a href="#9-2-1-再说移码" class="headerlink" title="9.2.1 再说移码"></a>9.2.1 再说移码</h3><p>之前说移码就是在补码的基础上将符号位取反得到，这个定义不准确，移码的定义：移码&#x3D;真值+偏置值。8 bit 数如果将偏置值设置为 <code>2^(n - 1)</code> 也就是 128，就可以达到 移码 &#x3D; 补码符号位取反的效果。</p>
+<p>如果我们将偏置值设置为 127 也就是 <code>2^(n-1) - 1</code>，移码就会变成这样：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708160556.png" alt="image.png"></p>
+<p>原码的 -127 到 127 就对应了移码的 0 到 254。移码全 1 和 全 0 是两个特殊状态。</p>
+<h3 id="9-2-2-IEEE-754-标准"><a href="#9-2-2-IEEE-754-标准" class="headerlink" title="9.2.2 IEEE 754 标准"></a>9.2.2 IEEE 754 标准</h3><p>就是一套计算机处理浮点数的标准，有了这个标准，不同的计算机就可以用浮点数交换数据。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708161539.png" alt="image.png"></p>
+<p>区别：</p>
+<ul>
+<li>没有阶符了，数符提到了最前面</li>
+<li>阶码用移码表示</li>
+<li>这里千万注意了，前面的普通浮点数 <code>1,011;0.101</code>，尾数部分仅仅是最后面的 101，至于 0. 那可是符号位，也就是数符。IEEE 这个不一样，数符在最前面，所以后面所说的隐藏的 1. ，这个 1. 是真的数值上的 1. ，而不是说负的M。</li>
+</ul>
+<p>比如这个：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708162056.png" alt="image.png"></p>
+<p>我们在转化的时候，前面的阶码要减去偏移量才行，这里 float 的偏移量是 127，可以把阶码转化为十进制，然后用十进制减去 127。</p>
+<p>十进制转浮点数：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708162354.png" alt="image.png"></p>
+<p>浮点数转十进制：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708162515.png" alt="image.png"></p>
+<h3 id="9-2-3-浮点数最值"><a href="#9-2-3-浮点数最值" class="headerlink" title="9.2.3 浮点数最值"></a>9.2.3 浮点数最值</h3><p>普通最值：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708162806.png" alt="image.png"></p>
+<p>注：阶码真值 -126，是因为 -127 和 -128 的移码分别是 00000000 和 11111111，这两个数比较特殊，有其他用途。</p>
+<p>如果要表示比最小绝对值还要小的数，也是有可能的，就需要使用阶码全0 和 全1 的两种特殊状态。</p>
+<p>当阶码E全为0，尾数M不全为0时，表示非规格化小数，表示 <code>+- (0.xxxb)x2^(-126)</code>。这时强制规定尾数M最高位隐含0而不是1。</p>
+<p>当阶码E全为0，尾数M全为0，则表示真值 <code>+-0</code>。</p>
+<p>当阶码E全为1，尾数M全为0时，表示无穷大 <code>+-∞</code>。</p>
+<p>当阶码E全为1，尾数M不全为0时，表示非数值 <code>NaN</code>。比如 0&#x2F;0、∞-∞ 等非法运算就会得出这个。</p>
+<h3 id="9-2-4-总结"><a href="#9-2-4-总结" class="headerlink" title="9.2.4 总结"></a>9.2.4 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708163540.png" alt="image.png"></p>
+<h2 id="9-3-浮点数运算"><a href="#9-3-浮点数运算" class="headerlink" title="9.3 浮点数运算"></a>9.3 浮点数运算</h2><p>这个如果没有特别说，就不是 IEEE 754 了，毕竟 IEEE 最短都是 32 bit，多麻烦。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708164802.png" alt="image.png"></p>
+<p>计算结果不需要舍入：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708194525.png" alt="image.png"></p>
+<p>首先，X 和 Y 的二进制表示都是补码形式。然后第二步尾数相减也就是加上 Y 的补码的负数，最后得到 10.110001000，发现符号位变成了 10，说明前面的计算结果发生了溢出。规格化的时候，将其右移，然后前面符号位要补1，因为之前符号位最高位是1，说明是个负数，所以符号位补1。</p>
+<p>有舍入的情况：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708195102.png" alt="image.png"></p>
+<h2 id="9-4-浮点数强制类型转换"><a href="#9-4-浮点数强制类型转换" class="headerlink" title="9.4 浮点数强制类型转换"></a>9.4 浮点数强制类型转换</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708195245.png" alt="image.png"></p>
+<p>说一下为啥 32bit 情况下 long 或者 float 转 double 都不会精度丢失。因为 double 的尾数部分有 53bit，而 long 只有 32bit，所以不会丢失，同理 float。</p>
+<p>而 int 转 float 就会精度丢失，因为 int 有 32bit，抛去一个符号位还剩 31 bit。float 尾数部分有 23 位，加上隐藏的 1. 就有 24 bit，float 放不下 int。但是数据不会溢出，float 表示的范围要比 int 大。</p>
+<p>但是 float 转 int 就不行了，溢出是没跑了，如果 float 是个小数 0.0001，转为 int 就会转成 0，会损失精度。</p>
+<h2 id="9-5-总结"><a href="#9-5-总结" class="headerlink" title="9.5 总结"></a>9.5 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230708195734.png" alt="image.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-02-%E6%95%B0%E6%8D%AE%E7%9A%84%E8%A1%A8%E7%A4%BA%E5%92%8C%E8%BF%90%E7%AE%97/" rel="prev" title="02-数据的表示和运算">
+      <i class="fa fa-chevron-left"></i> 02-数据的表示和运算
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-04-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/" rel="next" title="04-存储系统">
+      04-存储系统 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E5%A5%87%E5%81%B6%E6%A0%A1%E9%AA%8C"><span class="nav-text">1. 奇偶校验</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E7%94%B5%E8%B7%AF%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-text">2. 电路基本原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E5%9B%9E%E5%BF%86-ALU"><span class="nav-text">2.1 回忆 ALU</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E6%9C%80%E5%9F%BA%E6%9C%AC%E7%9A%84%E9%80%BB%E8%BE%91%E8%BF%90%E7%AE%97"><span class="nav-text">2.2 最基本的逻辑运算</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E5%BC%82%E6%88%96%E9%97%A8%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-text">2.3 异或门的应用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E5%8A%A0%E6%B3%95%E5%99%A8%E8%AE%BE%E8%AE%A1"><span class="nav-text">3. 加法器设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E4%B8%80%E4%BD%8D%E5%85%A8%E5%8A%A0%E5%99%A8"><span class="nav-text">3.1 一位全加器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E4%B8%B2%E8%A1%8C%E5%8A%A0%E6%B3%95%E5%99%A8"><span class="nav-text">3.2 串行加法器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E5%B9%B6%E8%A1%8C%E5%8A%A0%E6%B3%95%E5%99%A8"><span class="nav-text">3.3 并行加法器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-%E5%B9%B6%E8%A1%8C%E8%BF%9B%E4%BD%8D%E5%8A%A0%E6%B3%95%E5%99%A8"><span class="nav-text">3.4 并行进位加法器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-%E8%A1%A5%E7%A0%81%E5%8A%A0%E5%87%8F%E8%BF%90%E7%AE%97%E5%99%A8"><span class="nav-text">3.5 补码加减运算器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-1-%E5%9F%BA%E6%9C%AC%E5%8A%A0%E6%B3%95%E5%99%A8"><span class="nav-text">3.5.1 基本加法器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-2-%E8%A1%A5%E7%A0%81%E5%8A%A0%E5%87%8F%E6%B3%95%E5%99%A8"><span class="nav-text">3.5.2 补码加减法器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-3-%E8%BF%90%E7%AE%97%E9%97%AE%E9%A2%98"><span class="nav-text">3.5.3 运算问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-4-%E6%A0%87%E5%BF%97%E4%BD%8D%E7%94%9F%E6%88%90"><span class="nav-text">3.5.4 标志位生成</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E7%A7%BB%E4%BD%8D%E8%BF%90%E7%AE%97"><span class="nav-text">4. 移位运算</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E7%AE%97%E6%95%B0%E7%A7%BB%E4%BD%8D"><span class="nav-text">4.1 算数移位</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-1-%E5%8E%9F%E7%A0%81%E7%9A%84%E7%AE%97%E6%95%B0%E7%A7%BB%E4%BD%8D"><span class="nav-text">4.1.1 原码的算数移位</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-2-%E8%A1%A5%E7%A0%81%E7%9A%84%E7%AE%97%E6%95%B0%E7%A7%BB%E4%BD%8D"><span class="nav-text">4.1.2 补码的算数移位</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-3-%E6%80%BB%E7%BB%93"><span class="nav-text">4.1.3 总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E9%80%BB%E8%BE%91%E7%A7%BB%E4%BD%8D"><span class="nav-text">4.2 逻辑移位</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E5%BE%AA%E7%8E%AF%E7%A7%BB%E4%BD%8D"><span class="nav-text">4.3 循环移位</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E6%80%BB%E7%BB%93"><span class="nav-text">4.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%AE%9A%E7%82%B9%E6%95%B0%E4%B9%98%E6%B3%95"><span class="nav-text">5. 定点数乘法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E5%8E%9F%E7%A0%81%E4%B8%80%E4%BD%8D%E4%B9%98%E6%B3%95"><span class="nav-text">5.1 原码一位乘法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-1-%E6%9C%BA%E5%99%A8%E8%BF%90%E7%AE%97"><span class="nav-text">5.1.1 机器运算</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-2-%E9%A2%98%E7%9B%AE"><span class="nav-text">5.1.2 题目</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E8%A1%A5%E7%A0%81%E4%B8%80%E4%BD%8D%E4%B9%98%E6%B3%95"><span class="nav-text">5.2 补码一位乘法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-1-%E4%B9%98%E6%B3%95%E5%99%A8%E7%BB%93%E6%9E%84"><span class="nav-text">5.2.1 乘法器结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-2-%E8%AE%A1%E7%AE%97%E6%B5%81%E7%A8%8B"><span class="nav-text">5.2.2 计算流程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E5%AE%9A%E7%82%B9%E6%95%B0%E9%99%A4%E6%B3%95"><span class="nav-text">6. 定点数除法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E5%8E%9F%E7%A0%81%E9%99%A4%E6%B3%95%E8%BF%90%E7%AE%97"><span class="nav-text">6.1 原码除法运算</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-1-%E6%81%A2%E5%A4%8D%E4%BD%99%E6%95%B0%E6%B3%95"><span class="nav-text">6.1.1 恢复余数法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-2-%E5%8A%A0%E5%87%8F%E4%BA%A4%E9%94%99%E6%B3%95"><span class="nav-text">6.1.2 加减交错法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-%E8%A1%A5%E7%A0%81%E9%99%A4%E6%B3%95%E8%BF%90%E7%AE%97-%E5%8A%A0%E5%87%8F%E4%BA%A4%E6%9B%BF%E6%B3%95"><span class="nav-text">6.2 补码除法运算-加减交替法</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-C%E8%AF%AD%E8%A8%80%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2"><span class="nav-text">7. C语言数据类型转换</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#8-%E6%95%B0%E6%8D%AE%E7%9A%84%E5%AD%98%E5%82%A8%E4%B8%8E%E6%8E%92%E5%88%97"><span class="nav-text">8. 数据的存储与排列</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#8-1-%E5%A4%A7%E5%B0%8F%E7%AB%AF%E6%A8%A1%E5%BC%8F"><span class="nav-text">8.1 大小端模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-2-%E8%BE%B9%E7%95%8C%E5%AF%B9%E9%BD%90"><span class="nav-text">8.2 边界对齐</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#9-%E6%B5%AE%E7%82%B9%E6%95%B0"><span class="nav-text">9. 浮点数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#9-1-%E6%B5%AE%E7%82%B9%E6%95%B0%E8%A1%A8%E7%A4%BA"><span class="nav-text">9.1 浮点数表示</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#9-1-1-%E6%B5%AE%E7%82%B9%E6%95%B0%E8%A1%A8%E7%A4%BA"><span class="nav-text">9.1.1 浮点数表示</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-1-2-%E6%B5%AE%E7%82%B9%E6%95%B0%E5%B0%BE%E6%95%B0%E8%A7%84%E6%A0%BC%E5%8C%96"><span class="nav-text">9.1.2 浮点数尾数规格化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-1-3-%E8%A7%84%E6%A0%BC%E5%8C%96%E6%B5%AE%E7%82%B9%E6%95%B0%E7%9A%84%E7%89%B9%E7%82%B9"><span class="nav-text">9.1.3 规格化浮点数的特点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-1-4-%E6%80%BB%E7%BB%93"><span class="nav-text">9.1.4 总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-2-IEEE-754"><span class="nav-text">9.2 IEEE 754</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#9-2-1-%E5%86%8D%E8%AF%B4%E7%A7%BB%E7%A0%81"><span class="nav-text">9.2.1 再说移码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-2-2-IEEE-754-%E6%A0%87%E5%87%86"><span class="nav-text">9.2.2 IEEE 754 标准</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-2-3-%E6%B5%AE%E7%82%B9%E6%95%B0%E6%9C%80%E5%80%BC"><span class="nav-text">9.2.3 浮点数最值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-2-4-%E6%80%BB%E7%BB%93"><span class="nav-text">9.2.4 总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-3-%E6%B5%AE%E7%82%B9%E6%95%B0%E8%BF%90%E7%AE%97"><span class="nav-text">9.3 浮点数运算</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-4-%E6%B5%AE%E7%82%B9%E6%95%B0%E5%BC%BA%E5%88%B6%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2"><span class="nav-text">9.4 浮点数强制类型转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-5-%E6%80%BB%E7%BB%93"><span class="nav-text">9.5 总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

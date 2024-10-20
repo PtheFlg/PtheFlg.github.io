@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="前面说过，设备独立性软件、设备驱动程、中断处理程序 三个都属于OS内核部分，也就是 IO系统或者叫 IO 核心子系统。 我们主要需要掌握和理解的功能是：IO调度、设备保护、假脱机技术、设备分配与回、缓冲区管理。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="13.IO核心子系统">
+<meta property="og:url" content="http://example.com/2023/07/12/OS-13-IO%E6%A0%B8%E5%BF%83%E5%AD%90%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="前面说过，设备独立性软件、设备驱动程、中断处理程序 三个都属于OS内核部分，也就是 IO系统或者叫 IO 核心子系统。 我们主要需要掌握和理解的功能是：IO调度、设备保护、假脱机技术、设备分配与回、缓冲区管理。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710211704.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710212016.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710212811.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710213339.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710214431.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710214627.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710215150.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710215355.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710215537.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710221124.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710221248.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710221419.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230711101418.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230711101513.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230711101800.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230711102033.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230711102416.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230711102623.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230711102851.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230711103752.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230711103916.png">
+<meta property="article:published_time" content="2023-07-12T15:37:41.000Z">
+<meta property="article:modified_time" content="2023-07-12T15:38:17.321Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710211704.png">
+
+<link rel="canonical" href="http://example.com/2023/07/12/OS-13-IO%E6%A0%B8%E5%BF%83%E5%AD%90%E7%B3%BB%E7%BB%9F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>13.IO核心子系统 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/12/OS-13-IO%E6%A0%B8%E5%BF%83%E5%AD%90%E7%B3%BB%E7%BB%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          13.IO核心子系统
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-07-12 23:37:41 / 修改时间：23:38:17" itemprop="dateCreated datePublished" datetime="2023-07-12T23:37:41+08:00">2023-07-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>前面说过，设备独立性软件、设备驱动程、中断处理程序 三个都属于OS内核部分，也就是 IO系统或者叫 IO 核心子系统。</p>
+<p>我们主要需要掌握和理解的功能是：IO调度、设备保护、假脱机技术、设备分配与回、缓冲区管理。</p>
+<span id="more"></span>
+
+<p>这些功能都和硬件没有关系，所以涉及不到设备驱动程序和中断处理程序。其中 假脱机技术（SPOOLing 技术）要是用到设备独立性软件的一些功能，所以一般在用户层软件实现。剩下的 IO调度、设备保护都在设备独立性软件实现。</p>
+<h1 id="1-IO调度"><a href="#1-IO调度" class="headerlink" title="1. IO调度"></a>1. IO调度</h1><p>就和其他的调度一模一样，算法都是类似的，比如磁盘有的算法：</p>
+<ul>
+<li>先来先服务算法</li>
+<li>最短寻道优先算法</li>
+<li>SCAN 算法</li>
+<li>C-SCAN 算法</li>
+<li>LOOK 算法</li>
+<li>C-LOOK 算法</li>
+</ul>
+<p>IO 调度也都差不多，比如打印机等设备也可以用用先来先服务、优先级算法、短作业优先算法来确定 IO 调度顺序。</p>
+<h1 id="2-设备保护"><a href="#2-设备保护" class="headerlink" title="2. 设备保护"></a>2. 设备保护</h1><p>很多操作系统会将设备看作一种特殊的文件，所以每个设备也会有对应的 FCB。当用户请求访问某个设备时，系统根据 FCB 中记录的信息来判断该用户是否有相应的访问权限，以此实现设备保护的功能。</p>
+<p>细节就看文件保护的内容。</p>
+<h1 id="3-假脱机技术-SPOOLing"><a href="#3-假脱机技术-SPOOLing" class="headerlink" title="3. 假脱机技术 SPOOLing"></a>3. 假脱机技术 SPOOLing</h1><h2 id="3-1-脱机技术"><a href="#3-1-脱机技术" class="headerlink" title="3.1 脱机技术"></a>3.1 脱机技术</h2><p>之前我们说过，最早的计算机需要输入纸带，计算机读取纸带的时间很长，会导致 CPU 性能浪费。所以后面在批处理阶段引入了<strong>脱机技术</strong>。</p>
+<p>程序员将纸带的内容通过 <strong>外围控制机</strong> 输入到磁带中，然后计算机读取磁带。完成操作后，计算机同样将内容写回磁带，然后使用 <strong>外围控制机</strong> 将磁带中的数据打回纸带。</p>
+<p>“脱机” 的意思就是，脱离主机的控制进行输入输出操作，输入输出使用 外围控制机 来实现，和计算机没有关系。</p>
+<p>好处就是缓和了 CPU 和纸带的速度差。同时，如果 CPU 忙碌，外围控制机也可以先将数据读入磁带。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710211704.png" alt="image.png"></p>
+<h2 id="3-2-假脱机技术"><a href="#3-2-假脱机技术" class="headerlink" title="3.2 假脱机技术"></a>3.2 假脱机技术</h2><p>就是用软件来模拟外围控制机。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710212016.png" alt="image.png"></p>
+<p>这里面，输入进程用来模拟输入端的外围控制机，当 IO 设备输入数据时，输入进程会首先将数据暂存到内存的输入缓冲区中，然后将数据放到输入井中，这个输入井就可以理解成输入时的磁带。至于输入缓冲区，那是外围控制机的缓存。</p>
+<p>输出也是同理，磁盘上的输出井就是输出时的磁带，要将数据输出到 IO 设备上，就需要通过输出进程将数据从输出井经过内存上的输出缓冲区，给输出设备。</p>
+<h2 id="3-3-共享打印机"><a href="#3-3-共享打印机" class="headerlink" title="3.3 共享打印机"></a>3.3 共享打印机</h2><p>SPOOLing 的一个应用就是共享打印机。之前说过，这类型的 IO 设备，用户进程1 在使用的时候，用户进程2 必须阻塞，如果一块用就会导致打印出来的东西串行。可不可以实现不阻塞用户进程2，先应答进程2 的请求，等到打印机空闲的时候自动开始打印进程2 的数据。</p>
+<p>使用 SPOOLing 的流程如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710212811.png" alt="image.png"></p>
+<p>当用户进程申请打印但是打印机正忙的时候，系统会马上答应进程请求，然后假脱机管理进程会为其做以下操作：</p>
+<ul>
+<li>在磁盘的输出井中为进程申请一个空闲的缓冲区（磁盘中），并将要打印的数据从用户进程放到缓冲区中。</li>
+<li>为用户进程申请一张空白的打印请求表，并将用户的打印请求填入表内，再将表挂到假脱机文件队列上。</li>
+</ul>
+<p>这个打印请求表，里面就记录了用户要打印啥东西，这个东西存在了输出井的什么位置等信息。当打印机空闲时，输出进程会从文件队列的队头取出一张打印申请表，然后根据里面的内容，从输出井中找到打印数据，将其发送到输出缓冲区，最后送给打印机打印。</p>
+<p>这样的话不管有多少个任务，系统都会马上应答，然后将任务细节挂到队列上，让输出进程依次执行。这种技术就将物理上的一个设备变为了逻辑上的多个设备。每个用户都认为自己独占着设备。</p>
+<h2 id="3-4-总结"><a href="#3-4-总结" class="headerlink" title="3.4 总结"></a>3.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710213339.png" alt="image.png"></p>
+<h1 id="4-设备的分配和回收"><a href="#4-设备的分配和回收" class="headerlink" title="4. 设备的分配和回收"></a>4. 设备的分配和回收</h1><h2 id="4-1-设备分配因素"><a href="#4-1-设备分配因素" class="headerlink" title="4.1 设备分配因素"></a>4.1 设备分配因素</h2><p><strong>设备固有属性</strong></p>
+<p>分为三类：独占设备、共享设备、虚拟设备。</p>
+<ul>
+<li>独占设备：一个时间段只能分配给一个进程，比如打印机</li>
+<li>共享设备：可以同时分配给多个进程使用，比如磁盘，各个进程往往是宏观上同时共享使用设备，而微观上交替使用。</li>
+<li>虚拟设备：比如 SPOOLing 虚拟出来的设备，典型的虚拟打印机。</li>
+</ul>
+<p><strong>设备分配算法</strong></p>
+<p>比如先来先服务、优先级高者优先、短任务优先 等等。这种从名字上就可以判断了。</p>
+<p><strong>设备分配的安全性</strong></p>
+<p>安全分配方式：为进程分配一个设备后就将进程阻塞，本次 IO 完成后才将其唤醒。比如使用打印机，按理说只需要将数据给打印机就行了，但是非得把进程阻塞，啥也不能干。优点是破坏了“请求和保持” 的条件，不会死锁；缺点是对于一个进程来说，CPU 和 IO 设备只能串行工作。</p>
+<p>不安全分配方式：进程发出 IO 请求后，系统为其分配 IO 设备，进程可以继续执行，之后还可以发送新的 IO 请求。只有某个 IO 请求得不到满足时才会阻塞。有点就是计算任务 和 IO 任务可以并行处理，缺点就是有可能发生死锁（回忆死锁避免、死锁检测、死锁解除）。</p>
+<h2 id="4-2-设备分配"><a href="#4-2-设备分配" class="headerlink" title="4.2 设备分配"></a>4.2 设备分配</h2><h3 id="4-2-1-静态分配-和-动态分配"><a href="#4-2-1-静态分配-和-动态分配" class="headerlink" title="4.2.1 静态分配 和 动态分配"></a>4.2.1 静态分配 和 动态分配</h3><p>静态分配就是如果进程在执行前不能为其分配所有的资源，进程就不能启动。很好理解。这种方式不会发生死锁，因为没有保持。</p>
+<p>动态分配指的是进程运行过程中动态申请设备资源。</p>
+<h3 id="4-2-2-设备分配管理的数据结构"><a href="#4-2-2-设备分配管理的数据结构" class="headerlink" title="4.2.2 设备分配管理的数据结构"></a>4.2.2 设备分配管理的数据结构</h3><p>一个树的结构：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710214431.png" alt="image.png"></p>
+<p>系统中可能不止一个通道，每个通道管理多个控制器，每个控制器管理多个设备。</p>
+<p>系统会为每个设备配置一个 <font color='red'>设备控制表 DCT</font>：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710214627.png" alt="image.png"></p>
+<p>说几个点：</p>
+<ul>
+<li>设备表示符：这个在前面一大章的设备独立性软件里面的 LUT 中说过，这个就是一个设备的唯一表示符。</li>
+<li>重复执行次数：就是说IO操作失败了，比如打印机卡纸了，CPU 不会马上认为当前操作失败，而是会重新几次。</li>
+<li>设备队列的队首指针：就是说如果多个进程等待这个软件，这些进程就会阻塞。系统会将这些阻塞进程的 PCB 挂到这个队列上。</li>
+</ul>
+<p>然后系统会给管道管理的控制器构建一个<font color='red'>控制器控制表 COCT</font>，系统根据这个表对控制器进行管理：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710215150.png" alt="image.png"></p>
+<p>这些和前面大同小异不解释。</p>
+<p>控制器上面还有通道，所以系统还会为每个通道构建一个 <font color='red'>通道控制表 CHCT</font>，根据这个对通道进行管理：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710215355.png" alt="image.png"></p>
+<p>同时操作系统自己还管理着全部的设备，系统中有一张 <font color='red'>系统设备表 SDT</font>，记录系统中全部设备的情况，每个设备对应一个表项：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710215537.png" alt="image.png"></p>
+<h3 id="4-2-3-设备分配的步骤"><a href="#4-2-3-设备分配的步骤" class="headerlink" title="4.2.3 设备分配的步骤"></a>4.2.3 设备分配的步骤</h3><ol>
+<li>进程直接请求一个物理设备（也就是直接给出物理设备名），系统根据物理设备名查找 SDT，去和表项里面的设备表示符对比，找对其 DCT。</li>
+<li>如果设备繁忙，则将进程的 PCB 挂到 DCT 的阻塞队列上，不忙就将其分配给进程。</li>
+<li>同时根据 DCT 的 <strong>指向控制器表的指针</strong> 找到对应控制器的 COCT，重复上面的步骤，忙则挂，不忙则将控制器分配给进程。</li>
+<li>然后再根据 COCT 的 <strong>指向通道表的指针</strong> 找到对应的 CHCT，同理重复操作。</li>
+</ol>
+<p>只有将 通道、控制器、设备 三个东西全部分配给进程的时候，才算是分配成功，然后启动 IO 设备进行数据传送。</p>
+<p>这种分配思路的问题就是：</p>
+<ol>
+<li>用户必须使用物理设备名也就是表示符，假设明天我的键盘换了，设备标识符变了，那我写的程序就不能用了。很麻烦。</li>
+<li>如果请求的物理设备繁忙，及时同类型的物理设备还有，我也必须等待阻塞。</li>
+</ol>
+<h3 id="4-2-4-步骤改进"><a href="#4-2-4-步骤改进" class="headerlink" title="4.2.4 步骤改进"></a>4.2.4 步骤改进</h3><p>建立逻辑设备名和物理设备名 的映射机制，用户编程时只需要提供逻辑设备名即可。</p>
+<ol>
+<li>根据进程请求的<font color='red'>逻辑设备名</font>查找 SDT（大部分时候这个逻辑设备名就是设备类型，比如我就是要请求键盘，啥键盘我管不着）。SDT 中每个表项都记录了该设备的类型。</li>
+<li>找到一个指定类型的、空闲的设备，将其分配给该进程。然后 OS 会在<font color='red'>逻辑设备表LUT</font> 中新增一个表项。如果同类型的全部设备都繁忙则阻塞该进程。</li>
+<li>然后的顺序就和之前一样了，根据这个设备的 DCT 找到 COCT，然后再找 CHCT，最后三个都分配则分配成功。</li>
+</ol>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710221124.png" alt="image.png"></p>
+<p>再说说 LUT：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710221248.png" alt="image.png"></p>
+<p>如果 LUT 是整个系统一张的话，不同用户之间就不能使用相同逻辑设备名的设备，这问题有点大，所以适合单用户操作系统。</p>
+<p>如果是多用户操作系统，那就给每个用户都分配一个 LUT 即可。</p>
+<h3 id="4-2-5-总结"><a href="#4-2-5-总结" class="headerlink" title="4.2.5 总结"></a>4.2.5 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710221419.png" alt="image.png"></p>
+<h1 id="5-缓冲区管理"><a href="#5-缓冲区管理" class="headerlink" title="5. 缓冲区管理"></a>5. 缓冲区管理</h1><p>缓冲区是一个存储区域，可以用专门的硬件寄存器实现，也可以用内存作为缓冲区。使用硬件的成本较高，容量也较小，一般用在对速度要求非常高的场合（比如快表）。一般情况下是利用内存作为缓冲区。“设备独立性软件” 的缓冲区管理就是要组织管理好这些缓冲区。</p>
+<h2 id="5-1-缓冲区作用"><a href="#5-1-缓冲区作用" class="headerlink" title="5.1 缓冲区作用"></a>5.1 缓冲区作用</h2><p>第一：缓和 CPU 与 IO 设备之间速度不匹配的矛盾。CPU 可以将数据写入到速度快的内存中，然后 CPU 去干别的事，磁盘再从内存中慢慢拿走数据。</p>
+<p>第二：减少对 CPU 的中断频率，放宽对 CPU 中断相应的时间的限制。就是说如果是字符型设备，每输入完一个字符就要向 CPU 发送一次中断信号，CPU 开销大。可以先将数据读入缓冲区。</p>
+<p>第三：解决数据粒度不匹配的问题。输出进程每次可以生成一块数据，但是 IO 设备只能输出一个字符。通过缓冲区就可以解决。</p>
+<p>第四：提高 IO 设备和 CPU 的并行性。</p>
+<h2 id="5-2-单缓冲"><a href="#5-2-单缓冲" class="headerlink" title="5.2 单缓冲"></a>5.2 单缓冲</h2><p>某个用户进程请求某种块设备读入若干块数据。采用单缓冲策略，OS 就会在内存中为其分配一个缓冲区（如果没有明说，默认缓冲区就是一个块）。</p>
+<p>当缓冲数据非空时，不能往缓冲区中冲入数据，只能从缓冲区把数据传出；当缓冲区为空时，可以忘缓冲区中冲入数据，但必须把缓冲区充满后，才能将数据读出。</p>
+<p>我们一般认为内存中有两个区域，一个是用户进程的工作区，一个是进程的缓冲区，数据读入的流程是块设备将数据冲入缓冲区，然后数据从缓冲区再到工作区，最后交给 CPU 处理。所以这种时候就可以计算 处理一块数据的平均用时。</p>
+<p>计算这玩意儿我们一般假定一个初始状态，分析下次到达相同状态需要多少时间，这个就是平均时间。</p>
+<p>一般来说假设的初始状态是 <strong>工作区满，缓冲区空</strong>，根据 CPU 处理时间 和 块设备冲入缓冲区的时间分为两种情况：</p>
+<p>第一种：T &gt; C:</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230711101418.png" alt="image.png"></p>
+<p>第二种：T &lt; C:</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230711101513.png" alt="image.png"></p>
+<p>所以平均耗时 &#x3D; MAX(C, T) + M。</p>
+<h2 id="5-3-双缓冲"><a href="#5-3-双缓冲" class="headerlink" title="5.3 双缓冲"></a>5.3 双缓冲</h2><p>流程和单缓冲几乎一样，这回内存中会有两块缓冲区。这种要计算处理一块数据的平均耗时也和之前一样，找一个初始状态：工作区空，其中一个缓冲区满，另一个缓冲区空。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230711101800.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230711102033.png" alt="image.png"></p>
+<p>所以平均耗时 &#x3D; MAX(T, C + M)</p>
+<h2 id="5-4-缓冲区用于通信"><a href="#5-4-缓冲区用于通信" class="headerlink" title="5.4 缓冲区用于通信"></a>5.4 缓冲区用于通信</h2><p>两台计算机 A 和 B 要进行通信，如果采用单缓冲的策略，A 先向自己的缓冲区中写入数据，然后发送给 B，B 接收到数据缓冲区不为空，必须等到 CPU 将数据处理完成后，缓冲区为空才能向缓冲区中写入数据发送给 A。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230711102416.png" alt="image.png"></p>
+<p>这种方式不能实现双向传输，A 不能在发送数据的同时接收到 B 的数据。</p>
+<p>如果使用双缓冲的方式，可以设置一个发送缓冲区，一个接收缓冲区，A 在往发送缓冲区中写的时候，B 也可以往自己的发送缓冲区中写，发送给 A 的接受缓冲区，然后 A 同时可以将数据发送给 B 的接受缓冲区，实现双向通讯。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230711102623.png" alt="image.png"></p>
+<h2 id="5-5-循环缓冲区"><a href="#5-5-循环缓冲区" class="headerlink" title="5.5 循环缓冲区"></a>5.5 循环缓冲区</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230711102851.png" alt="image.png"></p>
+<h2 id="5-6-缓冲池"><a href="#5-6-缓冲池" class="headerlink" title="5.6 缓冲池"></a>5.6 缓冲池</h2><p>这个东西由一大堆缓冲区组成，然后根据不同的类型构建三条不同的队列：</p>
+<ul>
+<li>空缓冲队列</li>
+<li>装满输入数据的缓冲队列（输入队列）</li>
+<li>装满输出数据的缓冲队列（输出队列）</li>
+</ul>
+<p>另外，根据缓冲区在实际运算中扮演的功能不同，又设置四种工作缓冲区：</p>
+<ul>
+<li>收容输入数据的工作缓冲区 （hin）</li>
+<li>用于提取输入数据的工作缓冲区（sin）</li>
+<li>用于收容输出数据的工作缓冲区（hout）</li>
+<li>用于提取输出数据的共奏缓冲区（sout）</li>
+</ul>
+<p>工作流程如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230711103752.png" alt="image.png"></p>
+<p>输入进程想要请求输入数据，从空缓冲队列的队头上取下来一个，放到 hin 中，设备将数据写入到这个空缓冲上，然后将空缓冲挂到 输入队列的队尾。</p>
+<p>计算进程想要取得一块已经输入的数据，需要从输入队列的队头上取下来一块满了的缓冲区，放到 sin 上，将数据提取到用户进程。然后缓冲区被取空，再将其放回空缓冲队列的队尾。</p>
+<p>计算进程想要将准备好的数据写入缓冲区，需要从空缓冲队列的队头取下来一个空缓冲区放到 hout 上，用户进程将数据写入到缓冲区中，然后挂到输出队列队尾。</p>
+<p>输出进程请求输出数据，就从输出队列的队头取下来一块缓冲区放到 sout 上，将数据提取到设备中，然后缓冲区空了，挂回空缓冲队列队尾。</p>
+<h2 id="5-7-总结"><a href="#5-7-总结" class="headerlink" title="5.7 总结"></a>5.7 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230711103916.png" alt="image.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/07/12/OS-12-IO%E8%AE%BE%E5%A4%87/" rel="prev" title="12.IO设备">
+      <i class="fa fa-chevron-left"></i> 12.IO设备
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/12/OS-14-%E7%A3%81%E7%9B%98/" rel="next" title="14.磁盘">
+      14.磁盘 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-IO%E8%B0%83%E5%BA%A6"><span class="nav-text">1. IO调度</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E8%AE%BE%E5%A4%87%E4%BF%9D%E6%8A%A4"><span class="nav-text">2. 设备保护</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E5%81%87%E8%84%B1%E6%9C%BA%E6%8A%80%E6%9C%AF-SPOOLing"><span class="nav-text">3. 假脱机技术 SPOOLing</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E8%84%B1%E6%9C%BA%E6%8A%80%E6%9C%AF"><span class="nav-text">3.1 脱机技术</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E5%81%87%E8%84%B1%E6%9C%BA%E6%8A%80%E6%9C%AF"><span class="nav-text">3.2 假脱机技术</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E5%85%B1%E4%BA%AB%E6%89%93%E5%8D%B0%E6%9C%BA"><span class="nav-text">3.3 共享打印机</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-%E6%80%BB%E7%BB%93"><span class="nav-text">3.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E8%AE%BE%E5%A4%87%E7%9A%84%E5%88%86%E9%85%8D%E5%92%8C%E5%9B%9E%E6%94%B6"><span class="nav-text">4. 设备的分配和回收</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E8%AE%BE%E5%A4%87%E5%88%86%E9%85%8D%E5%9B%A0%E7%B4%A0"><span class="nav-text">4.1 设备分配因素</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E8%AE%BE%E5%A4%87%E5%88%86%E9%85%8D"><span class="nav-text">4.2 设备分配</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-1-%E9%9D%99%E6%80%81%E5%88%86%E9%85%8D-%E5%92%8C-%E5%8A%A8%E6%80%81%E5%88%86%E9%85%8D"><span class="nav-text">4.2.1 静态分配 和 动态分配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-2-%E8%AE%BE%E5%A4%87%E5%88%86%E9%85%8D%E7%AE%A1%E7%90%86%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-text">4.2.2 设备分配管理的数据结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-3-%E8%AE%BE%E5%A4%87%E5%88%86%E9%85%8D%E7%9A%84%E6%AD%A5%E9%AA%A4"><span class="nav-text">4.2.3 设备分配的步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-4-%E6%AD%A5%E9%AA%A4%E6%94%B9%E8%BF%9B"><span class="nav-text">4.2.4 步骤改进</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-5-%E6%80%BB%E7%BB%93"><span class="nav-text">4.2.5 总结</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E7%BC%93%E5%86%B2%E5%8C%BA%E7%AE%A1%E7%90%86"><span class="nav-text">5. 缓冲区管理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E7%BC%93%E5%86%B2%E5%8C%BA%E4%BD%9C%E7%94%A8"><span class="nav-text">5.1 缓冲区作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E5%8D%95%E7%BC%93%E5%86%B2"><span class="nav-text">5.2 单缓冲</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E5%8F%8C%E7%BC%93%E5%86%B2"><span class="nav-text">5.3 双缓冲</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-4-%E7%BC%93%E5%86%B2%E5%8C%BA%E7%94%A8%E4%BA%8E%E9%80%9A%E4%BF%A1"><span class="nav-text">5.4 缓冲区用于通信</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-5-%E5%BE%AA%E7%8E%AF%E7%BC%93%E5%86%B2%E5%8C%BA"><span class="nav-text">5.5 循环缓冲区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-6-%E7%BC%93%E5%86%B2%E6%B1%A0"><span class="nav-text">5.6 缓冲池</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-7-%E6%80%BB%E7%BB%93"><span class="nav-text">5.7 总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="这里开始研究 CPU，CPU 里面之前说过里面有运算器和控制器，这一章就看看控制器支持的指令如何设计。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="08-指令系统">
+<meta property="og:url" content="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-08-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="这里开始研究 CPU，CPU 里面之前说过里面有运算器和控制器，这一章就看看控制器支持的指令如何设计。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714115013.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714160324.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714161440.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714162121.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714165228.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714165407.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714165540.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714165633.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714165707.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714170417.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714170749.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714171230.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714171759.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714231440.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714231609.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714231807.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714232909.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714234237.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714234339.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714235246.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714235643.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714235932.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715000624.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715114044.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715114354.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715114519.png">
+<meta property="article:published_time" content="2023-07-21T10:01:07.000Z">
+<meta property="article:modified_time" content="2023-07-21T10:08:52.070Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230714115013.png">
+
+<link rel="canonical" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-08-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>08-指令系统 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-08-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          08-指令系统
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-07-21 18:01:07 / 修改时间：18:08:52" itemprop="dateCreated datePublished" datetime="2023-07-21T18:01:07+08:00">2023-07-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">计算机组成原理</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这里开始研究 CPU，CPU 里面之前说过里面有运算器和控制器，这一章就看看控制器支持的指令如何设计。</p>
+<span id="more"></span>
+
+<h1 id="1-指令格式"><a href="#1-指令格式" class="headerlink" title="1. 指令格式"></a>1. 指令格式</h1><h2 id="1-1-指令的定义"><a href="#1-1-指令的定义" class="headerlink" title="1.1 指令的定义"></a>1.1 指令的定义</h2><p>指令是指示计算机执行某种操作的命令，是计算机运行的最小功能单位。</p>
+<p>一台计算机的所有指令的集合称为该计算机的指令系统，或者叫指令集。一台计算机只能执行自己的指令系统中的指令，不能执行其他系统的指令。</p>
+<p>比如最常见的 x86 架构 和 ARM 架构，就是用两套指令集，所以两种架构下的应用不能直接上对方的架构上运行。</p>
+<h2 id="1-2-指令格式"><a href="#1-2-指令格式" class="headerlink" title="1.2 指令格式"></a>1.2 指令格式</h2><p>一条指令就是计算机语言的一个语句，他是一组有意义的二进制代码。一条指令通常包含 <strong>操作吗字段</strong> 和 <strong>地址码字段</strong> 两部分：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714115013.png" alt="image.png"></p>
+<p>一条指令可能包含 0、1、2、3、4 个地址吗。根据地址数目不同，可以将指令分为 零地址指令、一地址指令、二地址指令。</p>
+<p>如果指令的位数不变的话，后面的地址码越多，寻址能力就越差。</p>
+<h3 id="1-2-1-零地址指令"><a href="#1-2-1-零地址指令" class="headerlink" title="1.2.1 零地址指令"></a>1.2.1 零地址指令</h3><p>不需要操作数，只进行一个操作，不需要指明对谁做。</p>
+<p>比如：空操作、停机、关中断指令。</p>
+<p>有些特殊的指令，比如对于堆栈的操作就可能不指明地址码，比如弹栈操作，默认就是把栈顶的元素弹出。</p>
+<h3 id="1-2-2-一地址指令"><a href="#1-2-2-一地址指令" class="headerlink" title="1.2.2 一地址指令"></a>1.2.2 一地址指令</h3><p>格式：<code>OP | A1</code></p>
+<p>只需要一个操作数，比如 + 1，- 1，取反，求补码等。类似单目运算。指令含义：<code>OP(A1) -&gt; A1</code>，意思就是，取出 A1 指向的主存的值（如果给一个地址加上括号，一般指的就是取值），进行 OP 操作，然后放回 A1 的主存位置。</p>
+<p>需要三次访存，第一次从内存中取出指令，第二次取出 A1 的值，第三次将结果放回 A1.</p>
+<p>另一种情况就是需要两个操作数，但是另一个操作数隐含在某个寄存器中，比如 ACC，典型的例子就是乘法操作。指令含义：<code>(ACC)OP(A1) -&gt; ACC</code>，就是从 A1 和 ACC 中取出值，进行 OP 操作，然后将结果写回ACC。</p>
+<p>这种需要两次访存，第一次从内存中找到指令，第二次从内存中拿到 A1 的值。</p>
+<h3 id="1-2-3-二地址指令"><a href="#1-2-3-二地址指令" class="headerlink" title="1.2.3 二地址指令"></a>1.2.3 二地址指令</h3><p>格式：<code>OP | A1 | A2</code></p>
+<p>常用于需要两个操作数的算术运算、逻辑运算相关指令，指令含义：<code>(A1)OP(A2) -&gt; A1</code>，很好理解不解释。</p>
+<p>需要四次访存，第一次拿指令，第二次拿 A1，第三次拿 A2，第四次存回 A1</p>
+<h3 id="1-2-4-三地址指令"><a href="#1-2-4-三地址指令" class="headerlink" title="1.2.4 三地址指令"></a>1.2.4 三地址指令</h3><p>格式：<code>OP | A1 | A2 | A3(结果)</code></p>
+<p>和二地址指令差不多，二地址指令默认运算结果写回 A1，这里是显式的指明结果存放到A3位置。指令含义：<code>(A1)OP(A2) -&gt; A3</code>.</p>
+<p>同样是四次访存，不说了。</p>
+<h3 id="1-2-5-四地址指令"><a href="#1-2-5-四地址指令" class="headerlink" title="1.2.5 四地址指令"></a>1.2.5 四地址指令</h3><p>格式：<code>OP | A1 | A2 | A3(结果) | A4(下址)</code></p>
+<p>和三地址差不多，最终结果也是写回 A3，然后 A4 指向了一下条要执行的指令，会将 PC（程序计数器） 的值改为 A4.</p>
+<h2 id="1-3-按指令长度分类"><a href="#1-3-按指令长度分类" class="headerlink" title="1.3 按指令长度分类"></a>1.3 按指令长度分类</h2><p>指令字长：一条指令的总长度（可能会变）</p>
+<p>机器字长：CPU 进行一次证书运算所能处理的二进制数据的位数，通常和 ALU 直接相关</p>
+<p>存储字长：一个存储单元中二进制妈的位数，通常和 MDR 位数相同</p>
+<p>根据指令字长可以分为：半字长指令、单字长指令、双字长指令。指的就是指令长度是机器字长的多少倍。指令字长会影响去指令所需时间。比如机器字长&#x3D;存储字长&#x3D;16bit，则取一条双字长指令需要两次访存。</p>
+<p>按字长是否可变又分为两类：定长指令字结构、变长指令字结构。定长指令就是指令的长度都相同，变长自然就是指令长度可能不同。</p>
+<h2 id="1-4-按操作吗长度分类"><a href="#1-4-按操作吗长度分类" class="headerlink" title="1.4 按操作吗长度分类"></a>1.4 按操作吗长度分类</h2><ul>
+<li>定长操作码：指令系统中所有指令的操作吗长度都相同，如果操作码有n位，则有 2^n 条指令。这种控制器的译码电路设计简单，灵活性较低。</li>
+<li>可变长操作码：指令系统中各指令的操作码长度可变。译码电路复杂，但灵活</li>
+</ul>
+<h2 id="1-5-按操作类型分类"><a href="#1-5-按操作类型分类" class="headerlink" title="1.5 按操作类型分类"></a>1.5 按操作类型分类</h2><p>数据传送，进行主存和CPU之间的数据传送：</p>
+<ul>
+<li>LOAD：把 <strong>存储器</strong> 的数据放到 <strong>寄存器</strong> 中</li>
+<li>STORE：将 <strong>寄存器</strong> 的数据放到 <strong>存储器</strong> 中</li>
+</ul>
+<p>算术逻辑操作，运算类：</p>
+<ul>
+<li>算数：加、减、乘、除、加一、减一、补码、浮点运算、十进制运算</li>
+<li>逻辑：与、或、非、异或、位操作、位测试、位清除、位求反</li>
+</ul>
+<p>移位操作，运算类：</p>
+<ul>
+<li>算术移位、逻辑移位、循环移位</li>
+</ul>
+<p>转移操作，程序控制类，改变程序执行的顺序：</p>
+<ul>
+<li>无条件 JMP</li>
+<li>条件转移 </li>
+<li>调用和返回</li>
+<li>陷入Trap 和 陷入指令</li>
+</ul>
+<p>输入输出操作，输入输出类，进行CPU和IO设备之间的数据传送：</p>
+<ul>
+<li>CPU 寄存器和IO端口之间的数据传送</li>
+</ul>
+<h2 id="1-6-总结"><a href="#1-6-总结" class="headerlink" title="1.6 总结"></a>1.6 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714160324.png" alt="image.png"></p>
+<h1 id="2-扩展操作码指令格式"><a href="#2-扩展操作码指令格式" class="headerlink" title="2. 扩展操作码指令格式"></a>2. 扩展操作码指令格式</h1><p>之前我们说过，根据指令的长度可以分为可变长指令和定长指令，根据操作码的长度又可以分为定长操作码和可变长操作码。</p>
+<p>这里我们就设计一种扩展操作码指令格式：定长指令字结构+可变长操作码。就是说指令长度固定，但是操作码位数可变，不同地址数的指令使用不同长度的操作码。</p>
+<h2 id="2-1-操作码全1扩展"><a href="#2-1-操作码全1扩展" class="headerlink" title="2.1 操作码全1扩展"></a>2.1 操作码全1扩展</h2><p>现规定：指令字长 16 位，每个地址码占 4 位。前 4 位为基本操作码字段 OP，另外3个4位长的地址字段 A1、A2、A3。</p>
+<p>根据前面说的，三地址情况下，操作码给我们留了四位，也就是可以设计 2^4 个指令。但是需要把 OP 全为 1 的这个情况留出来，用于扩展，也就是说三地址指令有 15 条。</p>
+<p>如果是二地址指令，OP 则有 8 位，通过前四位全 1 来判断，然后后面 4 位设计指令，同样能设计 15 条，留下全 1 作为扩展。</p>
+<p>以此类推，如果要设计 0 地址指令，OP 为 16 位，前面 12 位已经是全 1 了，最后四位就可以有 16 个指令了，无需留下扩展。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714161440.png" alt="image.png"></p>
+<p>这种方式需要注意：</p>
+<ul>
+<li>不允许短码是长吗的前缀，也就是短操作码不能与长操作码的前面部分代码相同。例子：3地址指令中，OP 不能和 2地址指令的OP前缀（也就是 1111）相同，否则CPU无法识别该指令是几地址指令。</li>
+<li>各指令的操作码一定不能重复。</li>
+</ul>
+<p>通常情况下，使用频率较高的指令，分配较短的操作码，可以更快识别；对使用频率较低的指令，分配较长的操作码，从而尽可能减少指令译码和分析的时间。</p>
+<h2 id="2-2-例题"><a href="#2-2-例题" class="headerlink" title="2.2 例题"></a>2.2 例题</h2><p>指令字长固定为 16 位，设计一套指令系统满足：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714162121.png" alt="image.png"></p>
+<p>解释一下：</p>
+<p>三地址指令 OP 只有 4 位，要求有 15 条，那就是 0000 - 1110，所以用 1111 作为扩展位。</p>
+<p>二地址指令 OP 也有 4 位（不算最高位的 1111），要求有 12 条，对应数字就是从 0 到 11 呗，那就是 <code>0000 - 1011</code>，还剩下四个：<code>1100 1101 1110 1111</code>，四个的最高位都是 <code>11</code>，所以说只需要扩展 <code>11</code> 就超出了二地址OP的范围。</p>
+<p>一地址指令 OP 有 6 位（最高位 111111 扩展），要求有 62 条，也就是从 0 - 61，也就是<code>000000 - 111101</code>，扩展 <code>11111</code> 五位即可超出范围，所以向下扩展 5 位。</p>
+<p>零地址不说了。</p>
+<p>CPU 执行流程：</p>
+<p>发现 OP 的前四位不是 1111，则三地址指令，去后面取三个地址码。如果发现前 4 位全为 1，则根据前8位判断指令类型。发现 OP 的前6位全1，则根据前 12 位判断指令类型。如果前 11 位全是1，则零地址指令。</p>
+<p>计算指令数目：</p>
+<p>假设地址长度为 n，上一层留出 m 种状态，下一层可扩展 m x 2^n 种状态。</p>
+<p>啥意思？三地址指令 OP 有 4 位，有 16 状态，只要其中 15 种，则留下了 1 种状态。二地址指令 OP 也是 4 位，则有 1 x 2^4 &#x3D; 16 种状态，但是只留其中 12 种，留下 4 种状态。一地址指令OP仍旧是4位，前面留下 4 种状态，则一地址指令可有 4 x 2^4 &#x3D; 64 种状态。</p>
+<p>留出状态是啥意思？比如二地址指令，OP 是 <code>0000 - 1011</code>，扩展出 <code>11</code>，也就是二地址指令把自己的4位OP的最后两位留给了下一层指令。</p>
+<h1 id="3-指令寻址"><a href="#3-指令寻址" class="headerlink" title="3. 指令寻址"></a>3. 指令寻址</h1><p>如何确定下一条指令的存放地址。之前说过 PC 会指向下一条要执行的指令地址，下一条指令：<code>(PC) + 1 -&gt; PC</code>.但是这样有问题：</p>
+<ul>
+<li>如果内存是按照字节编址，而不是存储字编址。一条指令可能占两个字节，PC 不能加1，而是加2.</li>
+<li>如果计算机采用变长指令字结构咋办？</li>
+</ul>
+<h2 id="3-1-顺序寻址"><a href="#3-1-顺序寻址" class="headerlink" title="3.1 顺序寻址"></a>3.1 顺序寻址</h2><p>所有指令都是按顺序放在主存中，只需要对 PC 做手脚即可实现指令寻址。总结就是 <code>(PC) + &quot;1&quot; -&gt; PC</code>。</p>
+<h3 id="3-1-1-按字编址-定长指令"><a href="#3-1-1-按字编址-定长指令" class="headerlink" title="3.1.1 按字编址 + 定长指令"></a>3.1.1 按字编址 + 定长指令</h3><p>假设一个指令刚好占一个存储字，主存还是按字编址，则：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714165228.png" alt="image.png"></p>
+<p>这种情况最简单，只需要简单的 PC + 1 即可。</p>
+<h3 id="3-1-2-按字节编址-定长指令"><a href="#3-1-2-按字节编址-定长指令" class="headerlink" title="3.1.2 按字节编址 + 定长指令"></a>3.1.2 按字节编址 + 定长指令</h3><p>还是上面的例子，存储字长为 2B，一条指令也是 2B，主存按字节编址，那么下一条指令就需要 PC + 2 才能得到：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714165407.png" alt="image.png"></p>
+<h3 id="3-1-3-字节编址-可变长指令"><a href="#3-1-3-字节编址-可变长指令" class="headerlink" title="3.1.3 字节编址 + 可变长指令"></a>3.1.3 字节编址 + 可变长指令</h3><p>CPU 会首先读入指令的一部分，判断指令是几地址指令，然后按顺序将后面的部分也读入 CPU，然后让 PC + n，n 就是读入的指令总字节数：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714165540.png" alt="image.png"></p>
+<h2 id="3-2-跳跃寻址"><a href="#3-2-跳跃寻址" class="headerlink" title="3.2 跳跃寻址"></a>3.2 跳跃寻址</h2><p>通过转移指令指出PC要指向的值。比如 JMP 指令就是无条件跳转指令，后面跟的地址码就是下一条指令的位置：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714165633.png" alt="image.png"></p>
+<h2 id="3-3-总结"><a href="#3-3-总结" class="headerlink" title="3.3 总结"></a>3.3 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714165707.png" alt="image.png"></p>
+<h1 id="4-数据寻址"><a href="#4-数据寻址" class="headerlink" title="4. 数据寻址"></a>4. 数据寻址</h1><p>运行一条指令时，确定本条指令的地址码指明的真实地址。这个 OS 的第八章内存管理一上来也讲过地址转换，将逻辑地址转为物理地址。</p>
+<p>总共有 10 种寻址方式：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714170417.png" alt="image.png"></p>
+<p>这个东西是计算机规定好的，所以指令中的地址码可以在前面加上 4bit 的寻址特征，用来表示后面这个地址应该如何寻址。</p>
+<p>指令格式如下：<code>OP | 寻址特征 4bit | 形式地址</code>，后面讲的时候默认用的就是一地址指令，多地址指令同样的道理，地址前面加4bit的特征即可。</p>
+<p>往后默认 指令字长 &#x3D; 机器字长 &#x3D; 存储字长。操作数为 3。顺便一提：后面出现的什么 (A)，这个括号指的是，根据 A 里面的值，去寻址，也就是 A 指向的那个主存的值。</p>
+<h2 id="4-1-直接寻址"><a href="#4-1-直接寻址" class="headerlink" title="4.1 直接寻址"></a>4.1 直接寻址</h2><p>形式地址 A 就是操作数的真实地址 EA，即 EA &#x3D; A：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714170749.png" alt="image.png"></p>
+<p>共需要两次访存：取指令、取操作数。</p>
+<p>优点：简单，指令执行阶段仅需要访问一次主存，不需要专门计算操作数的地址。</p>
+<p>缺点：A 的位数决定了该指令操作数的寻址范围，操作数的地址不易修改。</p>
+<h2 id="4-2-间接寻址"><a href="#4-2-间接寻址" class="headerlink" title="4.2 间接寻址"></a>4.2 间接寻址</h2><p>A 不指向操作数的真实地址，而是指向一个一块主存（理解为指针），这个主存指向了操作数的真实地址 EA，A指向内存的值 &#x3D; EA，即 <code>EA = (A)</code>：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714171230.png" alt="image.png"></p>
+<p>对的，我们甚至可以两次间接寻址，如果 (A) 的第一位是 1，则 (A) 指向下一层指针。分别访存 3 次和 4 次。</p>
+<p>优点：扩大寻址范围（有效地址EA 的位数大于形式地址 A 的位数），便于编制程序（用间接寻址可以方便的完成子程序返回）。</p>
+<p>缺点：指令执行阶段需多次访存，一次间址需要两次访存，多次寻址需要根据存储字的最高位确定几次访存。</p>
+<h2 id="4-3-寄存器寻址"><a href="#4-3-寄存器寻址" class="headerlink" title="4.3 寄存器寻址"></a>4.3 寄存器寻址</h2><p>就是操作数不放在主存里面，放在寄存器中，A指向的是一个寄存器的编号：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714171759.png" alt="image.png"></p>
+<h2 id="4-4-寄存器间接寻址"><a href="#4-4-寄存器间接寻址" class="headerlink" title="4.4 寄存器间接寻址"></a>4.4 寄存器间接寻址</h2><p>同样地址码 Ri 指向的是一个寄存器，但是寄存器里面记录的是操作数的主存地址，所以：<code>(Ri) = EA</code>：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714231440.png" alt="image.png"></p>
+<h2 id="4-5-隐含寻址"><a href="#4-5-隐含寻址" class="headerlink" title="4.5 隐含寻址"></a>4.5 隐含寻址</h2><p>不是明显的给出操作数的地址，而是在指令中隐含着着操作数的地址。这个在之前讲 ALU 的时候就遇到很多，默认另一个操作数是在 ACC 中：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714231609.png" alt="image.png"></p>
+<h2 id="4-6-立即寻址"><a href="#4-6-立即寻址" class="headerlink" title="4.6 立即寻址"></a>4.6 立即寻址</h2><p>就是说 A 在这种情况下代表的不是一个地址码，而是操作数本身，直接把操作数存在指令里面：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714231807.png" alt="image.png"></p>
+<h2 id="4-7-偏移寻址"><a href="#4-7-偏移寻址" class="headerlink" title="4.7 偏移寻址"></a>4.7 偏移寻址</h2><p>相对寻址、基址寻址、变址寻址 三种方式属于偏移寻址，都是在 A 的基础上偏移一段距离找到操作数地址，不同的就是偏移的起点不一样：</p>
+<ul>
+<li>基址寻址：以程序的起始存放位置作为“起点”</li>
+<li>变址寻址：程序员自己决定从哪里作为“起点”</li>
+<li>相对寻址：以程序计数器 PC 所指向的地址作为”起点“</li>
+</ul>
+<h3 id="4-7-1-基址寻址"><a href="#4-7-1-基址寻址" class="headerlink" title="4.7.1 基址寻址"></a>4.7.1 基址寻址</h3><p>将 CPU 中 <strong>基址寄存器（BR）</strong> 的内容加上指令格式中的形式地址 A，而形成的操作数有效地址，即：<code>EA = (BR) + A</code>。这个就是 OS 里面我们最早说的那种寻址方式（OS里面管它叫重定位寄存器），以程序存放位置的起点为准往后偏移，BR 里面存的就是程序存放位置的起点。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714232909.png" alt="image.png"></p>
+<p>注意第二个，有的计算机不会专门设计 BR，会用通用寄存器代替 BR，指令里面就会指明哪个寄存器里面存了基址。</p>
+<p>优点：可以扩大寻址范围；便于程序“浮动”，方便实现多到程序并发运行。这个好理解，就是说如果程序装入内存的位置变了，程序的指令不需要更改，只需要更改BR即可。BR的值会存放在PCB中作为进程运行环境。</p>
+<p>基址寄存器是面向操作系统的，内容由操作系统或管理程序确定。程序运行过程中，基址寄存器的内容不变，形式地址可变。</p>
+<p>汇编语言可以直接操作通用寄存器，但是如果某个寄存器被我们指定为BR，我们也是不能操作的，只要是用于存储基址的东西，只能由操作系统管理。</p>
+<h3 id="4-7-2-变址寻址"><a href="#4-7-2-变址寻址" class="headerlink" title="4.7.2 变址寻址"></a>4.7.2 变址寻址</h3><p>有效地址 EA 等于指令字中的形式地址A与 <strong>变址寄存器IX</strong> 的内容相加之和，即：<code>EA = (IX) + A</code>，其中 IX 可为变址寄存器（专用），也可以用通用寄存器代替，这个和基址寻址一样。</p>
+<p>他和基址寻址的区别在于：IX 的值由我们自己决定，我们来让他偏移多少位，而 BR 是只能由操作系统管理；同时形式地址 A 被我们看作基地址。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714234237.png" alt="image.png"></p>
+<p>如何理解把 A 视作基地址？看下面这个例子：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714234339.png" alt="image.png"></p>
+<p>如何实现循环访问数组？着重看 2、3、4 指令：一开始 #2指令让 形式地址7上的操作数和 ACC 里面的数相加，然后存回 ACC，一开始 IX 是0，也就是 #2指令会取到 #7的数据，然后 IX 累加变成 1，然后比较，发现没有满足条件，继续循环。</p>
+<p>然后第二轮，#2指令还是要拿形式地址7 的数据，但是 IX 为1，也就是在 #7 的基础上往后偏移移位，也就访问到了 #8 的数据（数组的第二个数），然后往后循环。</p>
+<p>所以说 #7 地址在这里可以理解成一个数组的基地址，往后通过 IX 来实现向后偏移访问数组后面的数据。</p>
+<p>优点：数组处理过程中，可设定 A 为数组的首地址，不断改变变址寄存器 IX 的内容，便可以很容易形成数组中任意数据的地址，特别<font color='red'>适合编制循环程序</font>.</p>
+<h3 id="4-7-3-基址-amp-变址复合寻址"><a href="#4-7-3-基址-amp-变址复合寻址" class="headerlink" title="4.7.3 基址 &amp; 变址复合寻址"></a>4.7.3 基址 &amp; 变址复合寻址</h3><p>这个很好理解，之前的例子里面首地址是0，如果首地址不是0，形式地址A还需要通过 BR 来确定 EA 的值，然后 IX 接着累加实现往后访问。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714235246.png" alt="image.png"></p>
+<p>我们可以把各种寻址方式看作是一种函数，输入形式地址，返回物理地址，所以各种寻址方式复合使用很是常见。</p>
+<h3 id="4-7-4-相对寻址"><a href="#4-7-4-相对寻址" class="headerlink" title="4.7.4 相对寻址"></a>4.7.4 相对寻址</h3><p>这个很好理解了，就是在 PC 的基础上偏移。把 PC 的内容加上指令格式中的形式地址 A 而形成的操作数有效地址，即：<code>EA = (PC) + A</code>，其中 A 是相对于 PC 的偏移量，可正可负，<font color='red'>补码表示</font>.</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714235643.png" alt="image.png"></p>
+<p>这个错误注意了，A 是相对于下一条指令的偏移量，因为指令一被拿出来，PC自动就加一了。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230714235932.png" alt="image.png"></p>
+<p>这个例子很好理解， #M+3 指令要跳转回循环开头，需要往回偏移4个指令（为啥是4个，因为执行 M+3 的时候 PC 就已经指向了 M+4 了）。</p>
+<p>这种寻址的优点是：操作数的地址不是固定不变的，随着 PC 的变化而变化，并且指令地址之间总是相差一个固定值，因此便于程序浮动（一段代码在程序内部浮动），这种寻址广泛用于跳转指令。</p>
+<p>浮动这个在基址寻址里面也说过，基址寻址中的浮动说的是整个进程在内存中浮动，这个说的是一段指令在程序内部浮动。</p>
+<h3 id="4-7-5-如何实现判断"><a href="#4-7-5-如何实现判断" class="headerlink" title="4.7.5 如何实现判断"></a>4.7.5 如何实现判断</h3><p>判断：<code>if(a &gt; b) &#123;...&#125; else &#123;...&#125;</code></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715000624.png" alt="image.png"></p>
+<h2 id="4-8-堆栈寻址"><a href="#4-8-堆栈寻址" class="headerlink" title="4.8 堆栈寻址"></a>4.8 堆栈寻址</h2><p>堆栈式存储器（或者专用寄存器组）中一块特定的按“先进先出”原则管理的存储器，该区域中被读写单元的地址是用一个特定的寄存器给出的，这个寄存器叫<font color='red'>堆栈指针 SP</font>。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715114044.png" alt="image.png"></p>
+<p>注意一下：执行弹栈以后SP需要加一指向下一个栈顶元素。入栈的时候 SP - 1 指向上一个空位置，然后将元素放入。</p>
+<p>如果堆栈是用寄存器实现的，就是硬堆栈，如果只是在缓存里开辟一块空间，那就是软堆栈：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715114354.png" alt="image.png"></p>
+<h2 id="4-9-总结"><a href="#4-9-总结" class="headerlink" title="4.9 总结"></a>4.9 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715114519.png" alt="image.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-07-%E5%AD%98%E5%82%A8%E5%99%A8/" rel="prev" title="07-存储器">
+      <i class="fa fa-chevron-left"></i> 07-存储器
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-09-%E6%9C%BA%E5%99%A8%E7%BA%A7%E4%BB%A3%E7%A0%81/" rel="next" title="09-机器级代码">
+      09-机器级代码 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F"><span class="nav-text">1. 指令格式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E6%8C%87%E4%BB%A4%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="nav-text">1.1 指令的定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F"><span class="nav-text">1.2 指令格式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-1-%E9%9B%B6%E5%9C%B0%E5%9D%80%E6%8C%87%E4%BB%A4"><span class="nav-text">1.2.1 零地址指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-2-%E4%B8%80%E5%9C%B0%E5%9D%80%E6%8C%87%E4%BB%A4"><span class="nav-text">1.2.2 一地址指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-3-%E4%BA%8C%E5%9C%B0%E5%9D%80%E6%8C%87%E4%BB%A4"><span class="nav-text">1.2.3 二地址指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-4-%E4%B8%89%E5%9C%B0%E5%9D%80%E6%8C%87%E4%BB%A4"><span class="nav-text">1.2.4 三地址指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-5-%E5%9B%9B%E5%9C%B0%E5%9D%80%E6%8C%87%E4%BB%A4"><span class="nav-text">1.2.5 四地址指令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E6%8C%89%E6%8C%87%E4%BB%A4%E9%95%BF%E5%BA%A6%E5%88%86%E7%B1%BB"><span class="nav-text">1.3 按指令长度分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-%E6%8C%89%E6%93%8D%E4%BD%9C%E5%90%97%E9%95%BF%E5%BA%A6%E5%88%86%E7%B1%BB"><span class="nav-text">1.4 按操作吗长度分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-5-%E6%8C%89%E6%93%8D%E4%BD%9C%E7%B1%BB%E5%9E%8B%E5%88%86%E7%B1%BB"><span class="nav-text">1.5 按操作类型分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-6-%E6%80%BB%E7%BB%93"><span class="nav-text">1.6 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E6%89%A9%E5%B1%95%E6%93%8D%E4%BD%9C%E7%A0%81%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F"><span class="nav-text">2. 扩展操作码指令格式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E6%93%8D%E4%BD%9C%E7%A0%81%E5%85%A81%E6%89%A9%E5%B1%95"><span class="nav-text">2.1 操作码全1扩展</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E4%BE%8B%E9%A2%98"><span class="nav-text">2.2 例题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E6%8C%87%E4%BB%A4%E5%AF%BB%E5%9D%80"><span class="nav-text">3. 指令寻址</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E9%A1%BA%E5%BA%8F%E5%AF%BB%E5%9D%80"><span class="nav-text">3.1 顺序寻址</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-1-%E6%8C%89%E5%AD%97%E7%BC%96%E5%9D%80-%E5%AE%9A%E9%95%BF%E6%8C%87%E4%BB%A4"><span class="nav-text">3.1.1 按字编址 + 定长指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-2-%E6%8C%89%E5%AD%97%E8%8A%82%E7%BC%96%E5%9D%80-%E5%AE%9A%E9%95%BF%E6%8C%87%E4%BB%A4"><span class="nav-text">3.1.2 按字节编址 + 定长指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-3-%E5%AD%97%E8%8A%82%E7%BC%96%E5%9D%80-%E5%8F%AF%E5%8F%98%E9%95%BF%E6%8C%87%E4%BB%A4"><span class="nav-text">3.1.3 字节编址 + 可变长指令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E8%B7%B3%E8%B7%83%E5%AF%BB%E5%9D%80"><span class="nav-text">3.2 跳跃寻址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E6%80%BB%E7%BB%93"><span class="nav-text">3.3 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E6%95%B0%E6%8D%AE%E5%AF%BB%E5%9D%80"><span class="nav-text">4. 数据寻址</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E7%9B%B4%E6%8E%A5%E5%AF%BB%E5%9D%80"><span class="nav-text">4.1 直接寻址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E9%97%B4%E6%8E%A5%E5%AF%BB%E5%9D%80"><span class="nav-text">4.2 间接寻址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E5%AF%84%E5%AD%98%E5%99%A8%E5%AF%BB%E5%9D%80"><span class="nav-text">4.3 寄存器寻址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E5%AF%84%E5%AD%98%E5%99%A8%E9%97%B4%E6%8E%A5%E5%AF%BB%E5%9D%80"><span class="nav-text">4.4 寄存器间接寻址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E9%9A%90%E5%90%AB%E5%AF%BB%E5%9D%80"><span class="nav-text">4.5 隐含寻址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-6-%E7%AB%8B%E5%8D%B3%E5%AF%BB%E5%9D%80"><span class="nav-text">4.6 立即寻址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-7-%E5%81%8F%E7%A7%BB%E5%AF%BB%E5%9D%80"><span class="nav-text">4.7 偏移寻址</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-7-1-%E5%9F%BA%E5%9D%80%E5%AF%BB%E5%9D%80"><span class="nav-text">4.7.1 基址寻址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-7-2-%E5%8F%98%E5%9D%80%E5%AF%BB%E5%9D%80"><span class="nav-text">4.7.2 变址寻址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-7-3-%E5%9F%BA%E5%9D%80-amp-%E5%8F%98%E5%9D%80%E5%A4%8D%E5%90%88%E5%AF%BB%E5%9D%80"><span class="nav-text">4.7.3 基址 &amp; 变址复合寻址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-7-4-%E7%9B%B8%E5%AF%B9%E5%AF%BB%E5%9D%80"><span class="nav-text">4.7.4 相对寻址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-7-5-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%88%A4%E6%96%AD"><span class="nav-text">4.7.5 如何实现判断</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-8-%E5%A0%86%E6%A0%88%E5%AF%BB%E5%9D%80"><span class="nav-text">4.8 堆栈寻址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-9-%E6%80%BB%E7%BB%93"><span class="nav-text">4.9 总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

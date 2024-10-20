@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="控制器 CU 设计：硬布线、微程序。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="11-控制器设计">
+<meta property="og:url" content="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-11-%E6%8E%A7%E5%88%B6%E5%99%A8%E8%AE%BE%E8%AE%A1/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="控制器 CU 设计：硬布线、微程序。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718104030.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718105414.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718110554.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718111002.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718112010.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718112519.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718152728.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718153000.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718153140.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718153520.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718153846.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718154331.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718154513.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718155059.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718155926.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718160128.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718161410.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718162940.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718165230.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718165332.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718174322.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718175221.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718180017.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718180058.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718180307.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718180744.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718181046.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718181142.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718215723.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718220118.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718220350.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718221302.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718221607.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718221743.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718221852.png">
+<meta property="article:published_time" content="2023-07-21T10:01:45.000Z">
+<meta property="article:modified_time" content="2023-07-21T10:10:21.535Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718104030.png">
+
+<link rel="canonical" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-11-%E6%8E%A7%E5%88%B6%E5%99%A8%E8%AE%BE%E8%AE%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>11-控制器设计 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-11-%E6%8E%A7%E5%88%B6%E5%99%A8%E8%AE%BE%E8%AE%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          11-控制器设计
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-07-21 18:01:45 / 修改时间：18:10:21" itemprop="dateCreated datePublished" datetime="2023-07-21T18:01:45+08:00">2023-07-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">计算机组成原理</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>控制器 CU 设计：硬布线、微程序。</p>
+<span id="more"></span>
+
+<h1 id="1-控制器设计-硬布线设计"><a href="#1-控制器设计-硬布线设计" class="headerlink" title="1. 控制器设计-硬布线设计"></a>1. 控制器设计-硬布线设计</h1><h2 id="1-1-回顾"><a href="#1-1-回顾" class="headerlink" title="1.1 回顾"></a>1.1 回顾</h2><p>巨恶心：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718104030.png" alt="image.png"></p>
+<p>这张图里面的重点：</p>
+<ul>
+<li>微操作和微命令：微操作就是之前说的 <code>(PC) -&gt; MAR</code> 这种东西，如何实现这个微操作，CU 应该如何对 PC 和 MAR 发出控制信号，这个就是微命令。</li>
+<li><code>FE IND EX INT</code> 四个状态分别对应了之前说过的四个状态寄存器，用来记录当前指令执行到哪个周期了，这个要记住，后面要用</li>
+<li>图里面使用了定长机器周期，就是每个周期所需的时钟频率相等，如果占不满，就往后安排微操作。定长的机器周期到底要设计多长，要看可能出现的最大节拍数（通常是以访存所需要的节拍数为准）</li>
+</ul>
+<p>所以我们的问题就是，CU 如何在已知指令 OP、当前机器周期、节拍信号、机器状态条件 的情况下，确定发出哪些 <strong>微命令</strong>。</p>
+<h2 id="1-2-硬布线控制器"><a href="#1-2-硬布线控制器" class="headerlink" title="1.2 硬布线控制器"></a>1.2 硬布线控制器</h2><p>直接看图：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718105414.png" alt="image.png"></p>
+<p>解释一下：</p>
+<p>首先，需要把 IR 中的 Op 给 CU 才行，假设 Op 有 n 位，则对应 2^n 种指令，所以操作码译码器的作用就是输入 n 条线，输出 2^n 条线到 CU，用来表示全部指令。比如，n 为 4，输入 0010，则译码器的第 3 根线（#2）就需要给 CU 一个信号，CU 就知道了 Op 是啥了。</p>
+<p>CU 还需要通过四个触发器来判断当前指令执行到哪个周期了，所以需要把 FE、IND、EX、INT 四个连到 CU 上，图里面也说了，这四个其实在 CU 内部，只是这里为了符合意思，就这么画了。</p>
+<p>然后看左边节拍发生器，假设我们这里是定长机器周期，每个机器周期包含四个节拍，则节拍发生器就会有 <code>T0, T1, T2, T3</code> 四条线连接到 CU。在一个机器周期内，T0 给信号，说明当前处于第一个节拍，T1 给信号，说明在第二个节拍，以此类推，当 T3 给了信号，当前机器周期处在最后一个节拍，周期也就结束了，下一个机器周期又会从 T0 开始给信号。</p>
+<p>绿色的不说了。</p>
+<p>最先面的红色玩意，每条线都会对应一个微命令也就是微操作，比如让 C1 对应的微操作就是 <code>(PC) -&gt; MAR</code>，则让 C1 连到 <code>PCout</code> 和 <code>MARin</code> 即可。</p>
+<p>那么 CU 如何知道什么时候该启动 C1 ？C1 该如何设计？</p>
+<p>所有指令的取指周期，T0 节拍下必须要完成 <code>(PC) -&gt; MAR</code>，则 <code>C1 = FE 与(点) T0</code>，也就是说，当节拍处在 T0 且 指令周期是取指（FE &#x3D; 1）的时候，才会让 C1 启动。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718110554.png" alt="image.png"></p>
+<p>这个很简单，因为只有在 T0 &amp; FE 的时候才需要 PC 和 MAR 连通，但是比如 <code>M(MAR) -&gt; MDR</code> 这种指令，在多个指令周期内都可能被执行，这个咋设计？</p>
+<p>别说话，看图：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718111002.png" alt="image.png"></p>
+<p>稍微解释一点，全部的我也看不懂，看懂一点就得了：</p>
+<p>来看逻辑表达式的前面：<code>FE &amp; T1</code>，这就是说，如果当前处于 取指周期且在T1节拍下，则发出该微指令。这个很好理解。FE 的 T0 是 <code>(PC) -&gt; MAR</code>，T1 自然就是顺着 MAR 取指。</p>
+<p>在看最后一点：<code>EX &amp; T1 &amp;(ADD | LDA)</code>，就是说，如果当前处于指令执行阶段，而且在 T1 节拍，执行的指令还是 ADD （）或者 LDA（将数据从主存读入 ACC 寄存器）情况下，接通线路执行微操作。</p>
+<p>顺着这俩逻辑看看图，图里面的蓝色的线就来自上面的操作码译码器。</p>
+<h2 id="1-3-硬布线控制器设计"><a href="#1-3-硬布线控制器设计" class="headerlink" title="1.3 硬布线控制器设计"></a>1.3 硬布线控制器设计</h2><p>这个玩意就是说，已知我们会用到哪些指令，然后我们自己设计一个硬布线控制器，看看每个微操作电路应该怎么弄，如何确定一个微操作的逻辑表达式。</p>
+<p>大体分为四个步骤：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718112010.png" alt="image.png"></p>
+<p>我们这里为了省事，就假设采用同步控制方式（定长机器周期），几个机器周期有三个节拍。</p>
+<h3 id="1-3-1-分析各阶段微操作序列"><a href="#1-3-1-分析各阶段微操作序列" class="headerlink" title="1.3.1 分析各阶段微操作序列"></a>1.3.1 分析各阶段微操作序列</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718112519.png" alt="image.png"></p>
+<p>这里首次引入了机器状态寄存器，就是 <code>BAN X</code> 的微操作，写的是：<code>A0 . Ad(IR) + A0(反).(PC) -&gt; PC</code>，意思就是当 A0 也就是符号位为 1（ACC是负数）时，将 IR 里面的地址码送去 PC，或者 A0 是0的时候，就把 PC 送去 PC 也就是不变。</p>
+<p>其中标红的 <code>M(MAR) -&gt; MDR</code>，就是各个指令周期都会用到的微操作，设计就会比较复杂。需要考虑不同指令周期和不同指令执行。</p>
+<p>我们已经确定了才用定长机器周期的方式，每个机器周期三个节拍，所以第二步略过，直接进入第三步。</p>
+<h3 id="1-3-2-安排微操作时序"><a href="#1-3-2-安排微操作时序" class="headerlink" title="1.3.2 安排微操作时序"></a>1.3.2 安排微操作时序</h3><p>安排这个需要三个原则：</p>
+<ul>
+<li>微操作的先后顺序不能随便更改</li>
+<li>被控对象不同的微操作尽量安排在一个节拍内完成</li>
+<li>占用时间较短的微操作尽量安排在一个节拍内完成，并允许有先后顺序</li>
+</ul>
+<p>根据这三个原则，安排一下取指周期的时序：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718152728.png" alt="image.png"></p>
+<p>1 和 2 两步被控对象不同，所以可以安排到一个周期内完成，3 和 6 不解释，同样是被控对象不同，看看最后一个 4 和 5，4 和 5 只是 CPU 内部寄存器的流动，CPU 内寄存器数据传输速度非常快，所以可以将两步安排到一个周期内。但是第三步不行，需要访问主存，必须一个时钟周期才能保证微操作的完成。</p>
+<p>再看看间址周期：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718153000.png" alt="image.png"></p>
+<p>这个很简单，不说了。最后看看执行周期：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718153140.png" alt="image.png"></p>
+<h3 id="1-3-3-电路设计"><a href="#1-3-3-电路设计" class="headerlink" title="1.3.3 电路设计"></a>1.3.3 电路设计</h3><p>分为三步：</p>
+<ul>
+<li>列出操作时间表</li>
+<li>写出微操作命令的最简表达式</li>
+<li>画出逻辑图</li>
+</ul>
+<p>首先列出操作时间表，取指周期；</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718153520.png" alt="image.png"></p>
+<p>最后两行，I 指的是如果发现指令里面存在形式地址，则 <code>1 -&gt; IND</code>，让 CU 进入间址周期；如果没有间址，则 <code>1 -&gt; EX</code> 直接进入执行阶段。</p>
+<p>前面的非访存指令肯定不会用到间址，所以不为1，后面的访存指令可能会进入间址阶段，或者他们的地址码就是直接地址，也不需要进入间址阶段。</p>
+<p>再来看看间址周期时间表：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718153846.png" alt="image.png"></p>
+<p>最后面的 IND 取反是啥意思？就是说间址周期可能需要进行多次访存，比如他是一个多层的间址，完成这一步只是将第一层间址拼到了 IR 上，所以如果 IND 如果还是 1 的话，下一步就需要循环这个间址周期，知道找到了最终的直接地址，才能将 IND 设为 0，然后 <code>1 -&gt; EX</code>。</p>
+<p>最后看看执行周期的操作时间表：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718154331.png" alt="image.png"></p>
+<p>那列出这个表有啥用呢？可以根据这些表去找逻辑表达式，比如 <code>M(MAR) -&gt; MDR</code> 这个微操作，把它在表里出现的位置都找出来：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718154513.png" alt="image.png"></p>
+<p>看图，这个微操作会在：</p>
+<ul>
+<li>FE且T1 的时候被执行</li>
+<li>IND且T1且指令是 访存指令时执行</li>
+<li>EX 且 T1 且指令是 ADD 和 LDA 时执行</li>
+</ul>
+<p>根据这三个条件，就可以推出下面那个巨长的式子。经过化简，就是下面那个 T1 开头的东西。</p>
+<h2 id="1-4-总结"><a href="#1-4-总结" class="headerlink" title="1.4 总结"></a>1.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718155059.png" alt="image.png"></p>
+<h1 id="2-微程序控制器"><a href="#2-微程序控制器" class="headerlink" title="2. 微程序控制器"></a>2. 微程序控制器</h1><h2 id="2-1-设计思路"><a href="#2-1-设计思路" class="headerlink" title="2.1 设计思路"></a>2.1 设计思路</h2><p>之前我们说过，每个指令的机器周期内都会有不同的微操作，微程序的思路就是，按照节拍划分，将一个节拍内完成的所有微操作打包成一个微指令（注意，这叫微指令，而不是微命令，微命令说的是为了实现微操作CU发出的控制信号），然后每个机器周期都会有一串微指令。</p>
+<p>然后一个指令执行期间，所有用到的微指令就构成了微程序，CPU 要执行一条指令只需要执行这个指令对应的微程序即可。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718155926.png" alt="image.png"></p>
+<p>所以，我们可以认为，指令就是对一大堆微指令的封装。每一种指令都会对应一个微程序。</p>
+<p>然后才用“存储程序”的思想，CPU 出厂前将所有指令的 “微程序”存入“控制器存储器”中。</p>
+<p>微指令的基本格式：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718160128.png" alt="image.png"></p>
+<p>因为所有微指令都在控制器内部的存储器中，所以需要指明下一条微指令的地址。</p>
+<h2 id="2-2-微程序控制器的基本结构"><a href="#2-2-微程序控制器的基本结构" class="headerlink" title="2.2 微程序控制器的基本结构"></a>2.2 微程序控制器的基本结构</h2><p>这个东西和 CPU 执行内存里面的指令很像，指令存放在内存中，微程序存放在 CU 内部的存储器 CM 中。</p>
+<p>CM 中存储着各个微程序，微程序里面的微指令顺序存放。</p>
+<p>CPU 需要将 PC 中的地址信息给 MAR，MAR 去访存，然后得到指令存到指令后存到 MDR 中。对应微程序，CU 内也有一个 CMAR，这个东西是 MAR 和 PC 功能的结合体。CU 根据 CMAR 找到数据后会存放到 CMDR 中，这个 CMDR 也有 IR 的功能。中间也会经过一个地址译码器。</p>
+<p>总体结构如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718161410.png" alt="image.png"></p>
+<p>流程就是箭头流程：</p>
+<ul>
+<li>外界将指令 OP 给微地址形成部件，微地址形成部件根据 OP 找到对应指令的微程序起始地址</li>
+<li>经过时序逻辑，将地址交给 CMAR，然后顺着一路在 CM 中找到微程序中的微指令，放到 CMDR 中。</li>
+<li>CMDR 根据微指令的操作控制，向外界发出控制信号</li>
+</ul>
+<h2 id="2-3-微程序控制器的工作原理"><a href="#2-3-微程序控制器的工作原理" class="headerlink" title="2.3 微程序控制器的工作原理"></a>2.3 微程序控制器的工作原理</h2><p>各个指令的取指周期、间址周期、中断周期都相同，所以会共用一份微程序，然后每个指令的执行周期，都会有他们各自的微程序。</p>
+<p>上面不是说一个指令对应一个微程序么，怎么这里有说每个周期对应一个微程序，这个是物理上和逻辑上的区别，物理上确实是每个周期都有一个微程序，但是逻辑上，应该认为这些周期加起来才是这个指令的微程序。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718162940.png" alt="image.png"></p>
+<p>根据图可以看出来，取指周期、间址周期、中断周期都是一份，下面都是每个指令自己的微程序。</p>
+<p>执行周期结束后，这里显示的是返回 #0 位置，等待取指，但是如果这个时候顺序逻辑接收到了中断信号，顺序逻辑会执行中断周期微程序。取指周期同理，如果顺序逻辑发现地址码是一个形式地址，则进入间址周期，如果不是就进入执行周期。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718165230.png" alt="image.png"></p>
+<h2 id="2-4-总结"><a href="#2-4-总结" class="headerlink" title="2.4 总结"></a>2.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718165332.png" alt="image.png"></p>
+<h1 id="3-微指令设计"><a href="#3-微指令设计" class="headerlink" title="3. 微指令设计"></a>3. 微指令设计</h1><p>这里探讨的就是微指令的具体格式如何设计，如何 <strong>根据微指令发出相应的微命令</strong>，也就是如何让微程序控制器发出控制信号。</p>
+<p>有的微命令可以并行执行，比如 <code>M(MAR) -&gt; MDR; PC + 1 -&gt; PC</code> 这种的，因此一个微指令可以包含多个微命令。</p>
+<h2 id="3-1-微指令格式"><a href="#3-1-微指令格式" class="headerlink" title="3.1 微指令格式"></a>3.1 微指令格式</h2><p>首先引入两个概念：</p>
+<ul>
+<li>相容性微命令：可以并行完成的微命令</li>
+<li>互斥性微命令：不允许并行完成的微命令</li>
+</ul>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718174322.png" alt="image.png"></p>
+<p>水平型的微指令就是之前那种，前面有 n 位的操作控制，因为他可以并行的执行一些微命令，所以这个操作控制码可能会比较长，所以编写出来的微程序就会像图里那样比较的胖。</p>
+<p>垂直型微指令里面东西多，一条微指令只能定义一个微命令，由操作码字段规定具体功能，所以他写的微程序会比较多，执行慢，显得高。</p>
+<p>最后一种混合型不说了。</p>
+<p>前面两种重点看看。下面说说水平型的微指令如何设计，<strong>如何用 n 个比特来表示并行的多个微命令</strong>。</p>
+<h2 id="3-2-微指令的编码方式"><a href="#3-2-微指令的编码方式" class="headerlink" title="3.2 微指令的编码方式"></a>3.2 微指令的编码方式</h2><p>就是如何让微指令表示一系列的控制信号？讨论的就是水平型微指令的前半部分 操作控制。</p>
+<p>前面两种方式考的最多。</p>
+<p><strong>1）直接译码方式（直接控制方式）</strong></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718175221.png" alt="image.png"></p>
+<p>就是说操作控制的 n 位分别代表 n 中信号，拿到微指令后，只需要激活操作控制码里面为 1 的位对应的信号即可。</p>
+<p>比如这里我们假设第一个bit位对应的就是 <code>(PC) -&gt; MAR</code>，最后一个 bit 位表示的是 <code>1 -&gt; R</code>，那我们给出一个微指令 <code>10000000001...</code> 代表的就是并行的执行 <code>(PC) -&gt; MAR; 1 -&gt; R</code>。</p>
+<p>优缺点已经给出了。</p>
+<p><strong>2）字段直接编码方式</strong></p>
+<p>啥意思，就是说我们给操作控制分段，可以并行执行的微命令放到不同的段中，互斥的微命令放到一个段内。且这里引入了译码器，会将段内 n 个比特位译码为最多 （2^n） - 1 种不同的微命令（如果段内全0表示不发出微命令，所以-1）。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718180017.png" alt="image.png"></p>
+<p>这种东西为啥可以缩短微指令字长？看个例题：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718180058.png" alt="image.png"></p>
+<p>这里互斥的微命令有 5 类，就对应 5 个段，然后根据命令数规划每个段的bit数，最后得到 15，比 33 少多了。</p>
+<p><strong>3）字段间接编址方式</strong></p>
+<p>这种了解即可：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718180307.png" alt="image.png"></p>
+<p>优点就是进一步的缩短微指令字长；缺点很明显，削弱了微指令的并行控制能力。</p>
+<h2 id="3-3-微指令的地址形成方式"><a href="#3-3-微指令的地址形成方式" class="headerlink" title="3.3 微指令的地址形成方式"></a>3.3 微指令的地址形成方式</h2><p>就是说，如何确定下一条要执行的微命令的存放地址，6 种方式，其中1 和 3 比较常考：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718180744.png" alt="image.png"></p>
+<p>这个玩意它可能出这种题：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718181046.png" alt="image.png"></p>
+<p>问了半天其实就是想问 CM 里面总共存了多少条指令。</p>
+<h2 id="3-4-总结"><a href="#3-4-总结" class="headerlink" title="3.4 总结"></a>3.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718181142.png" alt="image.png"></p>
+<h1 id="4-微程序控制单元的设计"><a href="#4-微程序控制单元的设计" class="headerlink" title="4. 微程序控制单元的设计"></a>4. 微程序控制单元的设计</h1><p>这个和之前的硬布线控制单元设计基本上一个流程，也是那几步：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718215723.png" alt="image.png"></p>
+<p>还以取指周期为例，分析各个阶段的微操作序列：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718220118.png" alt="image.png"></p>
+<p>最后一步是 <code>OP(IR) -&gt; 微地址形成部件</code>，就是说将微指令的操作码发送给微地址形成部件，根据 OP 来选择执行哪个微程序。</p>
+<p>然后将这些步骤安排到节拍中：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718220350.png" alt="image.png"></p>
+<p>解释一下：</p>
+<ul>
+<li>CU 怎么确定微指令 a 的地址？很简单，取指周期的第一个微指令a 就直接把它放在 CM 中的 #0 位置，执行指令时自动去找 #0。</li>
+<li>然后怎么继续执行微指令b？很简单，微指令a 中使用下址来指向微指令 b。</li>
+<li>使用下址的话，就需要一个 PC + 1 的操作，所以执行完微指令a 以后，需要将下址取出来，放到 CMAR 中供下次取指，这个步骤需要花费一个节拍</li>
+<li>最后一步，将指令的 OP 给了微地址形成部件，微地址形成部件会形成该指令对应的执行周期的微程序的存放地址，所以最后要把执行周期的微程序地址放在 CMAR 中（这里假设没有间址周期）</li>
+</ul>
+<p>还有最后两步：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718221302.png" alt="image.png"></p>
+<p>第三步就是前面 3.2 和 3.3 说过的，如何设计微指令。</p>
+<p>第四步就是最后设计一堆指令，这个不说了。</p>
+<h2 id="扩展：微程序设计分类"><a href="#扩展：微程序设计分类" class="headerlink" title="扩展：微程序设计分类"></a>扩展：微程序设计分类</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718221607.png" alt="image.png"></p>
+<h2 id="比较：硬布线和微程序"><a href="#比较：硬布线和微程序" class="headerlink" title="比较：硬布线和微程序"></a>比较：硬布线和微程序</h2><p> <img src="https://gitee.com/pthef/imgrepo/raw/master/20230718221743.png" alt="image.png"></p>
+<h2 id="总结：微程序控制器"><a href="#总结：微程序控制器" class="headerlink" title="总结：微程序控制器"></a>总结：微程序控制器</h2><p> <img src="https://gitee.com/pthef/imgrepo/raw/master/20230718221852.png" alt="image.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-10-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/" rel="prev" title="10-中央处理器">
+      <i class="fa fa-chevron-left"></i> 10-中央处理器
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-12-%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF/" rel="next" title="12-指令流水线">
+      12-指令流水线 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E6%8E%A7%E5%88%B6%E5%99%A8%E8%AE%BE%E8%AE%A1-%E7%A1%AC%E5%B8%83%E7%BA%BF%E8%AE%BE%E8%AE%A1"><span class="nav-text">1. 控制器设计-硬布线设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E5%9B%9E%E9%A1%BE"><span class="nav-text">1.1 回顾</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E7%A1%AC%E5%B8%83%E7%BA%BF%E6%8E%A7%E5%88%B6%E5%99%A8"><span class="nav-text">1.2 硬布线控制器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E7%A1%AC%E5%B8%83%E7%BA%BF%E6%8E%A7%E5%88%B6%E5%99%A8%E8%AE%BE%E8%AE%A1"><span class="nav-text">1.3 硬布线控制器设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-1-%E5%88%86%E6%9E%90%E5%90%84%E9%98%B6%E6%AE%B5%E5%BE%AE%E6%93%8D%E4%BD%9C%E5%BA%8F%E5%88%97"><span class="nav-text">1.3.1 分析各阶段微操作序列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-2-%E5%AE%89%E6%8E%92%E5%BE%AE%E6%93%8D%E4%BD%9C%E6%97%B6%E5%BA%8F"><span class="nav-text">1.3.2 安排微操作时序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-3-%E7%94%B5%E8%B7%AF%E8%AE%BE%E8%AE%A1"><span class="nav-text">1.3.3 电路设计</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-%E6%80%BB%E7%BB%93"><span class="nav-text">1.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%99%A8"><span class="nav-text">2. 微程序控制器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF"><span class="nav-text">2.1 设计思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%99%A8%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%BB%93%E6%9E%84"><span class="nav-text">2.2 微程序控制器的基本结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%99%A8%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-text">2.3 微程序控制器的工作原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%E6%80%BB%E7%BB%93"><span class="nav-text">2.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%AE%BE%E8%AE%A1"><span class="nav-text">3. 微指令设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E5%BE%AE%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F"><span class="nav-text">3.1 微指令格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E5%BE%AE%E6%8C%87%E4%BB%A4%E7%9A%84%E7%BC%96%E7%A0%81%E6%96%B9%E5%BC%8F"><span class="nav-text">3.2 微指令的编码方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E5%BE%AE%E6%8C%87%E4%BB%A4%E7%9A%84%E5%9C%B0%E5%9D%80%E5%BD%A2%E6%88%90%E6%96%B9%E5%BC%8F"><span class="nav-text">3.3 微指令的地址形成方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-%E6%80%BB%E7%BB%93"><span class="nav-text">3.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%8D%95%E5%85%83%E7%9A%84%E8%AE%BE%E8%AE%A1"><span class="nav-text">4. 微程序控制单元的设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%A9%E5%B1%95%EF%BC%9A%E5%BE%AE%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E5%88%86%E7%B1%BB"><span class="nav-text">扩展：微程序设计分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AF%94%E8%BE%83%EF%BC%9A%E7%A1%AC%E5%B8%83%E7%BA%BF%E5%92%8C%E5%BE%AE%E7%A8%8B%E5%BA%8F"><span class="nav-text">比较：硬布线和微程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A%E5%BE%AE%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%99%A8"><span class="nav-text">总结：微程序控制器</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

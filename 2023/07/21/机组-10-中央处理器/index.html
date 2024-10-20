@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="这一章深入 CPU，主要学习以下内容：CPU结构与功能、指令执行过程、数据通路的功能和结构、控制器的功能和原理、流水线。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="10-中央处理器">
+<meta property="og:url" content="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-10-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="这一章深入 CPU，主要学习以下内容：CPU结构与功能、指令执行过程、数据通路的功能和结构、控制器的功能和原理、流水线。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230716213831.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717121218.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717122117.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717122550.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717122730.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717123543.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717124118.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717124500.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717155514.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717160023.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717160406.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717160851.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717161446.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717161656.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717161928.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717162647.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717163443.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717164428.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717165011.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717165030.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717215129.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717220521.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717221649.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717222249.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717222932.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717223657.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717224416.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717224440.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717224633.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717224843.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230717225626.png">
+<meta property="article:published_time" content="2023-07-21T10:01:30.000Z">
+<meta property="article:modified_time" content="2023-07-21T10:09:56.098Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230716213831.png">
+
+<link rel="canonical" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-10-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>10-中央处理器 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-10-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          10-中央处理器
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-07-21 18:01:30 / 修改时间：18:09:56" itemprop="dateCreated datePublished" datetime="2023-07-21T18:01:30+08:00">2023-07-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">计算机组成原理</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这一章深入 CPU，主要学习以下内容：CPU结构与功能、指令执行过程、数据通路的功能和结构、控制器的功能和原理、流水线。</p>
+<span id="more"></span>
+
+<h1 id="1-CPU-结构与功能"><a href="#1-CPU-结构与功能" class="headerlink" title="1. CPU 结构与功能"></a>1. CPU 结构与功能</h1><p>CPU 总共有 5 个功能：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230716213831.png" alt="image.png"></p>
+<p>说一下第二个功能，啥叫操作信号？</p>
+<p>比如我们要执行一条加法指令，这条信号并不能一次性执行完，将这条指令从主存放到 CPU 的 IR 中，然后控制器会分析指令，发现这个加法指令要从主存中取得操作数，还要放到 ACC 中，这一系列操作就是微指令，这里的操作信号说的就是这个，每个微指令都会有控制信号。</p>
+<h2 id="1-1-运算器和控制器的功能"><a href="#1-1-运算器和控制器的功能" class="headerlink" title="1.1 运算器和控制器的功能"></a>1.1 运算器和控制器的功能</h2><p>分开看运算器和控制器的功能：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717121218.png" alt="image.png"></p>
+<p>解释一下：</p>
+<ul>
+<li>取指令，自动形成指令地址：这个说的就是 PC + “1” 这个问题</li>
+<li>分析指令，产生操作数的有效地址：就是说知道这个指令是干啥的，然后进行一个操作数寻址</li>
+<li>执行指令：这里又说到了操作信号，就是说控制器拿到指令后，根据指令发出操作信号来执行微指令</li>
+<li>中断：一般来说 CPU 执行完一条指令都需要进行一个中断检查，OS 里面详细说过的</li>
+</ul>
+<h2 id="1-2-运算器基本结构"><a href="#1-2-运算器基本结构" class="headerlink" title="1.2 运算器基本结构"></a>1.2 运算器基本结构</h2><p>运算器里面有 ALU 算数逻辑单元，然后和 ALU 直接交互的存储器就是<font color='red'>通用寄存器组</font>，比如 AX、BX、CX、DX、SP 等（和上面说过的x86寄存器几乎一样），这些寄存器用于存放操作数和各种地址信息等。SP 是堆栈信息。</p>
+<p>AX-DX 这些寄存器还可以划分成两块，比如 AX 的高八位是 AH，低八位是 AL。我们这里把通用寄存器 AX - DX 简称叫 R0 - R3。</p>
+<h3 id="1-2-1-专用数据通路"><a href="#1-2-1-专用数据通路" class="headerlink" title="1.2.1 专用数据通路"></a>1.2.1 专用数据通路</h3><p>通用寄存器和 ALU 肯定要连接，寄存器既可以往 A 端输入数据，也可以往 B 端输入数据，所以寄存器和 A B 都有连线，如果寄存器是 16 bit 的话，就需要16根线，这里简化一下，一根线得了：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717122117.png" alt="image.png"></p>
+<p>每个寄存器都要和 ALU 通讯，所以都要连线，也就有了上面这个图，这个就叫 <font color = 'red'>专用数据通路方式</font>：根据指令执行过程中的数据和地址的流动方向安排连接线路。</p>
+<p>这种方式有个问题：每个寄存器都在同时给 ALU 发数据，这种肯定是不行的，咋办？第一种方式，给 A 和 B 两端加一个 MUX 多路选择器，根据控制信号选择一路输入：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717122550.png" alt="image.png"></p>
+<p>比如我们要执行 <code>add r0, r1</code> 这个指令，可以给 C1 一个 00 信号，连通 R0，给 C2 一个 01 信号，连通 R1。</p>
+<p>或者使用三态门，可以控制每一路是否输出：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717122730.png" alt="image.png"></p>
+<p>三态门上面还有个 R0out，可以控制当前线路是否接通。</p>
+<p>这种专用数据通路方式性能很高，基本不存在数据冲突，但是结构复杂，硬件量大，不易实现。</p>
+<h3 id="1-2-2-单总线方式"><a href="#1-2-2-单总线方式" class="headerlink" title="1.2.2 单总线方式"></a>1.2.2 单总线方式</h3><p>直接看图：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717123543.png" alt="image.png"></p>
+<p>解释一下：</p>
+<ul>
+<li>输入端暂存寄存器：一方面，暂存一个操作数，比如先把 R0 内容存到寄存器里，然后将 R1 输出，ALU必须两端同时有效，但是单总线只能同时传送一个操作数。有时一条指令要直接从主存读入数据，这个数据就可以放在暂存寄存器里，防止破坏通用寄存器里的值。</li>
+<li>移位寄存器：对计算结果进行移位运算。另外 ALU 算完之前是不能输出结果的，必须等到电压稳定后才能输出，所以移位寄存器同时也会暂存计算结果，然后上面连了一个三态门，等到电压稳定后才会连通线路，将结果从移位寄存器里输出回总线，所以也有暂存寄存器的功能。</li>
+<li>ACC 累加寄存器：用于暂存 ALU 运算的结果信息，用于实现加法运算，这个在之前的数据计算章节老见。</li>
+</ul>
+<p>另外 PSW 有点复杂，之前在数据计算章节也说过：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717124118.png" alt="image.png"></p>
+<h2 id="1-3-控制器基本结构"><a href="#1-3-控制器基本结构" class="headerlink" title="1.3 控制器基本结构"></a>1.3 控制器基本结构</h2><p>这个可就复杂了：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717124500.png" alt="image.png"></p>
+<p>解释：</p>
+<ul>
+<li>PC 能看懂吧，PC 有自增功能，不说了</li>
+<li>IR 也很好理解，指令寄存器里面放指令，指令分为 OP 和 地址码 AD</li>
+<li>指令译码器：对 OP 进行译码，知道当前指令要干啥，所以 OP 会输入到译码器 ID 中</li>
+<li>微操作信号发生器：根据 IR 的内容、PSW 的内容以及时序信号，产生控制整个计算机系统所需的各种控制信号，其结构有组合逻辑性型和存储逻辑型两种</li>
+<li>时序系统：用于产生各种时序信号，它们都是由统一时钟 CLOCK 分频得到</li>
+<li>后面的 MAR 和 MDR 就不说了</li>
+</ul>
+<p>来根据这个图理一理执行一条指令到底咋办的，比如要执行一条从内存中取数的指令：</p>
+<ol>
+<li>PC 指向这条指令，然后通过 PCout 将值输出，去内存中取指令，然后顺着 IRin 将指令输入到 IR 中</li>
+<li>IR 将 OP 发送给 ID，ID 一看，是个取内存的指令，然后通过微操作信号发生器开始执行微指令</li>
+<li>将 IR 中的 Ad 地址码通过 <code>AdIRout</code> 输出到 CPU 总线上，MARin 接收这个地址码，然后交给地址总线去内存中拿数</li>
+<li>内存找到数啦，发送给数据总线，通过 <code>MDRinE</code>  让 MDR 从数据总线拿数，然后通过 <code>MDRout</code> 将数据传输给 CPU 总线，看看下一步咋办。</li>
+</ol>
+<p>这里注意下 MDR 就行了，MDR 的 IO 线如果后面加 E ，就是和数据总线连着的，没有就是和 CPU 总线相连。</p>
+<p>中间的三个部分：指令译码器、微操作信号发生器、时序系统，就是<font color='red'> CU 控制单元</font>.</p>
+<h2 id="1-4-CPU-结构"><a href="#1-4-CPU-结构" class="headerlink" title="1.4 CPU 结构"></a>1.4 CPU 结构</h2><p>把上面两张图连在一起就变成了 CPU 的结构：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717155514.png" alt="image.png"></p>
+<p>橙色的都是用户可见的：</p>
+<ul>
+<li>PSW 我们在进行条件跳转的时候会用到，因为前面说过一点，条件跳转的比较就是相减然后通过 PSW 的四个标志位来判断</li>
+<li>ACC 老用，做各种运算的时候</li>
+<li>PC 在跳转的时候我们也会直接使用</li>
+</ul>
+<p>剩下的灰色的寄存器我们是感觉不到他们的存在的。</p>
+<h2 id="1-5-总结"><a href="#1-5-总结" class="headerlink" title="1.5 总结"></a>1.5 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717160023.png" alt="image.png"></p>
+<h1 id="2-指令执行过程"><a href="#2-指令执行过程" class="headerlink" title="2. 指令执行过程"></a>2. 指令执行过程</h1><h2 id="2-1-指令周期"><a href="#2-1-指令周期" class="headerlink" title="2.1 指令周期"></a>2.1 指令周期</h2><p>就是 CPU 从主存中取出并执行一条指令所需的全部时间。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717160406.png" alt="image.png"></p>
+<p>一个指令周期通常用若干个机器周期来表示，机器周期又称为 CPU 周期，意思就是完成一个子工作所需要的时间，比如取指令就花费一个机器周期，然后取出有效地址花费一个机器周期，最后指令执行也花费一个机器周期。</p>
+<p>一个机器周期又包含若干个时钟周期，也叫节拍，T周期或者CPU时钟周期，他是CPU 操作的<font color='red'>最基本单位</font>：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717160851.png" alt="image.png"></p>
+<p>里面 CLK 的一上一下，就是一个时钟周期，如果一个 CPU 是 3.0GHz 的，就是说一个CPU一秒钟内有 3G 个这种周期。</p>
+<p>如果说每个子操作的机器周期相同，就是定长机器周期，如果不一样，就是不定长。对于不同的指令，指令周期可能不同，对于不同的微操作，机器周期也可能不一样。比如下图：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717161446.png" alt="image.png"></p>
+<p>其中这个间址周期说一下，间接寻址说的就是地址码 Ad 指向一个指针，这个指针才指向了真正的操作数，所以访存拿到真正的操作数这个过程也需要一个机器周期。</p>
+<h2 id="2-2-指令周期流程"><a href="#2-2-指令周期流程" class="headerlink" title="2.2 指令周期流程"></a>2.2 指令周期流程</h2><p>如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717161656.png" alt="image.png"></p>
+<p>四个周期都有 CPU 的访存，只是目的不一样：</p>
+<ul>
+<li>取指周期：从主存中取出指令</li>
+<li>间址周期：从主存中取出有效地址</li>
+<li>执行周期：根据有效地址取出操作数</li>
+<li>中断周期：保存程序断点，这个的意思是执行中断处理程序，而不是专指时钟中断然后进程调度</li>
+</ul>
+<p>CPU 如何知道当前指令正处于什么阶段？</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717161928.png" alt="image.png"></p>
+<p>通过这四个触发器就行了。</p>
+<h2 id="2-3-取指周期-指令周期的数据流"><a href="#2-3-取指周期-指令周期的数据流" class="headerlink" title="2.3 取指周期-指令周期的数据流"></a>2.3 取指周期-指令周期的数据流</h2><p>流程如下：</p>
+<ul>
+<li>PC 里面记录了要执行指令的地址，将 PC 的值发送给 MAR，计作：<code>(PC) -&gt; MAR</code></li>
+<li>CU 发出控制信号，经过控制总线传给主存，这里发送的是读信号，告诉主存要马上要读主存了，计作：<code>1 -&gt; R</code>，这里的 R 指 Read</li>
+<li>将 MAR 的内容经过地址总线给主存，主存进行寻址，然后将数据通过数据总线给 MDR，计作：<code>M(MAR) -&gt; MDR</code>，意思是 Memory 里 MAR 指向位置的数据给 MDR</li>
+<li>MDR 中的内容（指令）发送给 IR，计作：<code>(MDR) -&gt; IR</code></li>
+<li>CU 发送控制信号，形成下一条指令地址，也就是 CU 让 PC + “1”，计作：<code>(PC) + 1 -&gt; PC</code></li>
+</ul>
+<p>如图所示：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717162647.png" alt="image.png"></p>
+<h2 id="2-4-间址周期-指令周期的数据流"><a href="#2-4-间址周期-指令周期的数据流" class="headerlink" title="2.4 间址周期-指令周期的数据流"></a>2.4 间址周期-指令周期的数据流</h2><p>如果指令采用了间接寻址，就是地址码是一个形式地址，指向了主存的指针，就需要进入这个周期：</p>
+<ul>
+<li>将指令中的形式地址发送给 MAR，计作：<code>Ad(IR) -&gt; MAR</code> 或者 <code>Ad(MDR) -&gt; MAR</code>，MDR 也可以，因为这时刚取指，MDR 保存的还是指令</li>
+<li>CU 发出控制信号，启动主存做读操作，计作：<code>1 -&gt; R</code></li>
+<li>将 MAR 所指的主存中的内容经过数据总线送给 MDR，计作：<code>M(MAR) -&gt; MDR</code></li>
+</ul>
+<p>这个时候，MDR 就存放着操作数的有效地址 EA，可以就这么着，待会执行阶段直接把 MDR 中的东西送给 MAR 去取操作数；有的计算机也会将 MDR 中的 EA 给到 IR 中，替换掉 IR 中的形式地址 A，计作：<code>(MDR) -&gt; Ad(IR)</code></p>
+<p>流程如图所示：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717163443.png" alt="image.png"></p>
+<p>然后就会进入执行周期。执行周期的任务是根据 IR 中的指令字的操作码和操作数通过 ALU 操作产生执行结果。不同的指令执行周期操作不同，因此没有统一的数据流向，这里先不讨论。</p>
+<h2 id="2-5-中断周期-指令周期的数据流"><a href="#2-5-中断周期-指令周期的数据流" class="headerlink" title="2.5 中断周期-指令周期的数据流"></a>2.5 中断周期-指令周期的数据流</h2><p>这里暂且理解成时钟中断，暂停当前任务取完成其他任务，为了能够恢复当前任务，需要保存断点。就是执行中断处理程序，注意，这个可不是 OS 里面说的时钟中断进程调度。</p>
+<p>会使用堆栈来保存断点，这里 SP 表示栈顶指针，入栈的操作是先修改指针，再放入数据：</p>
+<ul>
+<li>CU 控制将 SP - 1，修改后的地址送入 MAR，计作：<code>(SP) - 1 -&gt; SP; (SP) -&gt; MAR</code>，这里为啥是 SP - 1 啊，在09机器代码一章说过，计算机内低地址一般是栈顶</li>
+<li>CU 发出控制信号，启动主存做写操作，计作：<code>1 -&gt; W</code></li>
+<li>将断点（PC 内容）送入 MDR，计作：<code>(PC) -&gt; MDR</code></li>
+<li>CU 控制将中断服务程序的入口地址(由向量地址形成部件产生)送入 PC，计作：<code>向量地址 -&gt; PC</code></li>
+</ul>
+<p>如图所示：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717164428.png" alt="image.png"></p>
+<h2 id="2-6-指令执行方案"><a href="#2-6-指令执行方案" class="headerlink" title="2.6 指令执行方案"></a>2.6 指令执行方案</h2><p>一个指令周期通常包含几个时间段（执行步骤），每个步骤完成指令的一部分功能，几个依次执行的步骤完成指令的全部功能。直接看图，懒得写了：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717165011.png" alt="image.png"></p>
+<h2 id="2-7-总结"><a href="#2-7-总结" class="headerlink" title="2.7 总结"></a>2.7 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717165030.png" alt="image.png"></p>
+<h1 id="3-数据通路-单总线结构"><a href="#3-数据通路-单总线结构" class="headerlink" title="3. 数据通路-单总线结构"></a>3. 数据通路-单总线结构</h1><p>数据的流动大体就是三种方式：寄存器和寄存器、寄存器和主存、寄存器和 ALU。往后就是说说这三种数据传输怎么实现。</p>
+<h2 id="3-1-数据通路"><a href="#3-1-数据通路" class="headerlink" title="3.1 数据通路"></a>3.1 数据通路</h2><p>数据通路就是数据在功能部件之间的传送的途径，简单说就是信息从哪里开始，中间经过哪些部件，最后传到哪里。</p>
+<p>这些数据通路由 CU 里面的微操作信号发生器控制，他负责建立数据通路，比如之前 CPU 图里面的各种 R0in，R0out，MARin 这种的控制数据流向的都适合微操作信号发生器相连。</p>
+<p>数据通路的基本结构：</p>
+<ol>
+<li>CPU 内部单总线方式：CPU内部总线只有一根，所以同一时间只允许两个部件传输信息</li>
+<li>CPU 内部多总线方式：就是内部总线多根呗，比如有三根，就可以支持3组部件同时传递信息</li>
+<li>专用数据通路方式：比如 PC 要和 IR 通讯，就会在 PC 和 IR 之间专门连一根线</li>
+</ol>
+<p>这里我们着重看单总线方式。</p>
+<h2 id="3-2-数据传输"><a href="#3-2-数据传输" class="headerlink" title="3.2 数据传输"></a>3.2 数据传输</h2><h3 id="3-2-1-寄存器通讯"><a href="#3-2-1-寄存器通讯" class="headerlink" title="3.2.1 寄存器通讯"></a>3.2.1 寄存器通讯</h3><p>这里用 PC 到 MAR 的数据通讯为例，PC 将数据交给 MAR 的流程为：</p>
+<ul>
+<li>CU 发送控制信号，打开 PCout 让 PC 的数据发送到总线上：<code>(PC) -&gt; BUS</code></li>
+<li>CU 发送控制信号，打开 MARin 让总线上的数据流至 MAR：<code>BUS -&gt; MAR</code></li>
+<li>总体的流程就是：<code>(PC) -&gt; BUS -&gt; MAR</code>，PC 上的括号有的时候可以不加</li>
+</ul>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717215129.png" alt="image.png"></p>
+<h3 id="3-2-2-CPU和主存通讯"><a href="#3-2-2-CPU和主存通讯" class="headerlink" title="3.2.2 CPU和主存通讯"></a>3.2.2 CPU和主存通讯</h3><p>然后再来看主存和CPU之间的数据传送：</p>
+<ul>
+<li>在上面的基础上，MAR 中是 PC 的值指向下一条指令，CU 向主存发出读命令（通过控制总线，这里没画），<code>1 -&gt; R</code></li>
+<li>CU 控制 MARout 有效，将MAR中的地址发送到地址总线（也没画）去取指令，然后主存将指令通过数据总线发给 MDR（CU控制MDRInE有效）：<code>MEM(MAR) -&gt; MDR</code></li>
+<li>再将MDR数据发送给 IR，这个简单，就是寄存器之间的数据传送，直接发送到CPU内部总线即可：<code>MDR -&gt; BUS -&gt; IR</code></li>
+</ul>
+<h3 id="3-2-3-寄存器和ALU通讯"><a href="#3-2-3-寄存器和ALU通讯" class="headerlink" title="3.2.3 寄存器和ALU通讯"></a>3.2.3 寄存器和ALU通讯</h3><p>最后看看执行算数或逻辑运算，比如要执行一条加法指令：</p>
+<ul>
+<li>将 IR 中的地址码发送给 MAR：<code>Ad(IR) -&gt; BUS -&gt; MAR</code>，CU 会依次控制 IRout 和 MARin 有效。</li>
+<li>CU 向主存发出读信号：<code>1 -&gt; R</code></li>
+<li>访存，并放入 MDR：<code>MEM(MAR) -&gt; 数据总线 -&gt; MDR</code>，CU 会让 MDRinE 有效</li>
+<li>将操作数放入 Y 寄存器（就是上面 ALU 结构里面的暂存寄存器）：<code>MDR -&gt; BUS -&gt; Y</code></li>
+<li>上面是其中一个加数，另一个加数在 ACC 累加寄存器里，同时接通 ACCout 和 Yout 将两个操作数发送给 ALU：<code>(ACC) + (Y) -&gt; Z</code>，然后CU会告诉 ALU 你要进行加法，结果会被暂存到 Z 寄存器中。</li>
+<li>等稳定后，CU 撤销 ACCout 和 ALUin 信号，让 Bus 恢复空闲，然后让 Zout 有效，将结果存回 ACC：<code>Z -&gt; ACC</code></li>
+</ul>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717220521.png" alt="image.png"></p>
+<h3 id="3-2-4-例题"><a href="#3-2-4-例题" class="headerlink" title="3.2.4 例题"></a>3.2.4 例题</h3><p>取指周期：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717221649.png" alt="image.png"></p>
+<p>这里解释一点东西：</p>
+<ul>
+<li><code>((R0)) + (R1) -&gt; (R0)</code>，这里面每个括号的意思都不一样，左边 R0 的内层括号，指的是取出 R0 的值，是个地址。外层括号说的是，根据这个地址去访存，拿到真正的操作数。R1的括号就是取值。右边 R0 的括号指的是将结算结果会写到 R0 指向的主存里面。</li>
+<li><code>(PC) + 1 -&gt; PC</code>，这个可以放在 2 里面，因为取出指令以后就可以加1了，当然也可以后面加个第五步</li>
+</ul>
+<p>间址周期：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717222249.png" alt="image.png"></p>
+<p>再解释一点：</p>
+<ul>
+<li>我们发现这个间址周期直接把操作数从主存读入到 MDR 里面了，和间接地址一点关系没有，(R0) 其实就是一个直接地址。这个和教材有关系，有的教材认为，间址周期是想办法拿到直接地址，然后将直接地址拼到 IR 上；有的则认为间址周期需要将操作数读入内存。反正横竖都是这么个流程</li>
+</ul>
+<p>执行周期：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717222932.png" alt="image.png"></p>
+<p>为啥最后直接 M(MAR) 了，不是要存回 R0 指向的主存么？很简单，之前已经将 R0 放到 MAR 里面了，而且没有更新，所以直接根据 MAR 访存即可。</p>
+<h2 id="3-3-总结"><a href="#3-3-总结" class="headerlink" title="3.3 总结"></a>3.3 总结</h2><p>说一点啊，区分一下内部总线和系统总线：</p>
+<ul>
+<li>内部总线：CPU 内部总线</li>
+<li>系统总线：比如控制总线，数据总线，地址总线这种</li>
+</ul>
+<p>这一块，什么控制信号，微操作这个，有可能是考大题的。</p>
+<h1 id="4-数据通路-专用数据通路"><a href="#4-数据通路-专用数据通路" class="headerlink" title="4. 数据通路-专用数据通路"></a>4. 数据通路-专用数据通路</h1><p>这个其实和单总线流程上差不多，只是各个寄存器之间可能存在通路，这样的话数据传输就可以跳过 CPU 总线。</p>
+<p>这里举个例子即可，看看专用数据通路下，取指令如何操作：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717223657.png" alt="image.png"></p>
+<p>反正把握好一个方向，取指周期的数据流动一定是：<code>PC -&gt; MAR -&gt; 访存 -&gt; MDR &amp; PC+1 -&gt; IR</code>，在此基础上根据这个图看看控制信号怎么给即可。</p>
+<h2 id="4-1-例题"><a href="#4-1-例题" class="headerlink" title="4.1 例题"></a>4.1 例题</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717224416.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717224440.png" alt="image.png"></p>
+<p>b 和 微操作信号发生器相连，这里推测出他是 IR，毕竟 IR 需要将 OP 发送给微操作发生器。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717224633.png" alt="image.png"></p>
+<p>这里可以加两步：<code>(PC) + 1 -&gt; PC</code> 和 <code>Op(IR) -&gt; 发生器</code></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717224843.png" alt="image.png"></p>
+<p>取指的是从主存拿一个数过来放到 ACC 中，就是找一条 MDR 到 ALU 到 ACC 的通路，这里可以理解成将操作数读入 MDR，然后发到 ALU 中进行 + 0，然后返回到 ACC。</p>
+<p>4 5 6 题连着看：4. 将加数X从主存中读到 ACC 中暂存；5. 将另一个加数Y从主存中读入到 MDR 然后执行 X + Y；6. 将结果写回主存 Z 位置。</p>
+<p>第四题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">X -&gt; MAR               // 这里 x 是个值，所以不用加括号取值</span><br><span class="line">M(MAR) -&gt; MDR</span><br><span class="line">(MDR) -&gt; ALU -&gt; ACC</span><br></pre></td></tr></table></figure>
+
+<p>第五题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Y -&gt; MAR</span><br><span class="line">M(MAR) -&gt; MDR</span><br><span class="line">(MDR) -&gt; ALU, (ACC) -&gt; ALU</span><br><span class="line">ALU -&gt; ACC</span><br></pre></td></tr></table></figure>
+
+<p>第六题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Z -&gt; MAR</span><br><span class="line">(ACC) -&gt; MDR</span><br><span class="line">(MDR) -&gt; M(MAR)</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-2-总结"><a href="#4-2-总结" class="headerlink" title="4.2 总结"></a>4.2 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230717225626.png" alt="image.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-09-%E6%9C%BA%E5%99%A8%E7%BA%A7%E4%BB%A3%E7%A0%81/" rel="prev" title="09-机器级代码">
+      <i class="fa fa-chevron-left"></i> 09-机器级代码
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-11-%E6%8E%A7%E5%88%B6%E5%99%A8%E8%AE%BE%E8%AE%A1/" rel="next" title="11-控制器设计">
+      11-控制器设计 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-CPU-%E7%BB%93%E6%9E%84%E4%B8%8E%E5%8A%9F%E8%83%BD"><span class="nav-text">1. CPU 结构与功能</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E8%BF%90%E7%AE%97%E5%99%A8%E5%92%8C%E6%8E%A7%E5%88%B6%E5%99%A8%E7%9A%84%E5%8A%9F%E8%83%BD"><span class="nav-text">1.1 运算器和控制器的功能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E8%BF%90%E7%AE%97%E5%99%A8%E5%9F%BA%E6%9C%AC%E7%BB%93%E6%9E%84"><span class="nav-text">1.2 运算器基本结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-1-%E4%B8%93%E7%94%A8%E6%95%B0%E6%8D%AE%E9%80%9A%E8%B7%AF"><span class="nav-text">1.2.1 专用数据通路</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-2-%E5%8D%95%E6%80%BB%E7%BA%BF%E6%96%B9%E5%BC%8F"><span class="nav-text">1.2.2 单总线方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E6%8E%A7%E5%88%B6%E5%99%A8%E5%9F%BA%E6%9C%AC%E7%BB%93%E6%9E%84"><span class="nav-text">1.3 控制器基本结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-CPU-%E7%BB%93%E6%9E%84"><span class="nav-text">1.4 CPU 结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-5-%E6%80%BB%E7%BB%93"><span class="nav-text">1.5 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E6%8C%87%E4%BB%A4%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B"><span class="nav-text">2. 指令执行过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F"><span class="nav-text">2.1 指令周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E6%B5%81%E7%A8%8B"><span class="nav-text">2.2 指令周期流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E5%8F%96%E6%8C%87%E5%91%A8%E6%9C%9F-%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81"><span class="nav-text">2.3 取指周期-指令周期的数据流</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%E9%97%B4%E5%9D%80%E5%91%A8%E6%9C%9F-%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81"><span class="nav-text">2.4 间址周期-指令周期的数据流</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-5-%E4%B8%AD%E6%96%AD%E5%91%A8%E6%9C%9F-%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81"><span class="nav-text">2.5 中断周期-指令周期的数据流</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-6-%E6%8C%87%E4%BB%A4%E6%89%A7%E8%A1%8C%E6%96%B9%E6%A1%88"><span class="nav-text">2.6 指令执行方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-7-%E6%80%BB%E7%BB%93"><span class="nav-text">2.7 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E6%95%B0%E6%8D%AE%E9%80%9A%E8%B7%AF-%E5%8D%95%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84"><span class="nav-text">3. 数据通路-单总线结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E6%95%B0%E6%8D%AE%E9%80%9A%E8%B7%AF"><span class="nav-text">3.1 数据通路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93"><span class="nav-text">3.2 数据传输</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-1-%E5%AF%84%E5%AD%98%E5%99%A8%E9%80%9A%E8%AE%AF"><span class="nav-text">3.2.1 寄存器通讯</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-2-CPU%E5%92%8C%E4%B8%BB%E5%AD%98%E9%80%9A%E8%AE%AF"><span class="nav-text">3.2.2 CPU和主存通讯</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-3-%E5%AF%84%E5%AD%98%E5%99%A8%E5%92%8CALU%E9%80%9A%E8%AE%AF"><span class="nav-text">3.2.3 寄存器和ALU通讯</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-4-%E4%BE%8B%E9%A2%98"><span class="nav-text">3.2.4 例题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E6%80%BB%E7%BB%93"><span class="nav-text">3.3 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E6%95%B0%E6%8D%AE%E9%80%9A%E8%B7%AF-%E4%B8%93%E7%94%A8%E6%95%B0%E6%8D%AE%E9%80%9A%E8%B7%AF"><span class="nav-text">4. 数据通路-专用数据通路</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E4%BE%8B%E9%A2%98"><span class="nav-text">4.1 例题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E6%80%BB%E7%BB%93"><span class="nav-text">4.2 总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="进程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="03.进程">
+<meta property="og:url" content="http://example.com/2023/06/30/OS-03-%E8%BF%9B%E7%A8%8B/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="进程">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617214531.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617213809.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617214306.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617214648.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617220127.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617220107.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617220726.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617220803.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617222120.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617222353.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617222743.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617222901.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617223007.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617224219.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617225020.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617230026.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617230239.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617230752.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617232207.png">
+<meta property="article:published_time" content="2023-06-30T03:06:07.000Z">
+<meta property="article:modified_time" content="2023-07-12T15:34:59.700Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230617214531.png">
+
+<link rel="canonical" href="http://example.com/2023/06/30/OS-03-%E8%BF%9B%E7%A8%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>03.进程 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/30/OS-03-%E8%BF%9B%E7%A8%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          03.进程
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-30 11:06:07" itemprop="dateCreated datePublished" datetime="2023-06-30T11:06:07+08:00">2023-06-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-07-12 23:34:59" itemprop="dateModified" datetime="2023-07-12T23:34:59+08:00">2023-07-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>进程</p>
+<span id="more"></span>
+
+<h1 id="1-进程概念"><a href="#1-进程概念" class="headerlink" title="1. 进程概念"></a>1. 进程概念</h1><p>程序就是磁盘上的可执行文件，而进程就是动态的执行。</p>
+<p>如果我们一次打开多个进程，操作系统怎么知道哪个是哪个？</p>
+<h1 id="2-进程的组成"><a href="#2-进程的组成" class="headerlink" title="2. 进程的组成"></a>2. 进程的组成</h1><p>先说结论，进程实体由PCB、程序段、数据段 组成：<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617214531.png" alt="image.png"></p>
+<h2 id="2-1-PCB-程序控制块"><a href="#2-1-PCB-程序控制块" class="headerlink" title="2.1 PCB-程序控制块"></a>2.1 PCB-程序控制块</h2><p>操作系统会为每个进程分配一个ID——PID，同时操作系统还会记录当前这个进程的所属用户UID，还要记录给这个进程分配了多少资源；以及记录进程的运行情况，比如 CPU 使用时间，磁盘使用情况等。</p>
+<p>操作系统需要为一个进程维护这么多信息，这些信息就会统一的保存在一个数据结构中——PCB（Process Control Block），也就是<strong>进程控制块</strong>，操作系统需要对各个并发运行的进程进行管理，单发管理时所需要的信息，都会放在PCB中。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617213809.png" alt="image.png"></p>
+<h2 id="2-2-程序段和数据段"><a href="#2-2-程序段和数据段" class="headerlink" title="2.2 程序段和数据段"></a>2.2 程序段和数据段</h2><p>这个其实好理解，一个可执行文件，运行的时候就会把指令放在内存中供CPU读取执行，那么这些内存中的指令，就是程序段。而执行过程中肯定会产生不少数据，这些数据也会存在内存中，这么用来存数据的部分，就是这个进程的数据段。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617214306.png" alt="image.png"></p>
+<h1 id="3-进程的特征"><a href="#3-进程的特征" class="headerlink" title="3. 进程的特征"></a>3. 进程的特征</h1><p>一张图：<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617214648.png" alt="image.png"></p>
+<h1 id="4-进程状态"><a href="#4-进程状态" class="headerlink" title="4. 进程状态"></a>4. 进程状态</h1><h2 id="4-1-进程的各个状态"><a href="#4-1-进程的各个状态" class="headerlink" title="4.1 进程的各个状态"></a>4.1 进程的各个状态</h2><p>这个和线程状态感觉特别像。</p>
+<p><strong>创建态</strong></p>
+<p>当进程被创建时，它的状态就是“创建态”，这个阶段操作系统会给她分配资源，初始化PCB。</p>
+<p><strong>就绪态</strong></p>
+<p>当进程创建完成后，就会进入“就绪态”，处于就绪态的进程已经具备了运行条件，但是由于CPU比较忙，所以还不能运行这个进程。</p>
+<p><strong>运行态</strong></p>
+<p>等CPU空闲了，就会拿过来一个处于就绪态的进程去运行，那么这个被运行的进程就处于“运行态”。</p>
+<p><strong>阻塞态</strong></p>
+<p>假设这个进程就是WPS，他要让打印机进行打印，然后CPU就会给这个进程分配打印机资源，但是这个打印机正在干活，没空为这个进程服务，那么这个进程就会进入“阻塞态”。总的来说，进程运行时，可能会请求等待某个事件的发生，这里就是等待打印机空闲，在这个事件发生之前，操作系统就会让这个进程下CPU，并让他进入“阻塞态”。</p>
+<p>等到打印机空闲了，这个进程就会重新回到就绪态，然后等待被调度上CPU。</p>
+<p><strong>终止态</strong></p>
+<p>使用完打印机，这个进程就该结束了，然后进程就会执行 exit 系统调用，请求操作系统终止该进程。此时进程就会进入“终止态”，操作系统就会让这个进程下CPU，并回收内存空间等资源，最后回收这个进程的PCB。</p>
+<h2 id="4-2-进程状态的转换"><a href="#4-2-进程状态的转换" class="headerlink" title="4.2 进程状态的转换"></a>4.2 进程状态的转换</h2><p>这个转换和线程的状态转换也是非常像：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617220127.png" alt="image.png"></p>
+<h2 id="4-3-总结"><a href="#4-3-总结" class="headerlink" title="4.3 总结"></a>4.3 总结</h2><p>看图：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617220107.png" alt="image.png"></p>
+<h1 id="5-进程的组织"><a href="#5-进程的组织" class="headerlink" title="5. 进程的组织"></a>5. 进程的组织</h1><p>这个说的就是操作系统如何管理各个进程的PCB，这里说两个组织方式：</p>
+<h2 id="5-1-链接方式"><a href="#5-1-链接方式" class="headerlink" title="5.1 链接方式"></a>5.1 链接方式</h2><p>操作系统提供几个指针来指向不同的PCB：</p>
+<ul>
+<li>执行指针：指向当前运行的进程PCB</li>
+<li>就绪队列指针：将所有就绪的进程PCB放入队列，优先级高的进程放在队头，然后指针指向队头</li>
+<li>阻塞队列指针：和上面类似。</li>
+</ul>
+<p>阻塞队列指针有的时候会分开，比如进程1 3 5 等待打印机，就会把PCB1 3 5 放入打印机的阻塞队列，进程 2 4 6 等待磁盘，就会把PCB 2 4 6 放入磁盘的阻塞队列。</p>
+<h2 id="5-2-索引方式"><a href="#5-2-索引方式" class="headerlink" title="5.2 索引方式"></a>5.2 索引方式</h2><p>也会提供指针，但是指针不会直接指向PCB。</p>
+<ul>
+<li>执行指针：也是指向当前运行进程的PCB</li>
+<li>就绪表指针：指向了一个记录就绪进程表的指针，表里面记录了PCB的位置</li>
+<li>阻塞表指针：同理</li>
+</ul>
+<p>看看图就理解了：<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617220726.png" alt="image.png"></p>
+<h2 id="5-3-总结"><a href="#5-3-总结" class="headerlink" title="5.3 总结"></a>5.3 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617220803.png" alt="image.png"></p>
+<h1 id="6-进程控制"><a href="#6-进程控制" class="headerlink" title="6. 进程控制"></a>6. 进程控制</h1><p>前面重点说了进程的状态以及操作系统如何组织PCB，这里就说说操作系统具体如何实现各个进程的转换，也就是进程控制。</p>
+<h2 id="6-1-如何实现进程控制"><a href="#6-1-如何实现进程控制" class="headerlink" title="6.1 如何实现进程控制"></a>6.1 如何实现进程控制</h2><p>这里首先复习一下，前面说过一个词——“原语”，这个东西是操作系统内核的组成部分，非常重要。我们这里先给结论：进程控制需要使用原语来实现。</p>
+<p>一个进程从阻塞态变为就绪态需要干两件事：将这个进程的PCB的state改为2，此时这个PCB在阻塞队列里；然后将PCB放入就绪队列中。这两件事儿一定要一起执行，如果中断，就会导致PCB的state和所处队列不一致，可能就会出现BUG。</p>
+<p>之前说过，原语的执行具有原子性，执行原语的过程中不允许被打断，和上面说的就非常吻合，所以就要用原语来实现进程控制。</p>
+<h2 id="6-2-原语为啥原子性"><a href="#6-2-原语为啥原子性" class="headerlink" title="6.2 原语为啥原子性"></a>6.2 原语为啥原子性</h2><p>一般情况下，CPU每执行完一个指令，就会去检查有没有外部的中断信号，如果有就会中断，去执行中断处理程序。为了变面外中断干扰，CPU提供了两条特权指令：</p>
+<ul>
+<li>关中断指令：CPU执行这条指令后，往后面的指令都不会检查外部中断，一定会往下执行</li>
+<li>开中断指令：CPU执行后，恢复到以前的执行完检查外中断的模式，往后就不能保证原子性</li>
+</ul>
+<p>依靠这两条指令就可以实现原子性：<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617222120.png" alt="image.png"></p>
+<p>图中，指令a 和 指令b 一起执行，这两条指令就有了原子性。</p>
+<h2 id="6-3-进程控制相关原语"><a href="#6-3-进程控制相关原语" class="headerlink" title="6.3 进程控制相关原语"></a>6.3 进程控制相关原语</h2><h3 id="6-3-1-创建原语"><a href="#6-3-1-创建原语" class="headerlink" title="6.3.1 创建原语"></a>6.3.1 创建原语</h3><p>也就是涉及到创建进程的原语：<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617222353.png" alt="image.png"><br>这里提一句：这个作业调度里面的作业，指的就是外存里面的程序，把外存里面的程序读入内存，就是作业调度。</p>
+<h3 id="6-3-2-撤销原语"><a href="#6-3-2-撤销原语" class="headerlink" title="6.3.2 撤销原语"></a>6.3.2 撤销原语</h3><p>让进程结束要用到的原语：<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617222743.png" alt="image.png"></p>
+<h3 id="6-3-3-阻塞和唤醒"><a href="#6-3-3-阻塞和唤醒" class="headerlink" title="6.3.3 阻塞和唤醒"></a>6.3.3 阻塞和唤醒</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617222901.png" alt="image.png"></p>
+<h3 id="6-3-4-切换原语"><a href="#6-3-4-切换原语" class="headerlink" title="6.3.4 切换原语"></a>6.3.4 切换原语</h3><p>这个原语是干嘛的？就是说时间片轮转嘛，一个进程的时间片到了，他就需要从运行态返回就绪态，然后另一个进程上CPU，从就绪态变成运行态。切换原语就是干这个的：<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617223007.png" alt="image.png"></p>
+<h3 id="6-3-5-进程的运行环境"><a href="#6-3-5-进程的运行环境" class="headerlink" title="6.3.5 进程的运行环境"></a>6.3.5 进程的运行环境</h3><p>前面说要把进程的运行环境保存到PCB中，进程的运行环境是啥？</p>
+<p>首先说一下：CPU里面有两个比较重要的寄存器，PC和IR，PC也就是程序计数器，它指向了下一条要执行的指令；IR是当前正在执行的指令。然后还有一些别的寄存器就不说了。</p>
+<p>如果现在只有一个进程在运行，有指令 1 2 3 4，那很好解释，CPU将指令1存入IR，PC指向指令2，然后执行IR中的指令。然后CPU根据PC找到指令2，将指令2存入IR，然后PC接着指向指令3，然后CPU执行指令2，以此类推。</p>
+<p>但是如果要进行时间片轮转，执行到指令2之后要下CPU了，咋办？下次再上CPU，CPU如何恢复这些IR和PC？操作系统就会把CPU这些寄存器的数据存到PCB中，等下一次再将PCB读会到CPU。那么这些寄存器的数据，就是这个进程的运行环境信息。</p>
+<h2 id="6-4-总结"><a href="#6-4-总结" class="headerlink" title="6.4 总结"></a>6.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617224219.png" alt="image.png"></p>
+<h1 id="7-进程通讯"><a href="#7-进程通讯" class="headerlink" title="7. 进程通讯"></a>7. 进程通讯</h1><p>首先，进程之间通讯需要操作系统进行支持。进程是分配系统资源的单位（包括内存地址空间），因此各个进程拥有的内存地址空间相互独立。为了保证安全，一个进程不能直接访问另一个进程的地址空间。</p>
+<p>所以，操作系统为进程通讯提供了三种方式：共享存储、消息传递、管道通讯。</p>
+<h2 id="7-1-共享存储"><a href="#7-1-共享存储" class="headerlink" title="7.1 共享存储"></a>7.1 共享存储</h2><p>这个很好理解，一个进程需要对外暴露共享，他就可以在内存中再申请一片空间，共享数据往这片空间写就行了，然后别的进程来这片空间读即可。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617225020.png" alt="image.png"></p>
+<p>互斥这里注意一下就行了，为了避免两个进程都往共享区里面写，操作系统会让写这个操作为互斥操作。</p>
+<p>共享存储又分出来两种：基于存储区和基于数据结构。基于存储区的共享，操作系统只负责在内存中划分出来一块共享存储区，数据的形式、存放位置都是通过通信简称控制，而不是操作系统。这种共享方式速度很快，是一种<strong>高级通信</strong>方式。</p>
+<p>而基于数据结构的共享，就是操作系统规定，共享空间只能放一个 int[10]，这种共享方式速度慢，限制多，是一种<strong>低级通信</strong>方式。</p>
+<p>将内存区域映射到进程的虚拟地址空间，这个先有个印象，往后会详细说。</p>
+<h2 id="7-2-消息传递"><a href="#7-2-消息传递" class="headerlink" title="7.2 消息传递"></a>7.2 消息传递</h2><p>进程间的数据交换以<strong>格式化消息</strong>（Message） 为单位。进程通过操作系统提供的“发送消息&#x2F;接收消息”两个<strong>原语</strong>进行数据交换。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617230026.png" alt="image.png"></p>
+<h3 id="7-2-1-直接通讯"><a href="#7-2-1-直接通讯" class="headerlink" title="7.2.1 直接通讯"></a>7.2.1 直接通讯</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617230239.png" alt="image.png"></p>
+<ul>
+<li>首先进程P写一个消息，肯定是在P的地址空间写消息，然后执行发送原语，将消息发出。</li>
+<li>进程Q的PCB在操作系统内核空间，PCB内部都有一个消息队列，进程P发来的消息就会挂到这个队列上</li>
+<li>然后进程Q执行接收原语，就会在PCB的消息队列上找，哪个是进程P发来的消息</li>
+<li>找到消息以后，将这个消息从内核空间PCB上，复制到进程Q的地址空间。</li>
+</ul>
+<p>所谓的直接通讯，也就是在发送和接收消息的时候指名道姓的说，我这个消息是发给哪个进程的。</p>
+<h3 id="7-2-2-间接通信"><a href="#7-2-2-间接通信" class="headerlink" title="7.2.2 间接通信"></a>7.2.2 间接通信</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617230752.png" alt="image.png"></p>
+<p>这个也很好理解：</p>
+<ul>
+<li>进程P同样在自己的地址空间填写消息，但是不再发送给进程Q，而是发送给信箱A。</li>
+<li>进程Q会使用接收原语，从信箱A获取这个消息，同样是将消息复制到Q的地址空间。</li>
+</ul>
+<p>这个就可以多个进程往信箱中发送消息。</p>
+<h2 id="7-3-管道通讯"><a href="#7-3-管道通讯" class="headerlink" title="7.3 管道通讯"></a>7.3 管道通讯</h2><p>所谓管道就是特殊的共享文件，又名 pipe 文件。其实就是在内存中开辟一个大小固定的内存缓冲区。这个管道单向传递数据，而且必须按顺序读取数据，类似循环队列。</p>
+<p>进程P和进程Q建立pipe，进程P只能往pipe里写，进程Q只能从pipe里读。而且，进程Q只能读最前面未读取的数据，不能像前面共享存储那样，随心所欲想读哪读哪。</p>
+<p>重点：</p>
+<ul>
+<li>管道只能采取半双工通信，也就是在某一时间只能实现单向传输。传输完了以后pipe的方向可以改。如果想要同时进行两个方向的传输，需要设置两个管道。</li>
+<li>各个进程要护齿的访问管道，由操作系统实现</li>
+<li>当管道写满时，写进程将阻塞，直到读进程将数据取走，即可唤醒写进程</li>
+<li>当管道为空时，读进程将阻塞，直到写进程写入数据，即可唤醒读进程。</li>
+<li>数据被读走后就会彻底消失。因此如果多个进程同时读一个pipe时，可能会造成混乱。解决方案是：1-一个管道允许多个写进程，一个读进程；2-允许多个写进程多个读进程，但是读进程会轮流读取数据（Linux做法）</li>
+</ul>
+<p>如果是考试的话，就按多个写进程，一个读进程来就行了。还有，只要pipe没空，读进程就可以读，不用非等pipe满了以后才读，反过来也一样。</p>
+<h2 id="7-4-总结"><a href="#7-4-总结" class="headerlink" title="7.4 总结"></a>7.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230617232207.png" alt="image.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-02-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" rel="prev" title="02.操作系统">
+      <i class="fa fa-chevron-left"></i> 02.操作系统
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-04-%E7%BA%BF%E7%A8%8B/" rel="next" title="04.线程">
+      04.线程 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E8%BF%9B%E7%A8%8B%E6%A6%82%E5%BF%B5"><span class="nav-text">1. 进程概念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%BB%84%E6%88%90"><span class="nav-text">2. 进程的组成</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-PCB-%E7%A8%8B%E5%BA%8F%E6%8E%A7%E5%88%B6%E5%9D%97"><span class="nav-text">2.1 PCB-程序控制块</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E7%A8%8B%E5%BA%8F%E6%AE%B5%E5%92%8C%E6%95%B0%E6%8D%AE%E6%AE%B5"><span class="nav-text">2.2 程序段和数据段</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%89%B9%E5%BE%81"><span class="nav-text">3. 进程的特征</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81"><span class="nav-text">4. 进程状态</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%90%84%E4%B8%AA%E7%8A%B6%E6%80%81"><span class="nav-text">4.1 进程的各个状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E7%9A%84%E8%BD%AC%E6%8D%A2"><span class="nav-text">4.2 进程状态的转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E6%80%BB%E7%BB%93"><span class="nav-text">4.3 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%BB%84%E7%BB%87"><span class="nav-text">5. 进程的组织</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E9%93%BE%E6%8E%A5%E6%96%B9%E5%BC%8F"><span class="nav-text">5.1 链接方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E7%B4%A2%E5%BC%95%E6%96%B9%E5%BC%8F"><span class="nav-text">5.2 索引方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E6%80%BB%E7%BB%93"><span class="nav-text">5.3 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6"><span class="nav-text">6. 进程控制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6"><span class="nav-text">6.1 如何实现进程控制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-%E5%8E%9F%E8%AF%AD%E4%B8%BA%E5%95%A5%E5%8E%9F%E5%AD%90%E6%80%A7"><span class="nav-text">6.2 原语为啥原子性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-3-%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6%E7%9B%B8%E5%85%B3%E5%8E%9F%E8%AF%AD"><span class="nav-text">6.3 进程控制相关原语</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-1-%E5%88%9B%E5%BB%BA%E5%8E%9F%E8%AF%AD"><span class="nav-text">6.3.1 创建原语</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-2-%E6%92%A4%E9%94%80%E5%8E%9F%E8%AF%AD"><span class="nav-text">6.3.2 撤销原语</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-3-%E9%98%BB%E5%A1%9E%E5%92%8C%E5%94%A4%E9%86%92"><span class="nav-text">6.3.3 阻塞和唤醒</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-4-%E5%88%87%E6%8D%A2%E5%8E%9F%E8%AF%AD"><span class="nav-text">6.3.4 切换原语</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-5-%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%BF%90%E8%A1%8C%E7%8E%AF%E5%A2%83"><span class="nav-text">6.3.5 进程的运行环境</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-4-%E6%80%BB%E7%BB%93"><span class="nav-text">6.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-%E8%BF%9B%E7%A8%8B%E9%80%9A%E8%AE%AF"><span class="nav-text">7. 进程通讯</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#7-1-%E5%85%B1%E4%BA%AB%E5%AD%98%E5%82%A8"><span class="nav-text">7.1 共享存储</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-2-%E6%B6%88%E6%81%AF%E4%BC%A0%E9%80%92"><span class="nav-text">7.2 消息传递</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-2-1-%E7%9B%B4%E6%8E%A5%E9%80%9A%E8%AE%AF"><span class="nav-text">7.2.1 直接通讯</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-2-2-%E9%97%B4%E6%8E%A5%E9%80%9A%E4%BF%A1"><span class="nav-text">7.2.2 间接通信</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-3-%E7%AE%A1%E9%81%93%E9%80%9A%E8%AE%AF"><span class="nav-text">7.3 管道通讯</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-4-%E6%80%BB%E7%BB%93"><span class="nav-text">7.4 总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="前面提到过多次了，什么数据总线，控制总线，地址总线啥啥的，这章就详细看看总线是个什么玩意儿。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="13-总线">
+<meta property="og:url" content="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-13-%E6%80%BB%E7%BA%BF/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="前面提到过多次了，什么数据总线，控制总线，地址总线啥啥的，这章就详细看看总线是个什么玩意儿。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719163626.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719164135.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719164556.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719164937.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719165510.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719170217.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719170457.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719170817.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719171120.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719220244.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719220726.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719222411.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719221439.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719222432.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719223329.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719225655.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719230158.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719230940.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719231038.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719231401.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719231638.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719232433.png">
+<meta property="article:published_time" content="2023-07-21T10:02:01.000Z">
+<meta property="article:modified_time" content="2023-07-21T10:11:22.644Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719163626.png">
+
+<link rel="canonical" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-13-%E6%80%BB%E7%BA%BF/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>13-总线 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-13-%E6%80%BB%E7%BA%BF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          13-总线
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-07-21 18:02:01 / 修改时间：18:11:22" itemprop="dateCreated datePublished" datetime="2023-07-21T18:02:01+08:00">2023-07-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">计算机组成原理</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>前面提到过多次了，什么数据总线，控制总线，地址总线啥啥的，这章就详细看看总线是个什么玩意儿。</p>
+<span id="more"></span>
+
+<h1 id="1-总线概述"><a href="#1-总线概述" class="headerlink" title="1. 总线概述"></a>1. 总线概述</h1><p>先看张图：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719163626.png" alt="image.png"></p>
+<p>假如说这是一根数据总线，这里说的是一根，其实一个总线里面包含了多根信号线，每根信号线可以发送一个 bit，所以这跟总线可以并行的发送 4bit 数据。</p>
+<p>同一时刻只能由一个部件发送数据，但是可以有多个部件接受数据。</p>
+<h2 id="1-1-总线定义"><a href="#1-1-总线定义" class="headerlink" title="1.1 总线定义"></a>1.1 总线定义</h2><p>总线是一组能为多个部件 <strong>分时共享</strong> 的公共信息传送线路。有了总线，就可以很方便的在主板上增加硬件，提高 IO 设备和主机之间连接的灵活性。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719164135.png" alt="image.png"></p>
+<h2 id="1-2-总线特性"><a href="#1-2-总线特性" class="headerlink" title="1.2 总线特性"></a>1.2 总线特性</h2><p>四个：</p>
+<ul>
+<li>机械特性：尺寸、形状、管脚数、排列顺序</li>
+<li>电气特性：传输方向和有效的电平范围</li>
+<li>功能特性：每根传输线的功能（地址、数据、控制）</li>
+<li>时间特性：信号的时序关系</li>
+</ul>
+<p>电气特性说一下，方向指的就是总线的传输防线，比如 CPU 可以通过地址总线给 主存 发送地址，但是主存不能通过这根线根 CPU 通讯。而 MDR 就支持 CPU 和 主存的双向通讯。</p>
+<p>电平范围说的是，我们可以规定 0.1 - 0.5v 是低电平，4.8 - 5.2v 是高电平。</p>
+<h2 id="1-3-总线分类"><a href="#1-3-总线分类" class="headerlink" title="1.3 总线分类"></a>1.3 总线分类</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719164556.png" alt="image.png"></p>
+<h3 id="1-3-1-串行总线和并行总线"><a href="#1-3-1-串行总线和并行总线" class="headerlink" title="1.3.1 串行总线和并行总线"></a>1.3.1 串行总线和并行总线</h3><ul>
+<li>串行总线：每次传输只能发送一个 bit 数据，举例就是 USB。</li>
+<li>并行总线：一根总线有多个信号线，可以并行的发送多个 bit 位。</li>
+</ul>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719164937.png" alt="image.png"></p>
+<p>因为并行总线内的各个信号线离得近，可能发生干扰，所以数据不能发的特别快，不然容易发生数据跳变。</p>
+<p>所以，不能说并行总线的速度一定比串行总线的速度快。</p>
+<h3 id="1-3-2-片内、系统、通信"><a href="#1-3-2-片内、系统、通信" class="headerlink" title="1.3.2 片内、系统、通信"></a>1.3.2 片内、系统、通信</h3><p>片内总线：芯片内部的总线。之前的 CPU 内部总线就是属于这个，不说了。</p>
+<p>系统总线：计算机系统内各个功能部件（CPU、主存、IO接口）之间相互连接的总线。这里会根据功能再分出三种：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719165510.png" alt="image.png"></p>
+<p>通信总线：用于计算机系统之间活着计算机系统与其他系统（比如远程通讯设备、测试设备）之间信息传送的总线，通信总线也叫外部总线。比如网线就是外部总线。</p>
+<h3 id="1-3-3-系统总线结构"><a href="#1-3-3-系统总线结构" class="headerlink" title="1.3.3 系统总线结构"></a>1.3.3 系统总线结构</h3><p>这里先提一句，后面会详细讲这个系统总线。</p>
+<p><strong>单总线结构</strong></p>
+<p>将三种总线：数据、地址、控制 整合成一根大的系统总线，然后让各个部件连接到这个总线上。系统总线会按传送信息的不同细分使用的是里面的哪根线。</p>
+<p>各个部件互斥的使用这一根系统总线，而且 虽然总线的速度很快，但是这跟总线还连接着很多 IO 设备，IO 设备和 CPU 主存 之类的数据传输就比较慢了，这就导致总线的性能被浪费。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719170217.png" alt="image.png"></p>
+<p><strong>双总线结构</strong></p>
+<p>解决了上面 IO 设备速度慢浪费性能的问题，可以将主存总线设计的很快，IO总线设计的慢一点：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719170457.png" alt="image.png"></p>
+<p>这里面的通道在 OS 的 IO设备里面讲到过，这里不说了。</p>
+<p><strong>三总线结构</strong></p>
+<p>三根总线：</p>
+<ul>
+<li>IO 总线：CPU 和一些慢速的 IO 设备进行连接，比如键盘</li>
+<li>主存总线：CPU 和 主存之间交互</li>
+<li>DMA 总线：DMA 直接内存访问，用于连接主存和一些比较快的 IO 设备，比如磁盘</li>
+</ul>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719170817.png" alt="image.png"></p>
+<h2 id="1-4-总结"><a href="#1-4-总结" class="headerlink" title="1.4 总结"></a>1.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719171120.png" alt="image.png"></p>
+<h1 id="2-总线性能指标"><a href="#2-总线性能指标" class="headerlink" title="2. 总线性能指标"></a>2. 总线性能指标</h1><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719220244.png" alt="image.png"></p>
+<p>好像没啥解释的，说一下第二个时钟周期，里面说现在有的计算机总线时钟周期可能是桥接器提供，啥意思？</p>
+<p>就是现在的好多计算机都是四总线设计，根据连接的硬件速度不同总线速度也不同，桥接器就是在各个总线的交叉口上调配各个不同速度总线一起工作。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719220726.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719222411.png" alt="image.png"></p>
+<h2 id="2-1-例题"><a href="#2-1-例题" class="headerlink" title="2.1 例题"></a>2.1 例题</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719221439.png" alt="image.png"></p>
+<p>这里说的地址和数据总线复用其实很好理解，就是同一根线，第一次用它发就是发地址，第二次用它发就是发数据。</p>
+<p>第一题说一下，上升沿和下降沿各传送一次数据，说的就是一个时钟周期内，低电平到高电平发一次，高变低再发一次，所以一次时钟周期发送两次数据，得到 <strong>总线周期 &#x3D; 1&#x2F;2 个时钟周期</strong>。</p>
+<p>然后总线工作频率 &#x3D; 每秒钟多少个时钟周期（时钟频率）&#x2F; 多少个时钟频率发一次数据（N），这里就得到 66M &#x2F; （1&#x2F;2）也就是 132 MHz。</p>
+<p>所以每秒钟总线可以发送 132 M 个数据，乘上数据长度 32 bit，也就得到了带宽。</p>
+<p>第二题就注意下什么是猝发就行了。</p>
+<h2 id="2-2-总结"><a href="#2-2-总结" class="headerlink" title="2.2 总结"></a>2.2 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719222432.png" alt="image.png"></p>
+<h1 id="3-总线仲裁"><a href="#3-总线仲裁" class="headerlink" title="*3. 总线仲裁"></a>*3. 总线仲裁</h1><p>408 不考。</p>
+<p>多个部件要请求总线的控制权，如何安排不同的部件什么时候上总线，就是总线仲裁，归根到底就是一种总线调度问题。</p>
+<p>有个基本概念：当一个部件上了总线，他就是主设备，然后他可以要求给谁传输数据，这个设备就是从设备，从设备只能被动的从主设备上接受指令和数据。</p>
+<h1 id="4-总线的操作和定时"><a href="#4-总线的操作和定时" class="headerlink" title="4. 总线的操作和定时"></a>4. 总线的操作和定时</h1><p>占用总线的一对设备如何进行数据传输。</p>
+<h2 id="4-1-总线的四个阶段"><a href="#4-1-总线的四个阶段" class="headerlink" title="4.1 总线的四个阶段"></a>4.1 总线的四个阶段</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719223329.png" alt="image.png"></p>
+<p>这个图十分好理解，不说了，下面会按照从上往下的顺序，依次说说这四种总线定时方式。</p>
+<h2 id="4-2-同步定时方式"><a href="#4-2-同步定时方式" class="headerlink" title="4.2 同步定时方式"></a>4.2 同步定时方式</h2><p>就是说会有一个东西在旁边数拍子，在每个节拍，主设备和从设备必须完成相应的步骤，最终跟着节奏完成一次设备通信。</p>
+<h3 id="4-2-1-读命令流程"><a href="#4-2-1-读命令流程" class="headerlink" title="4.2.1 读命令流程"></a>4.2.1 读命令流程</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719225655.png" alt="image.png"></p>
+<p>详细步骤右边都给了，这里看看这个图到底说了个啥：</p>
+<ul>
+<li>T1 开始前，CPU 通过地址总线给出了地址，这里为啥是从中间往两边分裂，代表的就是地址线的电平即可能是高电平，也可能是低电平。</li>
+<li>T1 结束时，CPU 开始发送读命令，T2 开始前电平稳定。这里线条往下的意思就是低电平有效。</li>
+<li>T3 开始前，数据开始发送，同样是既可以往高走也可以往低走，高低电平都会发送。</li>
+<li>T4 开始前，读命令结束，恢复高电平；在 T4 最后 CPU 撤销地址线的电平</li>
+</ul>
+<h3 id="4-2-2-优劣势"><a href="#4-2-2-优劣势" class="headerlink" title="4.2.2 优劣势"></a>4.2.2 优劣势</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719230158.png" alt="image.png"></p>
+<p>解释下缺点，因为里面有人数拍子，所以每一步都必须按照时间准时完成，如果 CPU 和一个慢速的 IO 设备通讯，从设备跟不上这个节奏，整个就会乱。</p>
+<p>同时，每一步卡点完成，没有留出数据校验的时间，所以只有在数据传输安全的情况下才会使用这种（也就是最下面那一行）。</p>
+<h2 id="4-3-异步定时方式"><a href="#4-3-异步定时方式" class="headerlink" title="4.3 异步定时方式"></a>4.3 异步定时方式</h2><p>不提供节拍，而是通过握手信号来实现定时控制。</p>
+<p>主设备提出交换信息的“请求”信号，经过接口送到从设备；从设备接到主设备的请求后，通过接口向主设备发出 “回答信号”。</p>
+<p>根据“请求”和“回答”信号的撤销是否互锁，分为下面三种类型：</p>
+<ul>
+<li>不互锁方式</li>
+<li>半互锁方式</li>
+<li>全互锁方式</li>
+</ul>
+<p>其实特简单，就是是否等到响应再撤销信号的区别：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719230940.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719231038.png" alt="image.png"></p>
+<h2 id="4-4-半同步通信"><a href="#4-4-半同步通信" class="headerlink" title="4.4 半同步通信"></a>4.4 半同步通信</h2><p>书上没有，补充的。</p>
+<p>就是同步定时的加强版，为了避免某些慢速设备跟不上节奏，就加了一个 “等待”响应信号 wait，如果发现设备跟不上节拍了，就让 wait 向总线控制器发出等待指令，就会等待几个节拍。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719231401.png" alt="image.png"></p>
+<h2 id="4-5-分离式通信"><a href="#4-5-分离式通信" class="headerlink" title="4.5 分离式通信"></a>4.5 分离式通信</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719231638.png" alt="image.png"></p>
+<h2 id="4-6-总结"><a href="#4-6-总结" class="headerlink" title="4.6 总结"></a>4.6 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719232433.png" alt="image.png"></p>
+<h1 id="5-总线标准"><a href="#5-总线标准" class="headerlink" title="* 5. 总线标准"></a>* 5. 总线标准</h1><p>408 不考。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-12-%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF/" rel="prev" title="12-指令流水线">
+      <i class="fa fa-chevron-left"></i> 12-指令流水线
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-14-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F/" rel="next" title="14-输入输出系统">
+      14-输入输出系统 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E6%80%BB%E7%BA%BF%E6%A6%82%E8%BF%B0"><span class="nav-text">1. 总线概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E6%80%BB%E7%BA%BF%E5%AE%9A%E4%B9%89"><span class="nav-text">1.1 总线定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E6%80%BB%E7%BA%BF%E7%89%B9%E6%80%A7"><span class="nav-text">1.2 总线特性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E6%80%BB%E7%BA%BF%E5%88%86%E7%B1%BB"><span class="nav-text">1.3 总线分类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-1-%E4%B8%B2%E8%A1%8C%E6%80%BB%E7%BA%BF%E5%92%8C%E5%B9%B6%E8%A1%8C%E6%80%BB%E7%BA%BF"><span class="nav-text">1.3.1 串行总线和并行总线</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-2-%E7%89%87%E5%86%85%E3%80%81%E7%B3%BB%E7%BB%9F%E3%80%81%E9%80%9A%E4%BF%A1"><span class="nav-text">1.3.2 片内、系统、通信</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-3-%E7%B3%BB%E7%BB%9F%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84"><span class="nav-text">1.3.3 系统总线结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-%E6%80%BB%E7%BB%93"><span class="nav-text">1.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E6%80%BB%E7%BA%BF%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87"><span class="nav-text">2. 总线性能指标</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E4%BE%8B%E9%A2%98"><span class="nav-text">2.1 例题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E6%80%BB%E7%BB%93"><span class="nav-text">2.2 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E6%80%BB%E7%BA%BF%E4%BB%B2%E8%A3%81"><span class="nav-text">*3. 总线仲裁</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E6%80%BB%E7%BA%BF%E7%9A%84%E6%93%8D%E4%BD%9C%E5%92%8C%E5%AE%9A%E6%97%B6"><span class="nav-text">4. 总线的操作和定时</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E6%80%BB%E7%BA%BF%E7%9A%84%E5%9B%9B%E4%B8%AA%E9%98%B6%E6%AE%B5"><span class="nav-text">4.1 总线的四个阶段</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E5%90%8C%E6%AD%A5%E5%AE%9A%E6%97%B6%E6%96%B9%E5%BC%8F"><span class="nav-text">4.2 同步定时方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-1-%E8%AF%BB%E5%91%BD%E4%BB%A4%E6%B5%81%E7%A8%8B"><span class="nav-text">4.2.1 读命令流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-2-%E4%BC%98%E5%8A%A3%E5%8A%BF"><span class="nav-text">4.2.2 优劣势</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E5%BC%82%E6%AD%A5%E5%AE%9A%E6%97%B6%E6%96%B9%E5%BC%8F"><span class="nav-text">4.3 异步定时方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E5%8D%8A%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1"><span class="nav-text">4.4 半同步通信</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E5%88%86%E7%A6%BB%E5%BC%8F%E9%80%9A%E4%BF%A1"><span class="nav-text">4.5 分离式通信</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-6-%E6%80%BB%E7%BB%93"><span class="nav-text">4.6 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E6%80%BB%E7%BA%BF%E6%A0%87%E5%87%86"><span class="nav-text">* 5. 总线标准</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="存储系统，也就是主存。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="04-存储系统">
+<meta property="og:url" content="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-04-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="存储系统，也就是主存。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709103908.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709110148.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709110650.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709111200.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709111938.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709112932.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709114155.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709114215.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709115112.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709115406.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709120100.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709121237.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709122400.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709123956.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709125707.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710122009.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710122341.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710122449.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710122830.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710123424.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710123919.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710123949.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710124400.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710155137.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710155612.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710155934.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710160253.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710160835.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710161903.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710162427.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710162510.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710163046.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710163647.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230710163915.png">
+<meta property="article:published_time" content="2023-07-21T10:00:30.000Z">
+<meta property="article:modified_time" content="2023-07-21T10:09:13.499Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230709103908.png">
+
+<link rel="canonical" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-04-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>04-存储系统 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-04-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          04-存储系统
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-07-21 18:00:30 / 修改时间：18:09:13" itemprop="dateCreated datePublished" datetime="2023-07-21T18:00:30+08:00">2023-07-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">计算机组成原理</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>存储系统，也就是主存。</p>
+<span id="more"></span>
+
+<h1 id="1-存储系统基本概念"><a href="#1-存储系统基本概念" class="headerlink" title="1. 存储系统基本概念"></a>1. 存储系统基本概念</h1><h2 id="1-1-存储器的层次化结构"><a href="#1-1-存储器的层次化结构" class="headerlink" title="1.1 存储器的层次化结构"></a>1.1 存储器的层次化结构</h2><p>越靠近 CPU 的存储器速度越快，容量越小，价格越高。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709103908.png" alt="image.png"></p>
+<p>高速缓存 和 内存 都可以和 CPU 交互数据。外存和内存的数据交换一般由 OS 完成，内存和高速缓存的数据交互一般由硬件完成，软件不需要操心。</p>
+<h2 id="1-2-存储器的分类"><a href="#1-2-存储器的分类" class="headerlink" title="1.2 存储器的分类"></a>1.2 存储器的分类</h2><p>按照层次分类就是上面这个图，从上到下速度越来越慢。其中 Cache 和 主存可以直接被 CPU 读写。</p>
+<p>按照存储介质：</p>
+<ul>
+<li>半导体存储器：主存、Cache，速度会更快</li>
+<li>磁表面存储器：比如磁带、磁盘</li>
+<li>光存储器：比如光盘</li>
+</ul>
+<p>按照存取方式分类：</p>
+<ul>
+<li>随机存取存储器（RAM）：读写任何一个存储单元所需要的时间都是相同的，类似数组，可以直接访问一个存储地址。</li>
+<li>顺序存取存储器（SAM）：比如磁带，想要访问疑问存储单元必须要从头开始找，读取时间取决于存储单元所在位置</li>
+<li>直接存取存储器（DAM）：比如磁盘，既有随机存取的特性，也有顺序存取的特性。比如磁头可以移动到相应位置，然后顺着磁片转动的方向顺序读写数据。</li>
+<li>相联存储器（Associative Memory）：可以按照内容访问的存储器，可以按照内容检索到存储位置进行读写，比如 “快表”。</li>
+</ul>
+<p>DAM 的速度介于 RAM 和 SAM 之间，比 SAM 快。SAM 和 DAM 都叫串行访问存储器：读写某个存储单元所需要的时间和存储单元的物理位置有关。</p>
+<p>按照数据的可更改性：</p>
+<ul>
+<li>读写存储器（Read&#x2F;Write）：即可读也可写，比如磁盘、内存、Cache</li>
+<li>只读存储器（Read Only，ROM）：只能读不能写，比如蓝光光碟</li>
+</ul>
+<p>但是实际上 ROM 也可以写，就是麻烦。</p>
+<p>按照信息的可保存性：</p>
+<ul>
+<li><p>易失性存储器：比如主存，断电后数据丢失</p>
+</li>
+<li><p>非易失性存储器：比如磁盘、光盘，断电后数据不丢失</p>
+</li>
+<li><p>可破坏性读出：信息读出后数据会被破坏，需要进行重写，比如 DRAM 芯片</p>
+</li>
+<li><p>非破坏性读出：就是不会破坏，比如磁盘，SRAM 芯片</p>
+</li>
+</ul>
+<h2 id="1-3-存储器性能指标"><a href="#1-3-存储器性能指标" class="headerlink" title="1.3 存储器性能指标"></a>1.3 存储器性能指标</h2><ul>
+<li>存储容量：存储字长 x 字长，比如 1M x 8位</li>
+<li>单位称为：每位价格 &#x3D; 总成本 &#x2F; 总容量</li>
+<li>存储速度：数据传输率 &#x3D; 数据宽度&#x2F;存储周期</li>
+</ul>
+<p>这个存储周期说一说：存储器存取完以后有一个冷却时间，启动存储到存储完成时存取时间，然后到下一次存取的时间间隔叫恢复时间，这俩时间加到一起叫存取周期。</p>
+<ul>
+<li>主存带宽：也就数据传输率，每秒从主存进出信息的最大数量，单位是 字&#x2F;秒、字节&#x2F;秒、位&#x2F;秒。</li>
+</ul>
+<h2 id="1-4-总结"><a href="#1-4-总结" class="headerlink" title="1.4 总结"></a>1.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709110148.png" alt="image.png"></p>
+<h1 id="2-主存储器的基本组成"><a href="#2-主存储器的基本组成" class="headerlink" title="2. 主存储器的基本组成"></a>2. 主存储器的基本组成</h1><h2 id="2-1-基本的半导体元件及原理"><a href="#2-1-基本的半导体元件及原理" class="headerlink" title="2.1 基本的半导体元件及原理"></a>2.1 基本的半导体元件及原理</h2><p>回忆一下内存的组成，内存里面有存储体、MAR、MDR，存储体里面是一大堆的存储单元，每个存储单元是一串存储元构成的。这里说说存储元是咋来的。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709110650.png" alt="image.png"></p>
+<p>说一下 MOS 管是啥玩意，这个东西是一种开关，当上面给一定的电压以后，下面虚线部分就会被接通。所以叫半导体，高电压时导电，低电压时不导电。</p>
+<p>存储数据：</p>
+<p>存储元的右边给一个 5V 的电压，MOS 上面也给 5V 的电压，则线路接通，5V 电压就会给到电容，电容的上端 5V，下端接地 0V，则电容充电，可以保存一定的电荷，则可以代表当前存储元存储了二进制 1。</p>
+<p>访问数据：</p>
+<p>MOS 上面个 5V 电压，线路接通，如果电容里面保存了电荷的话，电容就会放电，存储元右边如果检测到电荷，说明存储元存储了 1，访问到了数据。如果没有电荷，则存储的是 0 。</p>
+<p>我们将一片存储元有序排列：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709111200.png" alt="image.png"></p>
+<p>给红线一个 5V 的高电压，直接接通一串存储元，然后每个绿线接受电荷，就可以得到这一行存储元存储的数据，这就构成了存储单元。然后一串存储单元就构成了存储体。</p>
+<p>一次性可以读出的绿色的数据，就是存储字，这图里一行只有 8 个存储单元，一次只能读入 8 bit 数据，所以存储字长为 8bit。所以说一次访存只能得到一个存储字，就是因为每次给电压只能接通一行存储元。</p>
+<p>存储单元长度 &#x3D; 字长。但是编址不一定按照存储单元来编，通常是按照字节编址，一个存储单元里面可能有多个地址。</p>
+<h2 id="2-2-存储器芯片的基本原理"><a href="#2-2-存储器芯片的基本原理" class="headerlink" title="2.2 存储器芯片的基本原理"></a>2.2 存储器芯片的基本原理</h2><p>直接上图：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709111938.png" alt="image.png"></p>
+<p>这张图里有假设有 8 个存储单元，则三位二进制可以表示所有存储单元，故 MAR 为 3位。我们要访问 0 号存储单元，MAR 给出 000，译码器就需要将 MAR 发来的 000 转化为具体的电信号，去接通相应的线路，得到数据，并将其存在 MDR 中。</p>
+<p>除此之外，还需要一个控制电路，首先需要控制 MAR，只有当 MAR 电压稳定后才让其接通到译码器，然后当电压稳定后，才认为 MDR 数据无误，才会开启数据总线，将数据从 MDR 发送出去。</p>
+<p>还有三个东西：</p>
+<ul>
+<li>片选线：CS 或者 CE（这俩头上有个横线，这里没法加），头上加横线表示低电平时有效，就是说芯片可用。</li>
+<li>写控制线：WE（上划线），该线低电平时表示当前允许写</li>
+<li>读控制线：OE（上划线），该线低电平时表示当前允许读</li>
+</ul>
+<p>WE 和 OE 也可以合二为一，还是 WE（上划线），低电平时允许写，高电平时允许读。</p>
+<p>简化的结构如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709112932.png" alt="image.png"></p>
+<p>地址线和 MAR 对应，数据线和 MDR 对应。一个内存条上面有多个存储芯片，比如一个 8G 的内存条可能就有 8 个 1G 的存储芯片，假如我们想要访问第二个存储芯片，就可以给第二个芯片的片选线一个低电平，其他的芯片给高电平，就可以实现。</p>
+<p>这些线实际对应的就是金属引脚，比如 MAR 是 3 位的话，地址线就是 3 根，金属引脚就是 3 个。</p>
+<p>现在告诉你 MAR 有 n 位，则存储单元个数 &#x3D; 2^n。总容量就是 &#x3D; 存储单元个数 x 存储字长。或者也可以说一个存储芯片是 8 x 8 的，就是说存储单元有 8 个，存储字长为 8 bit。同理如果是 8K x 8 位，则总容量就是 2^13 x 8bit 。</p>
+<h2 id="2-3-寻址"><a href="#2-3-寻址" class="headerlink" title="2.3 寻址"></a>2.3 寻址</h2><p>现代计算机通常是按字节编址，就是说一个字节一个地址，但是也支持按字、半字寻址。</p>
+<p>假如总容量为 1KB，按照一个 Byte 一个地址，则需要 1K 个地址，地址线就是 10 根。按字寻址的话，就是 256 个单元，每个单元 4Byte。按半字寻址，就是 512 个单元，每个单元 2Byte。字寻址就是将字号左移两位就可以得到起始字节地址。半字就是左移1位。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709114155.png" alt="image.png"></p>
+<h2 id="2-4-总结"><a href="#2-4-总结" class="headerlink" title="2.4 总结"></a>2.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709114215.png" alt="image.png"></p>
+<h1 id="3-DRAM-和-SRAM"><a href="#3-DRAM-和-SRAM" class="headerlink" title="3. DRAM 和 SRAM"></a>3. DRAM 和 SRAM</h1><p>这是两种存储芯片，之前说过 RAM 是随机存储器，DRAM 就是动态 RAM，SRAM 是静态 RAM。DRAM 用于主存、SRAM 用于 Cache。</p>
+<p>这俩芯片的对比是一个考点。</p>
+<h2 id="3-1-栅极电容-VS-双稳态触发器"><a href="#3-1-栅极电容-VS-双稳态触发器" class="headerlink" title="3.1 栅极电容 VS 双稳态触发器"></a>3.1 栅极电容 VS 双稳态触发器</h2><p>之前我们说的主存储器基本组成，说的就是 DRAM，一般用于主存，DRAM 芯片使用栅极电容存储信息，就是说过的电容存储元。</p>
+<p>而 SRAM 使用双稳态触发器存储信息。</p>
+<h3 id="3-1-1-栅极电路"><a href="#3-1-1-栅极电路" class="headerlink" title="3.1.1 栅极电路"></a>3.1.1 栅极电路</h3><p>之前说的已经很多了：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709115112.png" alt="image.png"></p>
+<p>读出1：MOS 接通，电容放电，数据线上产生电流；读出0：相应的，电容里面没有存储电荷，数据线没有产生电流。</p>
+<p>这种有个问题，就是接受数据的时候电容就把电荷释放掉了，属于是 <font color='red'>破坏性读出</font>，所以读出后还需要将数据重写，也叫 <font color='red'>再生</font>。读写速度更慢，但是存储元制造成本更低，集成度高，功耗低。</p>
+<h3 id="3-1-2-双稳态触发器"><a href="#3-1-2-双稳态触发器" class="headerlink" title="3.1.2 双稳态触发器"></a>3.1.2 双稳态触发器</h3><p>双稳态：储存数据 1 时，A 高 B 底；存储数据 0 时，A 低 B 高。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709115406.png" alt="image.png"></p>
+<p>所以这玩意就需要两条数据线，读出时，发现BL低电平，BLX高电平，则 A 低 B 高，读取到了 0。写入时逆着来呗，BL 给一个低电平，BLX 给一个高电平，则写入0。</p>
+<p>这种就属于 <font color='red'>非破坏性读出</font>，读出后不需要重写，所以这种玩意而读写速度更快，但是每个存储元制造成本更高，集成度低，功耗大。</p>
+<h3 id="3-1-3-二者对比"><a href="#3-1-3-二者对比" class="headerlink" title="3.1.3 二者对比"></a>3.1.3 二者对比</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709120100.png" alt="image.png"></p>
+<p>这里又引出一个新问题：啥是刷新。电容里面的电荷即使不管他，也是会慢慢流失的，DRAM 里面的电容只能维持电荷 2ms，所以每隔 2ms，就需要给电容重新充电。</p>
+<p>而 SRAM 只要不断电，触发器的状态就不会改变。</p>
+<h2 id="3-2-DRAM-的刷新"><a href="#3-2-DRAM-的刷新" class="headerlink" title="3.2 DRAM 的刷新"></a>3.2 DRAM 的刷新</h2><p><strong>刷新周期</strong></p>
+<p>前面说了，电容只能撑 2ms，所以一般 2ms 刷新一次。</p>
+<p><strong>一次刷新多少存储单元</strong></p>
+<p>这个是个啥玩意，一行不就一个存储单元么，咋还一行存储单元？这个就引出了行列地址。假设 MAR 是 20 位，则译码器就的输出端就需要 2^20 根选通线连接存储单元，这个难度就有点大了。</p>
+<p>解决办法就是将存储单元二维排列，然后分行地址和列地址。这样每个译码器的地址线就需要 n&#x2F;2 根，输出端的线就会大幅减少。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709121237.png" alt="image.png"></p>
+<p>这个算一算就知道了，本来有 2^n 个存储单元，平铺开的话，行列分别是 2^n 开根号，就是 2^(n&#x2F;2)，也就说地址线需要 n&#x2F;2 根。用 MAR 20位举例，拆分后，每个译码器地址线 10 根，输出端控制线就是 1024 根。</p>
+<p>这样的话只需要给出行地址，让行地址译码器选中一整行的存储单元刷新就行了。</p>
+<p><strong>如何刷新</strong></p>
+<p>有硬件支持，读出一行的信息后重新写入，占用一个读写周期。</p>
+<p><strong>什么时候刷新</strong></p>
+<p>假设 DRAM 内部 128 x 128 个存储单元，读写周期（存取周期）0.5us，2ms 共 2ms &#x2F; 0.5us &#x3D; 4000个周期。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709122400.png" alt="image.png"></p>
+<p>首先明确一下，给了读写周期，那么刷新一行时间我们也默认 0.5us，同时之前说过，存取周期 &#x3D; 存取时间 + 恢复时间，这个恢复时间可不等价于这个刷新操作。</p>
+<p>第一种方式，2ms 内需要刷新 2000 次，有点过于频繁了。第二种死区有点长。第三种就是将每行的刷新分散到 2ms 内，在 CPU 空闲的时候刷新一下得了。</p>
+<p>刷新操作由存储器独立完成，不需要 CPU 控制。</p>
+<h2 id="3-3-送行列地址"><a href="#3-3-送行列地址" class="headerlink" title="3.3 送行列地址"></a>3.3 送行列地址</h2><p>最后说一下这个东西，SRAM 和 DRAM 内部都是行列结构，但是 DRAM 容量更大，所以地址线通常也多，为了减少地址线，就提出了 <strong>地址线复用技术</strong>。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709123956.png" alt="image.png"></p>
+<p>采用这种方法就需要分两次发送行列地址。</p>
+<h1 id="4-ROM-芯片"><a href="#4-ROM-芯片" class="headerlink" title="4. ROM 芯片"></a>4. ROM 芯片</h1><p>ROM 是哟中非易失性的芯片，断电后数据不会消失。</p>
+<h2 id="4-1-MROM"><a href="#4-1-MROM" class="headerlink" title="4.1 MROM"></a>4.1 MROM</h2><p>Mask Read-Only Memory，掩模式只读存储器。</p>
+<p>厂家按照客户的需求，在芯片生产过程中直接写入信息，之后任何人不可重写，可靠性高，灵活性差，生产周期长，只适合批量定制。</p>
+<h2 id="4-2-PROM"><a href="#4-2-PROM" class="headerlink" title="4.2 PROM"></a>4.2 PROM</h2><p>Programmable ROM 可编程只读存储器。用户买来以后可以用专门的写入器向其中写入信息，写一次后就不能更改。</p>
+<h2 id="4-3-EPROM"><a href="#4-3-EPROM" class="headerlink" title="4.3 EPROM"></a>4.3 EPROM</h2><p>Erasable Programmable ROM，可擦除的可编程只读存储器，允许用户写入，之后也可以用某种方式擦除数据，可以进行多次重写。</p>
+<p>这里面又分俩：</p>
+<ul>
+<li>UVEPROM：紫外线擦除，紫外线照射一会儿就能擦除所有数据</li>
+<li>EEPROM：电擦除，擦除特定的字</li>
+</ul>
+<h2 id="4-4-Flash-Memory"><a href="#4-4-Flash-Memory" class="headerlink" title="4.4 Flash Memory"></a>4.4 Flash Memory</h2><p>闪速存储器，也就是闪存，比如 U盘，SD 卡。在 EEPROM 基础上来的，断电后也可以保存信息，且<font color='red'>可以进行多次快速擦除重写</font>。</p>
+<p>因为闪存需要先擦除再写入，所以写的速度会比读更慢。</p>
+<p>每个存储元只需要单个 MOS，所以位密度比 RAM 要高，其实就是说相同体积下存储元比 RAM 更多，可以保存更多 bit。</p>
+<h2 id="4-5-SSD"><a href="#4-5-SSD" class="headerlink" title="4.5 SSD"></a>4.5 SSD</h2><p>固态硬盘，由控制单元和存储单元（Flash 芯片）构成，与闪存的核心区别就是控制单元不一样，但是存储介质都类似，<font color='red'>可以进行多次快速擦除重写</font>。SSD速度快，功耗低，价格高。</p>
+<p>手机的辅存也用的是 Flash 芯片，但是比 SSD 使用的芯片集成度高，功耗低，价格贵。</p>
+<h2 id="4-6-计算机内部的-ROM"><a href="#4-6-计算机内部的-ROM" class="headerlink" title="4.6 计算机内部的 ROM"></a>4.6 计算机内部的 ROM</h2><p>学过操作系统的知道，开机时，计算机会首先读取主板上的一块 ROM 芯片，执行“自举装入程序”，引导计算机从辅存中加载操作系统。</p>
+<p>虽然说 ROM 在主板上，逻辑上我们认为主存由 ROM 和 RAM 组成，二者会统一编址。</p>
+<h2 id="4-7-总结"><a href="#4-7-总结" class="headerlink" title="4.7 总结"></a>4.7 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230709125707.png" alt="image.png"></p>
+<h1 id="5-双口-RAM"><a href="#5-双口-RAM" class="headerlink" title="5. 双口 RAM"></a>5. 双口 RAM</h1><p>RAM 存在存取周期，就是说每次存取完后都需要有个恢复时间。如果多核CPU访问 RAM，第一个 CPU 访问完 RAM，这个时候第二个 CPU 也要访问 RAM，是不是就得等 RAM 恢复。如何优化这个东西，就用到了双端口 RAM。</p>
+<p>没啥用，这块不考。</p>
+<h1 id="6-多模块存储器"><a href="#6-多模块存储器" class="headerlink" title="6. 多模块存储器"></a>6. 多模块存储器</h1><h2 id="6-1-多体并行存储器"><a href="#6-1-多体并行存储器" class="headerlink" title="6.1 多体并行存储器"></a>6.1 多体并行存储器</h2><p>为了扩展内存，可以将多个存储体放到一起，其实就可以理解成多个内存条。如何给这些内存条编址就是个问题。</p>
+<h3 id="6-1-1-高位交叉编址"><a href="#6-1-1-高位交叉编址" class="headerlink" title="6.1.1 高位交叉编址"></a>6.1.1 高位交叉编址</h3><p>计算机为了区分不同的存储体，就将内存地址划分为两块：体号、体内地址。体号用于表明要访问哪块存储体，体内地址自然就是存储体内的地址，和 OS 里面的逻辑地址很像。</p>
+<p>如果将体号放在逻辑地址的高位，就是这里的高位交叉编址：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710122009.png" alt="image.png"></p>
+<p>如果我们将地址转化为十进制，发现 M0 的地址是：<code>0 1 2 3 4 5 6 7</code>，M1 的地址是 <code>8 9 10 ...</code> ，也就是同一块存储体内的地址按顺序排列。</p>
+<p>假设一块存储体的存取周期为 T，存取时间为 r，T &#x3D; 4r。则每次访问一个存储体都需要花费 3r 的时间来恢复。如果我们要连续访问 <code>00000, 00001, 00010, 00011, 00100</code> 五个地址，就会导致每次访问完一个地址，存储体都需要花费 3r 的时间恢复，这段时间内不能访问下面一个地址，总花费时间为 5T。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710122341.png" alt="image.png"></p>
+<h3 id="6-1-2-低位交叉编址"><a href="#6-1-2-低位交叉编址" class="headerlink" title="6.1.2 低位交叉编址"></a>6.1.2 低位交叉编址</h3><p>和上面对应，逻辑地址的低位是体号，高位是体内地址：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710122449.png" alt="image.png"></p>
+<p>同理将地址变为十进制，发现地址 <code>0 1 2 3 </code> 四个连续的逻辑地址被分散到了四个存储体上，逻辑地址横着连续，单个存储体内地址不连续。</p>
+<p>这样的好处是，如果我们要访问一块连续的内存，就不需要等待前一块内存所对应的存储体恢复，让前面慢慢恢复，CPU 直接访问下一块存储体即可。</p>
+<p>还是 T &#x3D; 4r，连续访问 <code>00000 00001 00010 00011 00100</code> 五个地址，效果如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710122830.png" alt="image.png"></p>
+<p>如果访问的内存足够多，宏观上访问一次内存的时间就会趋近 r。效率几乎提升四倍。</p>
+<p>为啥要讨论访问连续空间？因为一般来说代码就会放在连续的空间内。也就是 OS 中说的局部性原理。</p>
+<p>这种存取方式就叫 <font color='red'>流水线</font>，CPU 的操作很快，但是访问内存很慢，就安排多个存储体并行的为 CPU 提供服务，宏观上，一个存储周期内，m体交叉存储器可以提供的数据量为单个模块的 m 倍。</p>
+<h3 id="6-1-3-存储体数量"><a href="#6-1-3-存储体数量" class="headerlink" title="6.1.3 存储体数量"></a>6.1.3 存储体数量</h3><p>存储周期为 T，存取时间为 r（或者换一种说法，总线传输周期为 r，反正就是 CPU 读写一次内存的时间不可能低于 r），为了让流水线不间断，应该保证模块数 m &gt;&#x3D; T&#x2F;r。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710123424.png" alt="image.png"></p>
+<p>最好的情况就是让 m &#x3D; T&#x2F;r，这样可以节省存储体数量，也不会让 CPU 等待。</p>
+<p>如何确定地址 x 对应哪个存储体？可以用二进制判断，看最低两位。或者 x 的十进制直接 mod m，也行。</p>
+<h3 id="6-1-4-总结"><a href="#6-1-4-总结" class="headerlink" title="6.1.4 总结"></a>6.1.4 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710123919.png" alt="image.png"></p>
+<h2 id="6-2-单体多字存储器"><a href="#6-2-单体多字存储器" class="headerlink" title="6.2 单体多字存储器"></a>6.2 单体多字存储器</h2><p>之前不是一行就是一个存储字吗，这回让它一行存 m 个存储字，就是说一次读写可操作的数更多了。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710123949.png" alt="image.png"></p>
+<p>但是这个有个问题，就是一次只能读出一整行 m 个字，如果我们要访问的几个字不在一行，则需要多次读取，同时访问到的无用数据也会更多。不如多题并行存储器灵活，可以直接在不同的存储体上访问多个字。</p>
+<h2 id="6-3-总结"><a href="#6-3-总结" class="headerlink" title="6.3 总结"></a>6.3 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710124400.png" alt="image.png"></p>
+<h1 id="7-内存与-CPU-连接"><a href="#7-内存与-CPU-连接" class="headerlink" title="7. 内存与 CPU 连接"></a>7. 内存与 CPU 连接</h1><p>这一章主要研究这么俩问题：1. 想要扩展主存的字数（容量）咋办——字扩展；2. 数据总线宽度 &gt; 存储芯片字长咋办——位扩展。</p>
+<p>之前说主存内有 MDR 和 MAR，但目前的计算机一般不会讲 MDR 和 MAR 放在主存中，而是集成在 CPU 上，CPU 通过地址总线和数据总线连接主存，实现数据的读写。</p>
+<h2 id="7-1-存储器芯片的输入输出信号"><a href="#7-1-存储器芯片的输入输出信号" class="headerlink" title="7.1 存储器芯片的输入输出信号"></a>7.1 存储器芯片的输入输出信号</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710155137.png" alt="image.png"></p>
+<p>前面说过了，现在的计算机主存里面没有 MAR 和 MDR 了， 所以主要关注一下地址线和数据线。两根线都是 0 - 7 也就是八位，说明主存的字数是 2^8 也就是256，字长是8 bit。</p>
+<h2 id="7-2-位扩展"><a href="#7-2-位扩展" class="headerlink" title="7.2 位扩展"></a>7.2 位扩展</h2><p>现在我们有一块 8K x 1 bit 的存储芯片 （注意，一个内存条通常有多个存储芯片，就是内存条上那些黑色的块），我们要把这块芯片和 CPU 连接，咋连？</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710155612.png" alt="image.png"></p>
+<p>CS 是片选线，指高电平有效，这里给 1 就代表当前芯片工作。WE 指的是 Write Enable，上面没有横线就代表高电平时有效。8K 个也就是 2 ^ 13 个存储单元，就需要 13 根地址线，所以链接到 A0 - A12 上。而存储字长只有 1bit，所以数据线只能连接一根 D0，这就造成了浪费。</p>
+<p>如何充分利用 CPU 上面的数据线？可以给他接多个存储芯片：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710155934.png" alt="image.png"></p>
+<p>第二块存储芯片的地址线和 A0 - A12 相连，WE 和 CPU 的 WE 相连，CS 也给 1 代表第二块存储芯片工作。这样的话 CPU 给出一个地址，就可以同时选中两块存储芯片上的相同位置的数据，也就是两位，然后将这两位数据分别给 D0 和 D1。</p>
+<p>这就实现了位扩展，通过多个存储芯片串联同时选中的方式，将存储字长扩展为 8 bit。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710160253.png" alt="image.png"></p>
+<h2 id="7-3-字扩展"><a href="#7-3-字扩展" class="headerlink" title="7.3 字扩展"></a>7.3 字扩展</h2><p>我们又买了一块存储芯片，8K x 8bit，CPU 找就是 A0 - A15，D0 - D7。连接方式很简单，就是将 CPU 的 A0 - A12 链接到芯片上，然后 D0 - D7 全部连接到芯片。</p>
+<p>这个时候CPU 的 A13 - A15 地址线还没用上，如何利用这几根线来扩展主存容量？</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710160835.png" alt="image.png"></p>
+<p>将另一块芯片接到 CPU 上，然后将 A13 和 A14 地址线连接到两块芯片的 CS 片选线上，这样的话如果给出的地址是 <code>01,xxxxxxxxxxxxx</code>，就说明要选中第一块存储芯片，因为 A13 地址线给了一个高电平，激活了第一块芯片。如果给出的地址是 <code>10,xxxxxxxxxxxxx</code>，说明选中第二块芯片。</p>
+<p>这种情况下，我们就需要规定最高两位地址不能是全 0 或者 全 1，必须是 10 或者 01 的情况。这种方法叫 <font color='red'>线选法</font>，用线来控制存储芯片。</p>
+<p>然而这样的话会导致一个问题就是地址不连续，如何解决？其实上面这个图有优化空间，可以将两块芯片的 CS 都连接到 A13 上，然后 A13 到第二块芯片的线上加一个非门，A13 给 1，第一块芯片接收到 1，第二块芯片经过非门接收到 0。同理 A13 给 0，就会选中第二块芯片，这样地址就连续了。</p>
+<p>这个非门可以叫 <strong>1-2 译码器</strong>，就是说一位可以选中两种状态，可以顺着这个思路优化，当时将内存的时候，地址线到内存芯片就有一个译码器，可以将n位地址转到 2^n 个存储单元上。这里也可以加一个译码器，将 n 位地址转到 2^n 个存储芯片上。比如这个 CPU，A15 - A13 三位就可以映射到 8个存储芯片，这种就叫 3-8 译码器。这样地址就可以连续了。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710161903.png" alt="image.png"></p>
+<p>这是一个 2-4 译码器的实例。几个注意的点：</p>
+<ul>
+<li>图里面显示地址线是 CPU 到芯片1 再到 芯片2，芯片之间的地址线相连。这个是为了简化，所有的地址线只会来自于 CPU。</li>
+<li>我们发现 CS 是一个低电平有效，所以线上面有个空心圆，译码器上也有空心圆，可以理解成非门，需要将信号取反。这就是习惯，低电平有效的电路连接线上加一个圈。</li>
+</ul>
+<p>这种方法就叫 <font color='red'>译码片选法</font>。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710162427.png" alt="image.png"></p>
+<h2 id="7-4-字位同时扩展"><a href="#7-4-字位同时扩展" class="headerlink" title="7.4 字位同时扩展"></a>7.4 字位同时扩展</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710162510.png" alt="image.png"></p>
+<p>这个看图倒是很好理解，就是将位扩展的那种方式，多个芯片为一组，充分利用 CPU 的地址线。然后每组芯片再进行字扩展，充分利用 CPU 的地址线。</p>
+<p>扩展后的主存变成了 64K x 8 bit。同时地址空间从 全0 到 全1，是连续的。</p>
+<h2 id="7-5-译码器"><a href="#7-5-译码器" class="headerlink" title="7.5 译码器"></a>7.5 译码器</h2><p>对于不同的片选线 CS ，要选择不同的译码器，高电平有效的CS就要使用输出一个 1 的译码器，低电平有效的 CS 就是用输出一个 0 的译码器，画图的时候也会有区别：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710163046.png" alt="image.png"></p>
+<p>译码器上有的时候也有存在 “使能”，类似 CS，用于开启译码器，比如图里面的 EN，就需要一个高电平才能让译码器工作。</p>
+<p>有些更复杂的情况，译码器上会有多个 使能，比如三个，<code>G1. G2A(低). G2B(低)</code>，只有在给 <code>100</code> 信号的时候，译码器才会工作，否则的话译码器输出全 1（或者全0，反正就是无效）。</p>
+<p>这玩意的功能是 CPU 用来控制片选信号的生效时间。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710163647.png" alt="image.png"></p>
+<p>功能就是，CPU 会首先通过 A0 - A15 发出地址，但是电流可能不稳定，MREQ 首先会输出1，所以译码器不工作，输出全0。当 CPU 确定电流稳定后，MREQ 才会发出 0 信号，让译码器开始工作，连接到存储芯片。</p>
+<p>上面这个译码器，就是经典的 <font color='red'>74LS138</font> 译码器，结构需要记住。</p>
+<p>所以回过头来理解一下存取周期这个东西：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230710163915.png" alt="image.png"></p>
+<p>地址线在一个交点位置发出地址，也就是地址有效那条线，但是同一时刻 CS 并没有接通（CS 那块灰色代表高电平，没接通，中间那段平的是低电平，代表 CS 接通），CS 接通的时间和地址发出的时间间隔，就是我们上面说的 MREQ。</p>
+<p>然后过了一段时间 Dout 找到了数据开始往出传，也就是数据有效那条线。等到数据稳定以后，CPU就撤销了片选信号，所以 CS 关闭。</p>
+<p>等到数据真的接受到了，CPU 撤销地址请求信号。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-03-%E6%95%B0%E6%8D%AE%E8%BF%90%E7%AE%97/" rel="prev" title="03-数据运算">
+      <i class="fa fa-chevron-left"></i> 03-数据运算
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-05-%E5%A4%96%E5%AD%98%E5%82%A8%E5%99%A8/" rel="next" title="05-外存储器">
+      05-外存储器 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-text">1. 存储系统基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E5%AD%98%E5%82%A8%E5%99%A8%E7%9A%84%E5%B1%82%E6%AC%A1%E5%8C%96%E7%BB%93%E6%9E%84"><span class="nav-text">1.1 存储器的层次化结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E5%AD%98%E5%82%A8%E5%99%A8%E7%9A%84%E5%88%86%E7%B1%BB"><span class="nav-text">1.2 存储器的分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E5%AD%98%E5%82%A8%E5%99%A8%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87"><span class="nav-text">1.3 存储器性能指标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-%E6%80%BB%E7%BB%93"><span class="nav-text">1.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E4%B8%BB%E5%AD%98%E5%82%A8%E5%99%A8%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%BB%84%E6%88%90"><span class="nav-text">2. 主存储器的基本组成</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E5%9F%BA%E6%9C%AC%E7%9A%84%E5%8D%8A%E5%AF%BC%E4%BD%93%E5%85%83%E4%BB%B6%E5%8F%8A%E5%8E%9F%E7%90%86"><span class="nav-text">2.1 基本的半导体元件及原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E5%AD%98%E5%82%A8%E5%99%A8%E8%8A%AF%E7%89%87%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-text">2.2 存储器芯片的基本原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E5%AF%BB%E5%9D%80"><span class="nav-text">2.3 寻址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%E6%80%BB%E7%BB%93"><span class="nav-text">2.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-DRAM-%E5%92%8C-SRAM"><span class="nav-text">3. DRAM 和 SRAM</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E6%A0%85%E6%9E%81%E7%94%B5%E5%AE%B9-VS-%E5%8F%8C%E7%A8%B3%E6%80%81%E8%A7%A6%E5%8F%91%E5%99%A8"><span class="nav-text">3.1 栅极电容 VS 双稳态触发器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-1-%E6%A0%85%E6%9E%81%E7%94%B5%E8%B7%AF"><span class="nav-text">3.1.1 栅极电路</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-2-%E5%8F%8C%E7%A8%B3%E6%80%81%E8%A7%A6%E5%8F%91%E5%99%A8"><span class="nav-text">3.1.2 双稳态触发器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-3-%E4%BA%8C%E8%80%85%E5%AF%B9%E6%AF%94"><span class="nav-text">3.1.3 二者对比</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-DRAM-%E7%9A%84%E5%88%B7%E6%96%B0"><span class="nav-text">3.2 DRAM 的刷新</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E9%80%81%E8%A1%8C%E5%88%97%E5%9C%B0%E5%9D%80"><span class="nav-text">3.3 送行列地址</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-ROM-%E8%8A%AF%E7%89%87"><span class="nav-text">4. ROM 芯片</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-MROM"><span class="nav-text">4.1 MROM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-PROM"><span class="nav-text">4.2 PROM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-EPROM"><span class="nav-text">4.3 EPROM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-Flash-Memory"><span class="nav-text">4.4 Flash Memory</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-SSD"><span class="nav-text">4.5 SSD</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-6-%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%86%85%E9%83%A8%E7%9A%84-ROM"><span class="nav-text">4.6 计算机内部的 ROM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-7-%E6%80%BB%E7%BB%93"><span class="nav-text">4.7 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%8F%8C%E5%8F%A3-RAM"><span class="nav-text">5. 双口 RAM</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E5%A4%9A%E6%A8%A1%E5%9D%97%E5%AD%98%E5%82%A8%E5%99%A8"><span class="nav-text">6. 多模块存储器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E5%A4%9A%E4%BD%93%E5%B9%B6%E8%A1%8C%E5%AD%98%E5%82%A8%E5%99%A8"><span class="nav-text">6.1 多体并行存储器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-1-%E9%AB%98%E4%BD%8D%E4%BA%A4%E5%8F%89%E7%BC%96%E5%9D%80"><span class="nav-text">6.1.1 高位交叉编址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-2-%E4%BD%8E%E4%BD%8D%E4%BA%A4%E5%8F%89%E7%BC%96%E5%9D%80"><span class="nav-text">6.1.2 低位交叉编址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-3-%E5%AD%98%E5%82%A8%E4%BD%93%E6%95%B0%E9%87%8F"><span class="nav-text">6.1.3 存储体数量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-4-%E6%80%BB%E7%BB%93"><span class="nav-text">6.1.4 总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-%E5%8D%95%E4%BD%93%E5%A4%9A%E5%AD%97%E5%AD%98%E5%82%A8%E5%99%A8"><span class="nav-text">6.2 单体多字存储器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-3-%E6%80%BB%E7%BB%93"><span class="nav-text">6.3 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-%E5%86%85%E5%AD%98%E4%B8%8E-CPU-%E8%BF%9E%E6%8E%A5"><span class="nav-text">7. 内存与 CPU 连接</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#7-1-%E5%AD%98%E5%82%A8%E5%99%A8%E8%8A%AF%E7%89%87%E7%9A%84%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E4%BF%A1%E5%8F%B7"><span class="nav-text">7.1 存储器芯片的输入输出信号</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-2-%E4%BD%8D%E6%89%A9%E5%B1%95"><span class="nav-text">7.2 位扩展</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-3-%E5%AD%97%E6%89%A9%E5%B1%95"><span class="nav-text">7.3 字扩展</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-4-%E5%AD%97%E4%BD%8D%E5%90%8C%E6%97%B6%E6%89%A9%E5%B1%95"><span class="nav-text">7.4 字位同时扩展</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-5-%E8%AF%91%E7%A0%81%E5%99%A8"><span class="nav-text">7.5 译码器</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

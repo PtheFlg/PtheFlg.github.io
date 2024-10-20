@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Java期末考试瞎指导。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java期末考试">
+<meta property="og:url" content="http://example.com/2022/06/07/java-exam/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="Java期末考试瞎指导。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-06-07T08:22:11.000Z">
+<meta property="article:modified_time" content="2022-06-07T08:26:02.236Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2022/06/07/java-exam/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Java期末考试 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/06/07/java-exam/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java期末考试
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-06-07 16:22:11 / 修改时间：16:26:02" itemprop="dateCreated datePublished" datetime="2022-06-07T16:22:11+08:00">2022-06-07</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Java期末考试瞎指导。</p>
+<span id="more"></span>
+
+<h1 id="1-Java-概述"><a href="#1-Java-概述" class="headerlink" title="1. Java 概述"></a>1. Java 概述</h1><p>好像没啥会考的，主要就是主方法，记住就行了。</p>
+<h1 id="2-基本数据类型和数组"><a href="#2-基本数据类型和数组" class="headerlink" title="2. 基本数据类型和数组"></a>2. 基本数据类型和数组</h1><p>八种基本数据类型 byte  char  short  int  long  float  double  boolean，大致有俩小知识点：</p>
+<ul>
+<li>精度丢失问题：高精度往低精度转化会丢东西</li>
+<li>类型转化：这个又分强制类型转化和自动类型转化<ul>
+<li>强制类型转化很简单：<code>long l = 1L; int i = (int)l;</code></li>
+<li>自动类型转化：就是两个精度不一样的数据类型放在一起运算，会自动把低精度值转化为高精度值</li>
+</ul>
+</li>
+</ul>
+<p>单独的数组可能会考个小题，问你下面哪种创建数组的方式不对，这个记住三种创建数组的方式就行了：</p>
+<ul>
+<li>动态赋值 <code>int[] a = new int[数组长度];</code></li>
+<li>静态赋值 <code>int[] a = new int[]&#123;...数组元素&#125;;</code></li>
+<li>简化静态 <code>int[] a = &#123;...数组元素&#125;;</code></li>
+</ul>
+<p>然后数组的循环赋值，循环取值，<code>array.length</code> 得到数组长度应该都不用说了。</p>
+<h1 id="3-运算符、表达式、语句"><a href="#3-运算符、表达式、语句" class="headerlink" title="3. 运算符、表达式、语句"></a>3. 运算符、表达式、语句</h1><p>运算符就是大致就是 + - * &#x2F; % 这种的，然后逻辑运算符就是与或非 &amp;&amp; || ! 这仨，没啥说的。</p>
+<p>还有一些不咋常用的运算符比如三目，移位，位运算，不是很常用，了解就行了。</p>
+<p>至于运算符的各种性质比如 结合性 运算符优先级等等，这种东西说实话没啥用，考的可能性有，撑死了一道小题，尤其优先级这个，我觉得智商100以上的人都会给算式加括号，实际情况不会去研究优先级这种东西。所以这个稍微看看就行了，不是重点。</p>
+<p>语句，以及流程控制，这个东西和C++可以说一模一样：</p>
+<ul>
+<li>判断：<code>if()&#123;...&#125;</code>、<code>if()&#123;...&#125;else&#123;...&#125;</code>、<code>if()&#123;...&#125;else if()&#123;...&#125;else.&#123;..&#125;</code></li>
+<li>循环：<code>for(..;..;..)&#123;...&#125;</code>、<code>while()&#123;...&#125;</code>、<code>do&#123;...&#125;while()</code></li>
+<li>break、continue：用于终止循环和跳过剩余步骤继续下一轮循环，这个python和C++也都有</li>
+</ul>
+<p>剩下的什么变量命名规范，还有剩下的一些小知识点，我觉得都是码代码的基础规范了，不说了。</p>
+<h1 id="4-类和对象"><a href="#4-类和对象" class="headerlink" title="4. 类和对象"></a>4. 类和对象</h1><p>这章那就太重要了，可以这么说，100分的卷80分都和这章有联系，要么直接考这章，要么考后面的继承和接口，属于是间接的考这章的东西。</p>
+<h2 id="4-1-如何写类和对象"><a href="#4-1-如何写类和对象" class="headerlink" title="4.1 如何写类和对象"></a>4.1 如何写类和对象</h2><p>和C++差不多，大致思路一样，就是语法变了而已。</p>
+<p>这里面包含了第四章的1-6，比较简单，可以说是后面所有东西的基础。</p>
+<h2 id="4-2-方法"><a href="#4-2-方法" class="headerlink" title="4.2 方法"></a>4.2 方法</h2><p>这里分了两种方法：实例方法和静态方法。</p>
+<ul>
+<li>实例方法：只有创建对象以后，通过对象才能访问</li>
+<li>静态方法：用static修饰，可以直接通过类名访问</li>
+</ul>
+<h2 id="4-3-方法重载"><a href="#4-3-方法重载" class="headerlink" title="4.3 方法重载"></a>4.3 方法重载</h2><p>简单说就是类里面的几个方法，方法名相同但是参数列表不同，比如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Demo</span>&#123;</span><br><span class="line">    <span class="type">int</span> <span class="title function_">sum</span><span class="params">(<span class="type">int</span> a, <span class="type">int</span> b, <span class="type">int</span> c, <span class="type">int</span> d)</span>&#123; <span class="keyword">return</span> a + b + c + e; &#125;</span><br><span class="line">    <span class="type">int</span> <span class="title function_">sum</span><span class="params">(<span class="type">int</span> a, <span class="type">int</span> b, <span class="type">int</span> c)</span>&#123; <span class="keyword">return</span> sum(a, b, c, <span class="number">0</span>); &#125;</span><br><span class="line">    <span class="type">int</span> <span class="title function_">sum</span><span class="params">(<span class="type">int</span> a, <span class="type">int</span> b)</span>&#123; <span class="keyword">return</span> sum(a, b, <span class="number">0</span>, <span class="number">0</span>); &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>很简单的概念，记住就行了，大部分情况下不会没事干重载一个方法，考试的时候方法重载多半要和构造方法联动，到时候就是一个类好几个构造方法的重载，然后构造方法里面还有各种的this，问你创建完这个对象以后输出是啥。</p>
+<h2 id="4-4-构造方法"><a href="#4-4-构造方法" class="headerlink" title="4.4 构造方法"></a>4.4 构造方法</h2><p>创建对象时给成员赋值的方法：</p>
+<ul>
+<li>方法名和类名相同，且没有返回值</li>
+<li>构造方法也能重载</li>
+<li>构造方法大致分为两类：无参构造和带参构造。区别就是有无入参</li>
+<li>一个类至少有一个构造方法，如果不写，编译器会给你自动补一个无参构造</li>
+<li>注意上面这条，只有不写构造的时候才会补，但凡写了构造，都不会给你补无参了</li>
+</ul>
+<h2 id="4-5-this关键字"><a href="#4-5-this关键字" class="headerlink" title="4.5 this关键字"></a>4.5 this关键字</h2><p>这个就比较重要了，可能会在这里出 除了 编程题以外的任何题型，比如选择题，再比如程序结果分析，给你一段代码里面套一堆this，问你最终输出啥。</p>
+<p>同时这个this会和第五章的super联动，如果到时候出的题恶心的话，可能两个类相互继承，然后子类又是this又是super的，不好分析反正。</p>
+<p>this有两种意思：</p>
+<ul>
+<li><code>this(...看情况有没有参数)</code>：指的是调用当前类的某一个构造方法，且<font color='red'>如果要写这个，必须写在构造器的第一行</font>，根据this() 的传参确定是哪一个构造方法的重载。</li>
+<li><code>this.xxxx</code>：指的是当前类的某一个成员，为了避免方法的参数名和成员名重名。</li>
+</ul>
+<h2 id="4-6-访问控制"><a href="#4-6-访问控制" class="headerlink" title="4.6 访问控制"></a>4.6 访问控制</h2><p>其实就是三个访问修饰符：</p>
+<ul>
+<li>private：私有，类外不可访问</li>
+<li>protected：受保护，同包下类外可以直接访问好像，这个不怎么用</li>
+<li>public：公有，类外随便访问</li>
+</ul>
+<p>这里需要把握好一件事：<font color='red'>所有的访问控制都是相对于其他类对本类的访问，类内部随便访问类自身成员和方法，访问控制是用来限制类外对类的修改。</font>。</p>
+<h2 id="4-7-包和Import"><a href="#4-7-包和Import" class="headerlink" title="4.7 包和Import"></a>4.7 包和Import</h2><p>这俩东西我天天用，但是问我这是啥我还真不好解释，包自己看吧，import我说一句：</p>
+<p>import后面跟着的是你类的全限定命名，什么意思，就是说你有一个类，在 cn.heuet包下，有个类叫User，那你导入的时候就得写 <code>import cn.heuet.User</code>。这个cn.heuet.User 就是User这个类的全限定命名，就是把包名带上就行了。</p>
+<h2 id="4-8-剩下的"><a href="#4-8-剩下的" class="headerlink" title="4.8 剩下的"></a>4.8 剩下的</h2><p>什么对象组合，就是类里面的成员是另一个类，什么对象数组，就是和基本数据类型差不多 <code>User[] users = new User[10];</code> 就是这个。</p>
+<p>包装类提一句，就是把基础数据类型封装成了一个类，仅此而已，这个类里面包含了一些这个类型的一些属性。自己看书吧，这个不是很重要，包装类主要用在泛型上，但是你们学的似乎泛型不是重点，所以连带着包装类没那么重要。</p>
+<h2 id="4-9-考题"><a href="#4-9-考题" class="headerlink" title="4.9 考题"></a>4.9 考题</h2><p>我觉得这一章的考题，大部分，应该都不会很难，难题主要集中在下一章。但是有另类，也就是 4.3-4.5。这几部分出题的话有可能会比较恶心。</p>
+<p>可能会出程序分析题，就是给你一段代码，问你执行结果是啥，各种构造方法重载+this关键字，比如可能会出下面这种题：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">A</span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> a;</span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">getA</span><span class="params">()</span>&#123; <span class="keyword">return</span> <span class="built_in">this</span>.a; &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">A</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="built_in">this</span>.a = <span class="number">10</span>;</span><br><span class="line">        System.out.println(<span class="string">&quot;a1&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">A</span><span class="params">(<span class="type">int</span> a)</span>&#123;</span><br><span class="line">        <span class="built_in">this</span>();</span><br><span class="line">        <span class="built_in">this</span>.a = a;</span><br><span class="line">        System.out.println(<span class="string">&quot;a2&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">A</span><span class="params">(<span class="type">int</span> a, <span class="type">int</span> b)</span>&#123;</span><br><span class="line">        <span class="built_in">this</span>(a &gt; b ? a : b);</span><br><span class="line">        System.out.println(<span class="string">&quot;a3&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">A</span> <span class="variable">a</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">A</span>(<span class="number">10</span>, <span class="number">30</span>);</span><br><span class="line">System.out.println(a.getA());</span><br><span class="line"></span><br><span class="line"><span class="comment">// 问：程序输出啥？</span></span><br><span class="line"><span class="comment">// a1</span></span><br><span class="line"><span class="comment">// a2</span></span><br><span class="line"><span class="comment">// a3</span></span><br><span class="line"><span class="comment">// 30</span></span><br></pre></td></tr></table></figure>
+
+<p>反正我觉得这章的主要考点，额，都可能会提到点，各种小知识点，比如还有static，100%会考，但是我觉得难点就是这个构造重载+this。剩下的不是很难了。</p>
+<h1 id="5-继承、接口、泛型"><a href="#5-继承、接口、泛型" class="headerlink" title="5. 继承、接口、泛型"></a>5. 继承、接口、泛型</h1><h2 id="5-1-继承"><a href="#5-1-继承" class="headerlink" title="5.1 继承"></a>5.1 继承</h2><p>这章的超级重点，真的是超级重点，往后什么接口，什么泛型，哪怕是上转型对象，也不如继承重要。为啥，继承的某些特性确实比较恶心，特别容易出程序分析题，甚至可以这么说，到时候程序分析题假如有5个，很有可能3个题，都是分析继承。</p>
+<p>大致是什么题型呢？就是给你好几个类，最可能是两个类继承，如果老师不当人的话也有可能出现三个类以上互相继承，继承一大堆私有公有，然后同时需要考虑子父类的构造方法执行顺序。然后三个类磨磨唧唧给你继承完了，随便给你创建一个对象，问你打印啥东西，然后问你哪个成员的值是多少。这种题可以说就是整张卷子的难度天花板，极难分析而且极易出错。</p>
+<p>题目知识点：</p>
+<ul>
+<li>构造方法重载</li>
+<li>this关键字</li>
+<li>super关键字</li>
+<li>继承</li>
+<li>方法重写</li>
+<li>子类对象和父类对象成员冲突</li>
+</ul>
+<p>差不多一道这种程序分析题，少说上面这些东西融合个3 4个知识点，比如A类继承了B类，然后调用了B类的某个super，然后覆盖了某个B类的成员，再通过super.xxx去访问这个成员，然后调用两个B类的公开方法去操作B类的私有成员，巨麻烦巨绕。</p>
+<p>我这里建议啊：碰见这种题，有条件直接敲一遍跑一遍，别自己分析，费力不讨好的。</p>
+<p>这章的知识点挺多的我就不说了，看书吧，看不懂来问就行。看的重点就集中在继承这一块，就是this、super、重写、成员覆盖 等等。</p>
+<h2 id="5-2-接口"><a href="#5-2-接口" class="headerlink" title="5.2 接口"></a>5.2 接口</h2><p>后面的接口，反倒不是很难，你们这本书基于jdk1.6，1.6的时候接口比较死板，就是一个类实现一个接口，然后必须实现这个接口里面的所有方法，就这么简单。</p>
+<p>然后需要注意的就是：Java中类是单继承，但是可以多实现接口，这个记住了，可能考小题。</p>
+<h2 id="5-3-上转型对象"><a href="#5-3-上转型对象" class="headerlink" title="5.3 上转型对象"></a>5.3 上转型对象</h2><p>这个不太好解释了，就是一个类，继承或者实现了另外一个东西，然后创建对象的时候就是 父类&#x2F;接口引用指向子类&#x2F;实现类对象。额，看代码吧：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">A</span>&#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">B</span> <span class="keyword">extends</span> <span class="title class_">A</span>&#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 这就是上转型</span></span><br><span class="line"><span class="type">A</span> <span class="variable">a</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">B</span>();</span><br></pre></td></tr></table></figure>
+
+<p>前面A a，就是创建了一个父类的引用，后面真正创建了子类对象，然后A a &#x3D; new B(); 的意义就是 父类引用指向子类对象。</p>
+<p>这个分为两个：一个是接口的上转型，或者叫接口回调；另一个是子类的上转型，就是父类引用指向子类对象。</p>
+<p>前一个可以说不重要，但是后面这个，子类上转型为父类，就又可以和继承联动出一些让人想吐的题了。比如上面说的，3 4 个类来回继承，各种super this，好不容易继承完了，给你创建对象的时候给你来个上转型，哎，难度又高了，更不会了。</p>
+<h2 id="5-4-剩下的东西"><a href="#5-4-剩下的东西" class="headerlink" title="5.4 剩下的东西"></a>5.4 剩下的东西</h2><p>比如各种奇葩的类，匿名类，内部类，异常类，泛型类，以及泛型，这些东西可以说不重要，多半不会考的，考了也是小题，不会是重点。</p>
+<p>但是我还是提一句啊，异常这个东西，其实是特别重要的，奈何她讲的不行，考试也不是重点。咱们学的里面，接口回调+异常+泛型，这三个东西都是那种实际上相当重要但是她不给好好讲的。</p>
+<h2 id="5-5-考题"><a href="#5-5-考题" class="headerlink" title="5.5 考题"></a>5.5 考题</h2><p>继承+重载+this+super+成员覆盖+方法重写+子类上转型，就这几个东西，会出一些难度极高的题。</p>
+<p>反正我当年碰见这种程序分析题，看不懂，直接敲了一遍。比如可能会有这种：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">A</span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> a;</span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">getA</span><span class="params">()</span>&#123; <span class="keyword">return</span> <span class="built_in">this</span>.a; &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setA</span><span class="params">(<span class="type">int</span> a)</span>&#123; <span class="built_in">this</span>.a = a; &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">A</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="built_in">this</span>.a = <span class="number">10</span>;</span><br><span class="line">        System.out.println(<span class="string">&quot;a1&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">A</span><span class="params">(<span class="type">int</span> a)</span>&#123;</span><br><span class="line">        <span class="built_in">this</span>();</span><br><span class="line">        <span class="built_in">this</span>.a = a;</span><br><span class="line">        System.out.println(<span class="string">&quot;a2&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">B</span> <span class="keyword">extends</span> <span class="title class_">A</span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> b;</span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">getB</span><span class="params">()</span> &#123; <span class="keyword">return</span> b; &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setB</span><span class="params">(<span class="type">int</span> b)</span> &#123; <span class="built_in">this</span>.b = b; &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">B</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="built_in">this</span>.b = <span class="number">100</span>;</span><br><span class="line">        System.out.println(<span class="string">&quot;b1&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">B</span><span class="params">(<span class="type">int</span> b)</span>&#123;</span><br><span class="line">        <span class="built_in">super</span>(b);</span><br><span class="line">        <span class="built_in">this</span>.b = b;</span><br><span class="line">        System.out.println(<span class="string">&quot;b2&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">C</span> <span class="keyword">extends</span> <span class="title class_">B</span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> b;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setB</span><span class="params">(<span class="type">int</span> b)</span>&#123; <span class="built_in">this</span>.b = b; <span class="built_in">super</span>.setB(b / <span class="number">10</span>); &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">getB</span><span class="params">()</span>&#123; <span class="keyword">return</span> <span class="built_in">this</span>.b; &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">getSuperB</span><span class="params">()</span>&#123; <span class="keyword">return</span> <span class="built_in">super</span>.getB(); &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">C</span><span class="params">(<span class="type">int</span> b)</span>&#123;</span><br><span class="line">        <span class="built_in">super</span>(b);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Demo</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="type">C</span> <span class="variable">c</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">C</span>(<span class="number">2022</span>);</span><br><span class="line">        System.out.println(c.getB());</span><br><span class="line">        System.out.println(c.getA());</span><br><span class="line">        c.setB(<span class="number">100000</span>);</span><br><span class="line">        System.out.println(c.getB());</span><br><span class="line">        System.out.println(c.getA());</span><br><span class="line">        System.out.println(c.getSuperB());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 然后问你输出是啥</span></span><br><span class="line">a1</span><br><span class="line">a2</span><br><span class="line">b2</span><br><span class="line"><span class="number">0</span></span><br><span class="line"><span class="number">2022</span></span><br><span class="line"><span class="number">100000</span></span><br><span class="line"><span class="number">2022</span></span><br><span class="line"><span class="number">10000</span></span><br></pre></td></tr></table></figure>
+
+<p>这题我瞎写的啊，真正考试那题八成比我这个复杂点，我这个考虑了半天也没把上转型考虑进去，考试的时候这种题，咋也得用上转型恶心人。</p>
+<h1 id="6-7-字符串系列和集合系列"><a href="#6-7-字符串系列和集合系列" class="headerlink" title="6. 7. 字符串系列和集合系列"></a>6. 7. 字符串系列和集合系列</h1><p>这俩东西，是面试的高频问题，对的，面试的高频问题，一遍面试一上来问你字符串的东西，然后面试会问你集合类的源码，比如ArrayList内部是否线程安全。话说回来，考试好像不是很重要。</p>
+<p>字符串有个小知识点：就是字符串判断相等的问题，这个考试很有可能会考。</p>
+<p>我这里就大致一说吧：字符串如果是 <code>String s1 = &quot;hello world&quot;;</code> 这种直接赋值，我们叫他字面量赋值，这个时候他就是指向了一块字符串内存，这个时候另一个字符串<code>String s2 = &quot;hello world&quot;;</code> s2 就也会指向这块内存。就是这种字面量赋值的方式，只要两个字符串内容相等，那么两个字符串 <code>s1 == s2 且 s1.equals(s2) == true</code>。</p>
+<p>如果不是字面量赋值，比如这样 <code>String s1 = new String(&quot;hello world&quot;);</code> 那这就是一个对象，不会直接指向这个helloworld 的内存，这个时候另一个字符串 <code>String s2 = new String(&quot;hello world&quot;);</code> 即便内容相等，但是两个对象也不相等，这个时候 <code>s1 != s2 但 s1.equals(s2) == true</code> 。</p>
+<p>看不懂的话看看书吧，这个地方要深究的话可以一路给你讲到JVM虚拟机讲到底层，那就费劲了。</p>
+<p>剩下的各种字符串衍生类比如StringBuffer、StringToken啥的，还有什么Scanner这些的，似乎不重要，考的话也是考小题，然后正则表达式，我记得当年我们考过填空？还是选择，忘了。正则倒是有可能会考，但不是重点。</p>
+<p>然后就是各种集合，这个集合一般会伴随泛型，但是既然泛型没咋讲，那我估计集合也不太会考，考的话也是考小题。对于考试来说数组就够用了，什么LinkedList什么TreeMap，学算法才可能用呢。</p>
+<h1 id="8-线程"><a href="#8-线程" class="headerlink" title="8. 线程"></a>8. 线程</h1><p>如何创建线程啥的，考的可能性不大，至少不会让你们自己写线程，线程这个东西，我找了一个30多小时的课专门学的，挺难的，我觉得没啥必要重点看。</p>
+<p>但是，如果我没猜错，这应该是你们第一次接触多线程，第一次听说线程通讯和线程状态，所以说概念题倒是很有可能考，我们当年考了一道简答题，就是直接问 线程有哪些状态，这些状态如何切换。</p>
+<p>所以线程多看看概念我觉得就差不多了，如何创建线程，如何开始线程，甚至还有线程通讯，各种sleep各种notify，没啥必要花时间看我觉得。</p>
+<h1 id="9-总结一下"><a href="#9-总结一下" class="headerlink" title="9. 总结一下"></a>9. 总结一下</h1><p>呐，复习吧，就紧着第四章和第五章复习，第五章呢，就紧着继承那块复习，我大胆预测一下啊，就继承那块，少说占个20分以上，而且出的题都是大题。剩下的小知识点就会出一些小题，比如可能会考你 面向对象的三个特征（封装继承多态）这类的小概念。</p>
+<p>编程题反倒不会太难，因为继承那块的东西让你们写说实在的多少有点难为你们了，所以最后考的，应该就是让你们设计个类，然后写写方法，但是也不会太简单，C++的时候和Python考试编程题充其量就是让你写个水仙花数，打印个质数，Java就绝不会这么简单了。Java的编程题可能会多少和实践有点联系，比如让你用类实现个登录这种的。</p>
+<p>嗯，说难不难说简单不简单的。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/06/06/garbage-collectors/" rel="prev" title="垃圾收集器">
+      <i class="fa fa-chevron-left"></i> 垃圾收集器
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/06/13/bytecode/" rel="next" title="JVM-字节码">
+      JVM-字节码 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Java-%E6%A6%82%E8%BF%B0"><span class="nav-text">1. Java 概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%92%8C%E6%95%B0%E7%BB%84"><span class="nav-text">2. 基本数据类型和数组</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E8%BF%90%E7%AE%97%E7%AC%A6%E3%80%81%E8%A1%A8%E8%BE%BE%E5%BC%8F%E3%80%81%E8%AF%AD%E5%8F%A5"><span class="nav-text">3. 运算符、表达式、语句</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E7%B1%BB%E5%92%8C%E5%AF%B9%E8%B1%A1"><span class="nav-text">4. 类和对象</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E5%A6%82%E4%BD%95%E5%86%99%E7%B1%BB%E5%92%8C%E5%AF%B9%E8%B1%A1"><span class="nav-text">4.1 如何写类和对象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E6%96%B9%E6%B3%95"><span class="nav-text">4.2 方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E6%96%B9%E6%B3%95%E9%87%8D%E8%BD%BD"><span class="nav-text">4.3 方法重载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95"><span class="nav-text">4.4 构造方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-this%E5%85%B3%E9%94%AE%E5%AD%97"><span class="nav-text">4.5 this关键字</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-6-%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6"><span class="nav-text">4.6 访问控制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-7-%E5%8C%85%E5%92%8CImport"><span class="nav-text">4.7 包和Import</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-8-%E5%89%A9%E4%B8%8B%E7%9A%84"><span class="nav-text">4.8 剩下的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-9-%E8%80%83%E9%A2%98"><span class="nav-text">4.9 考题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E7%BB%A7%E6%89%BF%E3%80%81%E6%8E%A5%E5%8F%A3%E3%80%81%E6%B3%9B%E5%9E%8B"><span class="nav-text">5. 继承、接口、泛型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E7%BB%A7%E6%89%BF"><span class="nav-text">5.1 继承</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E6%8E%A5%E5%8F%A3"><span class="nav-text">5.2 接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E4%B8%8A%E8%BD%AC%E5%9E%8B%E5%AF%B9%E8%B1%A1"><span class="nav-text">5.3 上转型对象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-4-%E5%89%A9%E4%B8%8B%E7%9A%84%E4%B8%9C%E8%A5%BF"><span class="nav-text">5.4 剩下的东西</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-5-%E8%80%83%E9%A2%98"><span class="nav-text">5.5 考题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-7-%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%B3%BB%E5%88%97%E5%92%8C%E9%9B%86%E5%90%88%E7%B3%BB%E5%88%97"><span class="nav-text">6. 7. 字符串系列和集合系列</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#8-%E7%BA%BF%E7%A8%8B"><span class="nav-text">8. 线程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#9-%E6%80%BB%E7%BB%93%E4%B8%80%E4%B8%8B"><span class="nav-text">9. 总结一下</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

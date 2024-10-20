@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="死锁">
+<meta property="og:type" content="article">
+<meta property="og:title" content="07.死锁">
+<meta property="og:url" content="http://example.com/2023/06/30/OS-07-%E6%AD%BB%E9%94%81/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="死锁">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620105802.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620110257.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620110332.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620110439.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620112309.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620112338.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620162845.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620165403.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620170704.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620212656.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620213210.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620213940.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620214029.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620214230.png">
+<meta property="article:published_time" content="2023-06-30T03:06:33.000Z">
+<meta property="article:modified_time" content="2023-07-12T15:35:25.801Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620105802.png">
+
+<link rel="canonical" href="http://example.com/2023/06/30/OS-07-%E6%AD%BB%E9%94%81/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>07.死锁 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/30/OS-07-%E6%AD%BB%E9%94%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          07.死锁
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-30 11:06:33" itemprop="dateCreated datePublished" datetime="2023-06-30T11:06:33+08:00">2023-06-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-07-12 23:35:25" itemprop="dateModified" datetime="2023-07-12T23:35:25+08:00">2023-07-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>死锁</p>
+<span id="more"></span>
+
+<h1 id="1-死锁的概念"><a href="#1-死锁的概念" class="headerlink" title="1. 死锁的概念"></a>1. 死锁的概念</h1><p>前面的哲学家进餐就是一个典型的死锁，每个进程要申请其他进程锁住的临界资源，同时自己还占着别的进程的临界资源，就会发生死锁。</p>
+<p>然后需要和饥饿，死循环区分一下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620105802.png" alt="image.png"></p>
+<h1 id="2-死锁产生的必要条件"><a href="#2-死锁产生的必要条件" class="headerlink" title="2. 死锁产生的必要条件"></a>2. 死锁产生的必要条件</h1><p>字太多了，懒得打：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620110257.png" alt="image.png"></p>
+<h1 id="3-什么时候会发生死锁"><a href="#3-什么时候会发生死锁" class="headerlink" title="3. 什么时候会发生死锁"></a>3. 什么时候会发生死锁</h1><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620110332.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620110439.png" alt="image.png"></p>
+<h1 id="4-死锁的处理策略"><a href="#4-死锁的处理策略" class="headerlink" title="4. 死锁的处理策略"></a>4. 死锁的处理策略</h1><h2 id="4-1-静态-预防死锁"><a href="#4-1-静态-预防死锁" class="headerlink" title="4.1 静态-预防死锁"></a>4.1 静态-预防死锁</h2><p>上面说了死锁产生的四个条件：互斥条件，不剥夺条件，请求和保持条件，循环等待条件。预防就是依次把这些条件给他破坏了就行。</p>
+<h3 id="4-1-1-破坏互斥条件"><a href="#4-1-1-破坏互斥条件" class="headerlink" title="4.1.1 破坏互斥条件"></a>4.1.1 破坏互斥条件</h3><p>只有对必须互斥使用的资源的争抢才会导致死锁。如果把这些互斥资源改造成共享资源，则系统不会进入死锁状态。比如后面要说到的一个 SPOOLing技术，将独占的设备改造成逻辑上共享的设备。这样的话在进程看起来请求资源会被立即接收处理，无需等待。</p>
+<p>缺点就是为了保证系统的安全，某些设备必须要被设计成互斥的。</p>
+<h3 id="4-1-2-破坏不剥夺条件"><a href="#4-1-2-破坏不剥夺条件" class="headerlink" title="4.1.2 破坏不剥夺条件"></a>4.1.2 破坏不剥夺条件</h3><p>正常情况下，进程获得资源以后，只有使用完成才会释放资源，其他人不能剥夺他的资源。如果其他人可以强制让他释放资源也就不会发生死锁。</p>
+<p>方案一：进程请求信资源得不到满足的时候，就会立即释放他持有的资源，等以后需要的时候重新申请，其实就是他自己发现自己活干不了了就主动躺平了。</p>
+<p>方案二：如果发现自己要的资源被其他进程占用了，可以让操作系统出面调解，强行剥夺其他进程持有的资源。这种方式需要考虑优先级（比如：剥夺调度方式，就是将处理机资源强行剥夺给优先级更高的进程使用）。</p>
+<p>破坏不剥夺条件的缺点：</p>
+<ul>
+<li>实现复杂</li>
+<li>释放已经获得的资源可能会导致前面的工作作废，所以这种办法适合那种易于保存和恢复的资源，比如CPU。</li>
+<li>反复申请和释放资源会增加系统开销，降低系统吞吐量。</li>
+<li>方式一的话可能会导致饥饿。</li>
+</ul>
+<h3 id="4-1-3-破坏请求和保持条件"><a href="#4-1-3-破坏请求和保持条件" class="headerlink" title="4.1.3 破坏请求和保持条件"></a>4.1.3 破坏请求和保持条件</h3><p>这个条件本身说的是：进程已经保持了至少一个资源，同时还提出了新的资源<strong>请求</strong>，而该罪案又被其他进程占用，此时请求进程阻塞，仍<strong>保持</strong>着自己已有的资源。</p>
+<p>可以使用静态分配方法，进程在运行前一次性申请完他所需要的资源，如果没有申请到，那就不让他运行。一旦运行资源就会一直归他所有，根本上避免进程申请别的资源。</p>
+<p>缺点：资源浪费，资源利用率低，可能导致饥饿。</p>
+<h3 id="4-1-4-破坏循环等待条件"><a href="#4-1-4-破坏循环等待条件" class="headerlink" title="4.1.4 破坏循环等待条件"></a>4.1.4 破坏循环等待条件</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620112309.png" alt="image.png"></p>
+<h3 id="4-1-5-总结"><a href="#4-1-5-总结" class="headerlink" title="4.1.5 总结"></a>4.1.5 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620112338.png" alt="image.png"></p>
+<h2 id="4-2-动态-避免死锁"><a href="#4-2-动态-避免死锁" class="headerlink" title="4.2 动态-避免死锁"></a>4.2 动态-避免死锁</h2><h3 id="4-2-1-安全序列"><a href="#4-2-1-安全序列" class="headerlink" title="4.2.1 安全序列"></a>4.2.1 安全序列</h3><p>假设现在有个银行发放贷款，然后各个企业向银行借钱，这些企业会有个借贷总金额的上限，借贷次数可以是多次。现在规定，如果某一次不能满足企业的借贷需求，之前借出去的钱也就要不回来了。</p>
+<p>现在问：按照什么顺序给企业发放贷款可以满足全部需求？</p>
+<p>假设你有100亿，B企业最多借70亿，A企业最多借40亿，T企业最多借50亿。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620162845.png" alt="image.png"></p>
+<p>那如果，借完第一波，A企业又想借30亿，敢借么？如果借出去的话，B或者T企业在来要钱就没了，就不能满足需求。</p>
+<p>所以，按照什么顺序依次给这些企业放贷，就是“银行家问题”，得到的这个序列，就是“安全序列”。如果按照安全序列分配资源，每个进程都能顺利完成，那么系统就会处在“安全状态”。如果我们没有按照安全序列分配资源，系统就进入了“不安全状态”，就可能产生死锁问题，如果这个时候某些资源归还了资源，系统就有可能回到“安全状态”。</p>
+<h3 id="4-2-2-寻找安全序列"><a href="#4-2-2-寻找安全序列" class="headerlink" title="4.2.2 寻找安全序列"></a>4.2.2 寻找安全序列</h3><p>其实很简单，就是打表然后挨个对比，假设现在有5个进程，每个进程都要申请三种资源，现在已经给他们分配了一部分：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620165403.png" alt="image.png"></p>
+<p>现在还剩余（3，3，2），然后用这个和P0-P4挨个对比，看看能满足谁，就给谁分配，分配完了以后进程结束会归还之前的资源，然后重新计算剩余资源数，再去挨个对比。</p>
+<p>这里，（3，3，2）可以满足P1，所以把 P1 加入安全队列，P1 使用完资源以后归还之前的资源（2，0，0）和（1，2，2），剩余资源变成（5，3，2）。然后再用（5，3，2）去挨个对比，发现P3可以满足，然后将P3放入安全队列…..一次类推。</p>
+<p>手算的话可以简单一点，一上来（3，3，2）可以满足P1和P3，直接把P1和P3加入安全队列就行了，然后加上他们之前持有的资源，然后循环比对。</p>
+<p>最后尽可能将所有进程都添加到安全队列中。</p>
+<h3 id="4-2-3-银行家算法"><a href="#4-2-3-银行家算法" class="headerlink" title="4.2.3 银行家算法"></a>4.2.3 银行家算法</h3><p>Dijkstra为银行系统设计的一种算法，确保银行放贷的时候可以满足所有客户的需求。在操作系统上，就是提前预知系统会不会进入不安全状态，以此解决资源分配请求，这就是算法的核心思想。银行家算法代码实现的逻辑如下：</p>
+<p>系统中有n个进程m种资源。</p>
+<p>每个进程都需要先声明对各种资源的最大需求利郎，可以用一个 n * m 的矩阵来表示各种：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620170704.png" alt="image.png"></p>
+<p>同时用 Available &#x3D; （3，3，2） 来表示当前剩余的资源量。假设 P0 现在发起请求 Req0 &#x3D; （2，1，1）也就是要申请这么多资源我们就可以这么着：</p>
+<ul>
+<li>判断 Req &lt;&#x3D; Need，如果不满足认为出错，不给分配资源</li>
+<li>判断 Req &lt;&#x3D; Available，如果不满足说明资源紧张，当前进程等待</li>
+<li>系统会试探的将资源分配给P0，根据 Available 修改 P0 的 Allocation 和 Need 矩阵。</li>
+<li>系统执行安全性算法，根据当前修改寻找安全队列，判断系统是否可以进入安全状态。如果安全，则真正的将资源分配给 P0。</li>
+</ul>
+<p>这里所谓的安全性算法就是前面的寻找安全队列。</p>
+<h2 id="4-3-死锁的检测和解除"><a href="#4-3-死锁的检测和解除" class="headerlink" title="4.3 死锁的检测和解除"></a>4.3 死锁的检测和解除</h2><h3 id="4-3-1-死锁检测"><a href="#4-3-1-死锁检测" class="headerlink" title="4.3.1 死锁检测"></a>4.3.1 死锁检测</h3><p>要检测死锁，就需要做两件事：</p>
+<ul>
+<li>用某种数据结构来保存资源的请求和分配信息。</li>
+<li>提供一种算法，利用上述信息来检测系统是否已经进入死锁状态。</li>
+</ul>
+<p>数据结构如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620212656.png" alt="image.png"></p>
+<p>P1 和 P2 两个进程，蓝色的箭头代表他们分别要申请什么资源。R1 和 R2 代表两种资源，里面的点代表资源个数，绿色箭头代表已经给进程分配了多少资源，注意是已经分配的。</p>
+<p>然后根据图来分析，P1 进程 要申请1一个R2，R2 已经给了P2一个资源还剩一个资源，所以就可以正常分配给 P1，P1执行结束后，返还资源，也就是将 P1 连着的边全部消除。证明 P1 执行完成并释放资源。同样的方法看 P2，最后也可以消边，最终这个图里面就不存在边，只剩各个节点，则称这个图<font color='red'>可完全简化</font>。</p>
+<p>如果一个图可以完全简化，那么此时一定没有发生死锁，其实就相当于我们根据这个图找到了一个安全序列。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620213210.png" alt="image.png"></p>
+<p>如果是这种情况，P3 可以正常消边，P1 和 P2 根据分析发现完全没法动，则说明该图不能完全简化，那么就发生了死锁。</p>
+<p><strong>具体检测方法</strong></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620213940.png" alt="image.png"></p>
+<h3 id="4-3-2-死锁解除"><a href="#4-3-2-死锁解除" class="headerlink" title="4.3.2 死锁解除"></a>4.3.2 死锁解除</h3><p>根据上面的方法检测到死锁以后，如何解除？</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620214029.png" alt="image.png"></p>
+<p>我们再根据以下指标来判断对谁开刀：</p>
+<ul>
+<li>进程优先级</li>
+<li>已经执行多长时间</li>
+<li>还要多久完成</li>
+<li>进程已经使用了多少资源</li>
+<li>进程是交互式的还是批处理式的</li>
+</ul>
+<h2 id="4-4-总结"><a href="#4-4-总结" class="headerlink" title="4.4 总结"></a>4.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620214230.png" alt="image.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-06-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/" rel="prev" title="06.同步与互斥">
+      <i class="fa fa-chevron-left"></i> 06.同步与互斥
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-08-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" rel="next" title="08.内存管理">
+      08.内存管理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E6%AD%BB%E9%94%81%E7%9A%84%E6%A6%82%E5%BF%B5"><span class="nav-text">1. 死锁的概念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E6%AD%BB%E9%94%81%E4%BA%A7%E7%94%9F%E7%9A%84%E5%BF%85%E8%A6%81%E6%9D%A1%E4%BB%B6"><span class="nav-text">2. 死锁产生的必要条件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E4%BC%9A%E5%8F%91%E7%94%9F%E6%AD%BB%E9%94%81"><span class="nav-text">3. 什么时候会发生死锁</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E6%AD%BB%E9%94%81%E7%9A%84%E5%A4%84%E7%90%86%E7%AD%96%E7%95%A5"><span class="nav-text">4. 死锁的处理策略</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E9%9D%99%E6%80%81-%E9%A2%84%E9%98%B2%E6%AD%BB%E9%94%81"><span class="nav-text">4.1 静态-预防死锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-1-%E7%A0%B4%E5%9D%8F%E4%BA%92%E6%96%A5%E6%9D%A1%E4%BB%B6"><span class="nav-text">4.1.1 破坏互斥条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-2-%E7%A0%B4%E5%9D%8F%E4%B8%8D%E5%89%A5%E5%A4%BA%E6%9D%A1%E4%BB%B6"><span class="nav-text">4.1.2 破坏不剥夺条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-3-%E7%A0%B4%E5%9D%8F%E8%AF%B7%E6%B1%82%E5%92%8C%E4%BF%9D%E6%8C%81%E6%9D%A1%E4%BB%B6"><span class="nav-text">4.1.3 破坏请求和保持条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-4-%E7%A0%B4%E5%9D%8F%E5%BE%AA%E7%8E%AF%E7%AD%89%E5%BE%85%E6%9D%A1%E4%BB%B6"><span class="nav-text">4.1.4 破坏循环等待条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-5-%E6%80%BB%E7%BB%93"><span class="nav-text">4.1.5 总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E5%8A%A8%E6%80%81-%E9%81%BF%E5%85%8D%E6%AD%BB%E9%94%81"><span class="nav-text">4.2 动态-避免死锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-1-%E5%AE%89%E5%85%A8%E5%BA%8F%E5%88%97"><span class="nav-text">4.2.1 安全序列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-2-%E5%AF%BB%E6%89%BE%E5%AE%89%E5%85%A8%E5%BA%8F%E5%88%97"><span class="nav-text">4.2.2 寻找安全序列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-3-%E9%93%B6%E8%A1%8C%E5%AE%B6%E7%AE%97%E6%B3%95"><span class="nav-text">4.2.3 银行家算法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E6%AD%BB%E9%94%81%E7%9A%84%E6%A3%80%E6%B5%8B%E5%92%8C%E8%A7%A3%E9%99%A4"><span class="nav-text">4.3 死锁的检测和解除</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-1-%E6%AD%BB%E9%94%81%E6%A3%80%E6%B5%8B"><span class="nav-text">4.3.1 死锁检测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-2-%E6%AD%BB%E9%94%81%E8%A7%A3%E9%99%A4"><span class="nav-text">4.3.2 死锁解除</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E6%80%BB%E7%BB%93"><span class="nav-text">4.4 总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

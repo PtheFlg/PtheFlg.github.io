@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="JVM方法区，主要用于储存各种类的元信息，也就是我们常说的Class类摸版，这里详细说一下方法区的内存分布和垃圾回收问题。同时这里也不会只讲方法区，因为讲完方法区以后我们就可以深入的去研究一个对象是如何被创建的，所以后面还会和堆空间结合起来说。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM-方法区">
+<meta property="og:url" content="http://example.com/2022/05/30/jvm-methodarea/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="JVM方法区，主要用于储存各种类的元信息，也就是我们常说的Class类摸版，这里详细说一下方法区的内存分布和垃圾回收问题。同时这里也不会只讲方法区，因为讲完方法区以后我们就可以深入的去研究一个对象是如何被创建的，所以后面还会和堆空间结合起来说。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/runtime/ConstantPool.png">
+<meta property="og:image" content="http://example.com/images/runtime/NewObjectProcess.png">
+<meta property="og:image" content="http://example.com/images/runtime/%E5%8F%A5%E6%9F%84%E8%AE%BF%E9%97%AE.png">
+<meta property="og:image" content="http://example.com/images/runtime/%E7%9B%B4%E6%8E%A5%E6%8C%87%E9%92%88.png">
+<meta property="og:image" content="http://example.com/images/runtime/non-direct-memory.png">
+<meta property="og:image" content="http://example.com/images/runtime/NIOProcess.png">
+<meta property="article:published_time" content="2022-05-30T10:32:40.000Z">
+<meta property="article:modified_time" content="2022-06-02T07:03:37.089Z">
+<meta property="article:author" content="PtheF">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="底层">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/runtime/ConstantPool.png">
+
+<link rel="canonical" href="http://example.com/2022/05/30/jvm-methodarea/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>JVM-方法区 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/30/jvm-methodarea/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JVM-方法区
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-05-30 18:32:40" itemprop="dateCreated datePublished" datetime="2022-05-30T18:32:40+08:00">2022-05-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-06-02 15:03:37" itemprop="dateModified" datetime="2022-06-02T15:03:37+08:00">2022-06-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>JVM方法区，主要用于储存各种类的元信息，也就是我们常说的Class类摸版，这里详细说一下方法区的内存分布和垃圾回收问题。同时这里也不会只讲方法区，因为讲完方法区以后我们就可以深入的去研究一个对象是如何被创建的，所以后面还会和堆空间结合起来说。</p>
+<span id="more"></span>
+
+<h1 id="1-方法区"><a href="#1-方法区" class="headerlink" title="1. 方法区"></a>1. 方法区</h1><h2 id="1-1-明确几个概念"><a href="#1-1-明确几个概念" class="headerlink" title="1.1 明确几个概念"></a>1.1 明确几个概念</h2><ul>
+<li><p>方法区虽然之前说过算是 堆的一部分，但是一般情况下是要分开的。</p>
+</li>
+<li><p>方法去看作是JVM独立的一部分。</p>
+</li>
+<li><p>HotSpot 虚拟机的方法区还有一个别名：Non-Heap 非堆。</p>
+</li>
+<li><p>方法区会自己收缩扩大</p>
+</li>
+</ul>
+<h2 id="1-2-方法区的基本理解"><a href="#1-2-方法区的基本理解" class="headerlink" title="1.2 方法区的基本理解"></a>1.2 方法区的基本理解</h2><ul>
+<li><p>方法区和堆类似，都是线程共享的。</p>
+</li>
+<li><p>方法区在JVM启动时被创建，和heap一样他的物理内存可以不连续。</p>
+</li>
+<li><p>方法区的大小和heap一样，可固定 可 伸缩</p>
+</li>
+<li><p>方法区的大小决定了系统能加载多少个类，如果类过于多，也会抛出 OutOfMemoryError</p>
+<ul>
+<li>比如加载过多 jar 包，或者 tomcat部署过多服务，比如 30 - 50 个。</li>
+</ul>
+</li>
+<li><p>关闭JVM会释放这部分内存。</p>
+</li>
+</ul>
+<h2 id="1-3-HotSpot-虚拟机-方法区演进"><a href="#1-3-HotSpot-虚拟机-方法区演进" class="headerlink" title="1.3 HotSpot 虚拟机 方法区演进"></a>1.3 HotSpot 虚拟机 方法区演进</h2><ul>
+<li><p>JDK7 中，将方法区称为永久代，JDK8以后用元空间取代了永久代</p>
+<blockquote>
+<p>JVM虚拟机规范中说：将类的原信息存储到本地堆中，这块区域称为元空间</p>
+</blockquote>
+</li>
+<li><p>确切来说永久代和方法区并不等价，仅针对 HotSpot 虚拟机而言，他并没有规定如何实现方法区。</p>
+</li>
+<li><p>可以这么理解，方法区就是一个接口，永久代和元空间用于存储类的原信息，是方法区的实现。</p>
+</li>
+</ul>
+<h2 id="1-4-hotSpot-设置-方法区大小"><a href="#1-4-hotSpot-设置-方法区大小" class="headerlink" title="1.4 hotSpot 设置 方法区大小"></a>1.4 hotSpot 设置 方法区大小</h2><ul>
+<li><p>JDK7 之前：</p>
+<ul>
+<li><p>-XX:PermSize&#x3D;100m 设置初始大小 默认 20.75m</p>
+</li>
+<li><p>-XX:MaxPermSize&#x3D;200m 设置最大值 默认 32位机器 64m，64位机器 86m</p>
+</li>
+</ul>
+</li>
+<li><p>JDK8 以后：</p>
+<ul>
+<li><p>-XX:MetaspaceSize&#x3D;100m 设置初始大小 默认 21m</p>
+</li>
+<li><p>-XX:MaxMetaspaceSize&#x3D;200m 设置最大值 默认没有最大，最大就是你的真实内存</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>二者的区别：</p>
+<ul>
+<li><p>元空间和永久代不同，元空间会耗尽你所有的内存，直到你的内存崩了，他会给你抛出 OOM异常。</p>
+</li>
+<li><p>-XX:MetaspaceSize 设置初始大小。对于一个64位的机器来说，默认是21m空间，那么这个21m就是一个高水位线，一旦元空间的东西超过了21m，就会触发FullGC来清理不用的类(类加载器死亡了)，然后这个高水位线会重置。如果清理的不多，同时在最大空间以内，他就会稍微提高这个高水位线，如果清理的过多，就会降低这个高水位线。</p>
+</li>
+<li><p>根据上面所说的，如果初始值比较低，那么就会频繁触发 FullGC，为了提高性能，建议吧这个初始值调高。</p>
+</li>
+</ul>
+<h1 id="2-方法区内部结构"><a href="#2-方法区内部结构" class="headerlink" title="2. 方法区内部结构"></a>2. 方法区内部结构</h1><h2 id="2-1-方法区主要存储对象"><a href="#2-1-方法区主要存储对象" class="headerlink" title="2.1 方法区主要存储对象"></a>2.1 方法区主要存储对象</h2><ul>
+<li><p>类型信息</p>
+<ul>
+<li><p>全限定命名</p>
+</li>
+<li><p>直接父类的全限定命名</p>
+</li>
+<li><p>类的访问修饰符</p>
+</li>
+<li><p>实现的直接接口的有序列表</p>
+</li>
+</ul>
+</li>
+<li><p>域信息(Field 其实就是字段，或者属性):</p>
+<ul>
+<li><p>JVM必须在方法去中保存所有字段的相关信息和声明顺序</p>
+</li>
+<li><p>域的相关信息包括：名称 类型 访问修饰符</p>
+</li>
+</ul>
+</li>
+<li><p>方法</p>
+<ul>
+<li><p>JVM必须在方法去中保存下面的信息，同时也会保存声明顺序：</p>
+</li>
+<li><p>方法名称</p>
+</li>
+<li><p>方法返回值类型</p>
+</li>
+<li><p>参数的数量与类型(按顺序)</p>
+</li>
+<li><p>访问修饰符</p>
+</li>
+<li><p>方法的字节码 操作数栈 局部变量表及大小(abstract native 方法除外)</p>
+</li>
+<li><p>异常表(abstract native 除外)</p>
+<ul>
+<li>包括 每个异常处理的开始位置，结束位置，代码处理在PC寄存器中的偏移地址，被捕获的异常类的常量池索引</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="2-2-全局常量"><a href="#2-2-全局常量" class="headerlink" title="2.2 全局常量"></a>2.2 全局常量</h2><p>就是 static final，用 final 修饰的 static 成员。</p>
+<p>这个东西在编译的时候就已经为他分配了值。直接反编译，就可以看到.</p>
+<h1 id="3-常量池-和-运行时常量池"><a href="#3-常量池-和-运行时常量池" class="headerlink" title="3. 常量池 和 运行时常量池"></a>3. 常量池 和 运行时常量池</h1><p>一个有效的字节码文件里面包含了类的信息 字段 方法 接口等，以外，还包括一个东西，就是常量池：Constant Pool。常量池里面包括：字面量 类型，字段，方法的引用。</p>
+<p>看图： </p>
+<p><img src="/images/runtime/ConstantPool.png" alt="method_area"></p>
+<p>这图领会精神，因为我也看不懂.</p>
+<h2 id="3-1-为什么引入-常量池"><a href="#3-1-为什么引入-常量池" class="headerlink" title="3.1 为什么引入 常量池"></a>3.1 为什么引入 常量池</h2><p>Java 一个类编译后生成字节码文件。而Java字节码通常需要数据支持，而这些数据大到无法存到 字节码文件中，所以引入常量池，在动态链接阶段 会用到运行时常量池。</p>
+<p>比如我们写一个最简单的HelloWorld 程序，这个程序就用到了 Object,System,PrintStream等一系列的类。这些类很显然不能全都装在字节码里面，所以就以常量池的形式存储。</p>
+<p>比如我们随便反编译一个类，得到 Constant Pool，都是一大堆 #… 这种东西，然后我们跟着他的 # 一路往下追，才能找到他到底是个啥。</p>
+<h2 id="3-2-常量池里面都存啥？"><a href="#3-2-常量池里面都存啥？" class="headerlink" title="3.2 常量池里面都存啥？"></a>3.2 常量池里面都存啥？</h2><ul>
+<li><p>数量值</p>
+</li>
+<li><p>字符串值</p>
+</li>
+<li><p>类引用</p>
+</li>
+<li><p>字段引用</p>
+</li>
+<li><p>方法引用</p>
+</li>
+</ul>
+<p>举个例子：</p>
+<p><code>Object object = new Object();</code></p>
+<p>他在 字节码中会被表示成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0:new #2</span><br><span class="line">1:dup </span><br><span class="line">2:invokespecial #3</span><br></pre></td></tr></table></figure>
+
+<p>这里的#2 和#3就是常量池中的东西，new 后面这个#2，指向的就是常量池中用于表示Object这个类的字符串常量，注意是字符串常量，#3 就指向了常量池的Object的<init>O 方法，然后在类加载的链接阶段就会将这些字符串常量转化为运行时常量池，然后#2也会指向真实的内存地址。</p>
+<p>总的来说：常量池就可以理解成一张表，JVM根据这张表，去找到要执行的类名 方法 参数 字面量等。</p>
+<h2 id="3-3-运行时常量池"><a href="#3-3-运行时常量池" class="headerlink" title="3.3 运行时常量池"></a>3.3 运行时常量池</h2><p>这里明确一下，运行时常量池和字节码中的常量池表不一样。</p>
+<ul>
+<li><p>运行时常量池 是 方法区的一部分</p>
+</li>
+<li><p>常量池表是字节码文件的一部分，用于存储编译期生成的各种字面量和引用，这部分内容将在类加载后放到方法区的运行时常量池中。</p>
+</li>
+<li><p>加载类和接口到虚拟机后就会生成对应的运行时常量池</p>
+</li>
+<li><p>JVM为每一个已经加载的类型(类或者接口)都维护一个运行时常量池，池中的数据向数组像一样，可以通过索引访问。</p>
+</li>
+<li><p>运行时常量池中包含多种不同的常量，包括编译期间就已经明确的字面量，也包括运行时解析后才能得到的方法或字段引用，此时已经不再是常量池那种符号地址了，而是真实地址</p>
+</li>
+<li><p>运行时常量池对比常量池的一个特点：具备动态性</p>
+</li>
+<li><p>运行时常量池类似其他语言的符号表，但是内容更丰富。</p>
+</li>
+<li><p>在构造类型的运行时常量池的时候，如果方法区的空间不够了，就会抛出 OutOfMemoryError</p>
+</li>
+</ul>
+<h1 id="4-JVM方法区的演进"><a href="#4-JVM方法区的演进" class="headerlink" title="4. JVM方法区的演进"></a>4. JVM方法区的演进</h1><ul>
+<li><p>首先 HotSpot 虚拟机才有永久代</p>
+</li>
+<li><p>HotSpot虚拟机的演进：</p>
+<ul>
+<li><p>JDK6以前，有永久代，静态变量存放在永久代上</p>
+</li>
+<li><p>JDK7还有永久代，但是 字符串常量池，静态变量从永久代移除，放到了堆上</p>
+</li>
+<li><p>JDK8以后，取消永久代，而是元空间，类型信息 字段 方法 常量保存在元空间，但是 静态变量和字符串常量池还在堆上。</p>
+</li>
+</ul>
+</li>
+<li><p>以前有永久代的时候，所有内存都放在JVM的内存上，到了元空间，变成了本地内存。</p>
+</li>
+</ul>
+<h2 id="4-1元空间为何要取代永久代"><a href="#4-1元空间为何要取代永久代" class="headerlink" title="4.1元空间为何要取代永久代"></a>4.1元空间为何要取代永久代</h2><ul>
+<li><p>JDK8以后，永久代没了，原先存在永久代中的数据被存到了一个和堆不连续的本地内存上， 这块地方就是元空间。</p>
+</li>
+<li><p>因为类的元数据放在本地内存，所以元空间的上线就是真实内存max</p>
+</li>
+</ul>
+<h2 id="4-2-好处"><a href="#4-2-好处" class="headerlink" title="4.2 好处"></a>4.2 好处</h2><ul>
+<li><p>方法区的大小很难确定，如果功能过多，加载的雷多，很可能出现OOM错误。</p>
+</li>
+<li><p>对永久代调优很困难，就是 FullGC，去判断哪些是垃圾特别麻烦，所以 尽量少去GC，就需要更大的方法区空间。</p>
+</li>
+</ul>
+<h2 id="4-3-StringTable-调整"><a href="#4-3-StringTable-调整" class="headerlink" title="4.3 StringTable 调整"></a>4.3 StringTable 调整</h2><p>首先说一下啥是StringTable，StringTable 就是字符串常量池，JVM中有一个专门储存字符串的地方，因为字符串大量使用，所以干脆给你做成一个单独的常量池。这个东西在后面我们说到字符串的时候还会详细说，这里先了解一下。</p>
+<p>JDK7以前，StringTable在永久代，而JDK7以后，把StringTable扔到了堆中，为哈？</p>
+<p>如果放在方法区，那就会涉及FullGC，而FullGC只有在永久代满了的时候才会触发， GC不频繁，而StringTable 经常用，看法中大量的String被创建，所以放在永久代里面 效率底下，所以放在堆中。</p>
+<h2 id="4-4-静态成员放在哪里"><a href="#4-4-静态成员放在哪里" class="headerlink" title="4.4 静态成员放在哪里"></a>4.4 静态成员放在哪里</h2><p>就是说我们有一个静态成员，比如 <code>private static UserUtils uu = new UserUtils();</code> ，那么这个UserUtils 到底在哪？</p>
+<p>明确一下，只要是new出来的东西，就肯定是放在堆中的，没有例外。不同的是这个 static uu 放到哪了。</p>
+<p>JDK7 以后，这个引用也会放在堆中，而JDK6以前，这个引用同样放在方法区。</p>
+<h1 id="5-元空间GC"><a href="#5-元空间GC" class="headerlink" title="5. 元空间GC"></a>5. 元空间GC</h1><blockquote>
+<p>方法区的具体实现部分可以不涉及GC ——Java虚拟机规范</p>
+</blockquote>
+<p>首先明确，方法去中有GC，但是方法区的GC很难让人满意。</p>
+<p>方法区的垃圾回收主要回收常量池和类型信息。</p>
+<h2 id="如何垃圾回收"><a href="#如何垃圾回收" class="headerlink" title="如何垃圾回收"></a>如何垃圾回收</h2><ul>
+<li><p>常量相对简单，然而他没讲</p>
+</li>
+<li><p>如何判断类型不再使用：</p>
+<ul>
+<li><p>该类的所有对象都被回收，且不存在子类对象</p>
+</li>
+<li><p>加载该类的类加载器被回收，这个除非是精心设计的可以可替换类加载的场景，比如 JSP OSGI 等，否则很难达成。</p>
+</li>
+<li><p>类的Class 在任何地方都没有被引用，任何地方都不能通过反射区访问这个类。</p>
+</li>
+</ul>
+</li>
+<li><p>Java 虚拟机只有满足了上述三个条件才会允许回收这个类，但也仅仅是允许， 并不是说就想对象一样，一定可以被回收。</p>
+</li>
+<li><p>在大量使用反射 动态代理 CGlib等字节码框架，动态生成</p>
+</li>
+</ul>
+<p>这里只是大致说一句GC，GC后面会专门说的。</p>
+<h1 id="6-创建对象流程"><a href="#6-创建对象流程" class="headerlink" title="6. 创建对象流程"></a>6. 创建对象流程</h1><p>学了方法区，我们就得详细说说一个对象是如何被创建的了，这里就会把方法区和堆空间结合起来说了。所以这部分内容比较综合。</p>
+<h2 id="6-1-创建方式"><a href="#6-1-创建方式" class="headerlink" title="6.1 创建方式"></a>6.1 创建方式</h2><p>首先，创建对象的方式：</p>
+<ul>
+<li><p>new 对象</p>
+<blockquote>
+<p>包括单例设计模式里面的 getInstance 那种在内部调用 new 的</p>
+</blockquote>
+</li>
+<li><p>Class.newInstance() 反射创建对象</p>
+<blockquote>
+<p>条件比较苛刻，首先必须有无参构造，其次构造函数必须是 public</p>
+</blockquote>
+</li>
+<li><p>Constructor的 newInstance(args) 调用构造函数</p>
+<blockquote>
+<p>可以调用任意构造函数，不用担心权限</p>
+</blockquote>
+</li>
+<li><p>Clone，需要类 实现 Cloneable 接口，实现 clone 方法</p>
+</li>
+<li><p>反序列化，通过 ObjectSteam</p>
+</li>
+<li><p>第三方库 Objenesis</p>
+</li>
+</ul>
+<h2 id="6-2-字节码角度看对象创建"><a href="#6-2-字节码角度看对象创建" class="headerlink" title="6.2 字节码角度看对象创建"></a>6.2 字节码角度看对象创建</h2><p>我们写一个代码，main 方法里面仅仅创建一个 Object 对象，然后反编译，看看 得到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">0: new           #2   // class java/lang/Object  </span><br><span class="line">3: dup  </span><br><span class="line">4: invokespecial #1   // Method java/lang/Object.&quot;&lt;init&gt;&quot;:()V  </span><br><span class="line">7: astore_1  </span><br><span class="line">8: return</span><br></pre></td></tr></table></figure>
+
+<p>首先我们看第一条指令 new，它里面涉及到的东西：</p>
+<ul>
+<li><p>加载 Object，将 Object 放到方法区，当然这个过程可能早就做了</p>
+</li>
+<li><p>在堆中给Object 分配空间，此时内存占用大小已经可以通过数据类型确定下来了，然后 给成员变量进行初始化，给他一个初值。</p>
+</li>
+</ul>
+<p>第二步 dump 复制操作：</p>
+<ul>
+<li>因为这个对象在 main 方法中执行，所以引用在操作数栈里面， 然后他吧引用复制了一份，一份用来赋值，一个用来调用方法。</li>
+</ul>
+<blockquote>
+<p>为啥是在操作数栈？因为此时对象还没有创建完，创建完之后 指令 7 才会存储到 局部变量表中。</p>
+</blockquote>
+<p>第三步 invokespecial 调用 <init> 方法，也就是构造函数。</p>
+<p>第四步 astore 将对象存储到 局表。</p>
+<h2 id="6-3-具体的创建流程"><a href="#6-3-具体的创建流程" class="headerlink" title="6.3 具体的创建流程"></a>6.3 具体的创建流程</h2><p>一个对象创建出来，new 出来，大致需要经历六个步骤：</p>
+<h3 id="6-3-1-判断对象对应的类是否加载-链接-初始化"><a href="#6-3-1-判断对象对应的类是否加载-链接-初始化" class="headerlink" title="6.3.1 判断对象对应的类是否加载 链接 初始化"></a>6.3.1 判断对象对应的类是否加载 链接 初始化</h3><p>很显然这三步是反射的时候学过的，然后一开始类加载也学过一些， 可以看chapter02回忆一下。下面具体说：</p>
+<p>虚拟机遇到一条new指令，首先根据这个指令的参数去metaspace 也就是方法区里面定位这个类的符号引用，并且检查这个符号引用对应的类是否完成了 加载 链接 初始化。 也就是查找类型元信息。如果找不到，则会在双亲委派模式下调用 ClassLoader 来加载Class文件， 如果找不到，则抛出 ClassNotFoundException。</p>
+<p>如果找到了，则加载类，方法区中生成 Class对象。</p>
+<h3 id="6-3-2-为对象分配内存"><a href="#6-3-2-为对象分配内存" class="headerlink" title="6.3.2 为对象分配内存"></a>6.3.2 为对象分配内存</h3><p>计算对象占用空间大小，这个根据类的成员类型很容易可以计算出来，如果是引用数据类型，那就分配 引用空间即可，也就是 4 字节，然后为对象分配空间。</p>
+<p>如何分配空间又是个问题，这里区分内存规整和不规整：</p>
+<ul>
+<li><p>内存规整，则采用指针碰撞来为对象分配内存。</p>
+<p>这tm是啥？简单说，就是如果内存规整，一条内存，用过的连续在一端，没用过的在另一端， 区分的特别明显，那么这条内存在用过的和没用过的中间有个指针用来划分区域。 在这种情况下分配内存，指针只需要向空的那一端移动和对象一样的大小即可。</p>
+<p>如果垃圾收集器采用的是 Serial ParNew 这种基于标记压缩算法的，虚拟机使用这种内存分配方式。</p>
+<p>一般使用带有 Compact(整理)过程的收集器时，使用指针碰撞。</p>
+</li>
+<li><p>内存不规整，虚拟机就需要维护一个列表，也就是空闲列表。</p>
+<p>那么啥叫空闲列表？内存不规整，使用过的和没用过的相互交错，就需要一个列表用来 标记那些内存是没用过的，那些使用过的。</p>
+<p>分配内存的时候，查询列表，找到一块能放得下的地方，吧对象放进去， 然后更新空闲列表。</p>
+</li>
+<li><p>总的来说，采用那种方法是由Java堆是否规整决定的，堆规整与否又是由所采用的垃圾收集器 是否有压缩算法决定。</p>
+</li>
+</ul>
+<h3 id="6-3-3-处理并发安全问题"><a href="#6-3-3-处理并发安全问题" class="headerlink" title="6.3.3 处理并发安全问题"></a>6.3.3 处理并发安全问题</h3><ul>
+<li><p>采用CAS 失败重试，区域枷锁 保证更新的原子性</p>
+</li>
+<li><p>给每个线程预留一块 TLBA ，通过 -XX:+&#x2F;-useTLBA 来控制， jdk8默认开启。</p>
+</li>
+</ul>
+<h3 id="6-3-4-初始化分配到的空间"><a href="#6-3-4-初始化分配到的空间" class="headerlink" title="6.3.4 初始化分配到的空间"></a>6.3.4 初始化分配到的空间</h3><p>简单地说就是给每个成员一个默认值，保证一个对象不赋值就可以直接使用。</p>
+<h3 id="6-3-5-设置对象的对象头"><a href="#6-3-5-设置对象的对象头" class="headerlink" title="6.3.5 设置对象的对象头"></a>6.3.5 设置对象的对象头</h3><p>将对象的所属类(也就是累的元信息) 和 对象的 HashCode 和 对象的 GC信息，锁信息存储到对象头中，这个过程的具体设置方式取决于JVM。</p>
+<h3 id="6-3-6-调用-init-方法"><a href="#6-3-6-调用-init-方法" class="headerlink" title="6.3.6 调用 init 方法"></a>6.3.6 调用 init 方法</h3><p>init 方法并不是构造方法，而是给对象进行完整的赋值，比如 成员的赋值，实例代码块里面对于成员的赋值，构造函数里面给成员的赋值，都在init 方法里面，不是单纯的构造函数。</p>
+<h2 id="6-4-总结"><a href="#6-4-总结" class="headerlink" title="6.4 总结"></a>6.4 总结</h2><p>看这条代码</p>
+<p>Object o &#x3D; new Object();</p>
+<p>其实 new 就是一个指令，告诉JVM 要去加载 Object，然后Object() 就是调用构造器，完整的创建一个对象出来，应该是吧上面的6部全都执行完才算是创建完了，就一个new，可以说仅仅是有了个对象的大体模型，但是细节还不完善。</p>
+<h1 id="7-对象的内存分布"><a href="#7-对象的内存分布" class="headerlink" title="7. 对象的内存分布"></a>7. 对象的内存分布</h1><p>对象的内存分布主要分为：</p>
+<ul>
+<li><p>对象头 header</p>
+</li>
+<li><p>实例数据 instance data</p>
+</li>
+<li><p>对齐填充</p>
+</li>
+</ul>
+<p>下面会挨个说。</p>
+<h2 id="7-1-对象头"><a href="#7-1-对象头" class="headerlink" title="7.1 对象头"></a>7.1 对象头</h2><p>对象头里面包含两部分：</p>
+<ul>
+<li><p>运行时元数据 Mark Word（32bit），里面记录了以下内容：</p>
+<ul>
+<li><p>哈希值</p>
+</li>
+<li><p>GC分代年龄，就是堆里面的年龄计数器记录的那个东西</p>
+</li>
+<li><p>锁状态标志</p>
+</li>
+<li><p>线程持有的锁</p>
+</li>
+<li><p>偏向线程id</p>
+</li>
+<li><p>偏向时间戳</p>
+</li>
+</ul>
+</li>
+<li><p>类型指针 Klass Word（32bit）</p>
+<p>指向了方法区里面的Class，也就是类型元信息。确定对象所属类型</p>
+<p>方法 Object.getClass() 就是体现了这个，就是我们以前说的，对象可以找到 它对应的Class。</p>
+</li>
+<li><p>特殊情况： 如果存的是数组，那么还会保存数组长度信息（32bit）。</p>
+</li>
+</ul>
+<p>这块内容在Java并发编程的时候也会说的，到时候可以再加深一下印象。</p>
+<h2 id="7-2-实例数据"><a href="#7-2-实例数据" class="headerlink" title="7.2 实例数据"></a>7.2 实例数据</h2><p>他是对象真正存储的有效信息，包括程序代码中定义的各种类型的字段 (包括继承的和本身的)</p>
+<p>存放规则：</p>
+<ul>
+<li><p>相同宽度的字段总是被分配在一起。</p>
+</li>
+<li><p>父类中定义的变量会出现在子类之前</p>
+</li>
+<li><p>如果 CompactFields 参数为 true，子类的窄变量可以插入到父类的变量之间。</p>
+</li>
+</ul>
+<h2 id="7-3-图解过程"><a href="#7-3-图解过程" class="headerlink" title="7.3 图解过程"></a>7.3 图解过程</h2><p>我们现在有一个Customer对象，这个对象里面还包含了一个Account对象，那么这个Customer对象的内存分布如何？</p>
+<p>具体情况如下：</p>
+<p><img src="/images/runtime/NewObjectProcess.png"></p>
+<p>看图就行了，我觉得这个图还是挺清楚的。</p>
+<h1 id="8-对象的访问定位"><a href="#8-对象的访问定位" class="headerlink" title="8. 对象的访问定位"></a>8. 对象的访问定位</h1><p>简单地说，JVM是如何通过栈帧中的引用访问到对象实例的？</p>
+<p>懂得来说，都是一个流程：</p>
+<p>栈帧中的引用指向堆区，堆区再通过元数据指针指向方法区。</p>
+<p>具体的流程有两个：</p>
+<h2 id="8-1-句柄访问"><a href="#8-1-句柄访问" class="headerlink" title="8.1 句柄访问"></a>8.1 句柄访问</h2><p>就是说堆中我们再专门弄出一个空间，专门用来放类型指针，栈的引用先指向了句柄，然后句柄再指向实例数据和类型数据。</p>
+<p><img src="/images/runtime/%E5%8F%A5%E6%9F%84%E8%AE%BF%E9%97%AE.png"></p>
+<h2 id="8-2-直接指针"><a href="#8-2-直接指针" class="headerlink" title="8.2 直接指针"></a>8.2 直接指针</h2><p>这个就很好理解了，就是堆中的对象里面还有个对象头指向了类型数据，HotSpot虚拟机就是使用这种办法。</p>
+<p><img src="/images/runtime/%E7%9B%B4%E6%8E%A5%E6%8C%87%E9%92%88.png"></p>
+<p>这个就是栈帧里面的引用直接指向堆中的对象实体，实体里面有一个指针指向方法区的类型元信息。</p>
+<p>Hotspot 虚拟机就用的是直接访问，看24那张图，可以看出来是直接访问。</p>
+<h1 id="9-直接内存"><a href="#9-直接内存" class="headerlink" title="9. 直接内存"></a>9. 直接内存</h1><p>jdk8中的元空间不再是 jvm的虚拟内存，而是直接内存，所以这里我们看看什么是直接内存。</p>
+<h2 id="9-1-直接内存概念"><a href="#9-1-直接内存概念" class="headerlink" title="9.1 直接内存概念"></a>9.1 直接内存概念</h2><ul>
+<li><p>直接内存不是虚拟机运行时内存的一部分，也不是java虚拟机规范中定义的内存区域</p>
+</li>
+<li><p>直接内存是堆外，直接向系统申请的内存</p>
+</li>
+<li><p>来源于 NIO，通过存在堆中的 DirectByteBuffer操作native内存。</p>
+</li>
+<li><p>通常，访问直接内存的效率要高于java堆，读写速度快。</p>
+<ul>
+<li><p>由于处于性能考虑，读写频繁的场合可能用到直接内存。</p>
+</li>
+<li><p>java 的NIO 库允许Java程序直接使用内存，用于数据缓冲区。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="9-2-NIO-和-IO-的比较"><a href="#9-2-NIO-和-IO-的比较" class="headerlink" title="9.2 NIO 和 IO 的比较"></a>9.2 NIO 和 IO 的比较</h2><ul>
+<li><p>IO：文件输入输出</p>
+<p>基础工具：byte[] &#x2F; char[] 用于传输</p>
+<p>基础的类：Stream</p>
+</li>
+<li><p>NIO(New IO &#x2F; Non-Blocking IO)</p>
+<p>基础工具：Buffer</p>
+<p>基础的类：Channel</p>
+</li>
+</ul>
+<p>不使用 NIO ，JVM进行IO的流程如下：</p>
+<p><img src="/images/runtime/non-direct-memory.png"></p>
+<p>使用NIO，JVM进行IO流程</p>
+<p><img src="/images/runtime/NIOProcess.png"></p>
+<p>额，咱也不懂这玩意有啥用，反正先写在这里。</p>
+<h1 id="10-总结"><a href="#10-总结" class="headerlink" title="10. 总结"></a>10. 总结</h1><p>啊，总算是整理完了，这一章东西可谓是奇多，不光是讲方法区，同时还讲了堆和方法区之间是如何配合的，这两部分如何协同才能创建出一个对象来。需要慢慢消化。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+              <a href="/tags/%E5%BA%95%E5%B1%82/" rel="tag"># 底层</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/05/28/jvm-heap/" rel="prev" title="JVM-堆">
+      <i class="fa fa-chevron-left"></i> JVM-堆
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/06/02/JIT/" rel="next" title="JIT即时编译器">
+      JIT即时编译器 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E6%96%B9%E6%B3%95%E5%8C%BA"><span class="nav-text">1. 方法区</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E6%98%8E%E7%A1%AE%E5%87%A0%E4%B8%AA%E6%A6%82%E5%BF%B5"><span class="nav-text">1.1 明确几个概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E6%96%B9%E6%B3%95%E5%8C%BA%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%90%86%E8%A7%A3"><span class="nav-text">1.2 方法区的基本理解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-HotSpot-%E8%99%9A%E6%8B%9F%E6%9C%BA-%E6%96%B9%E6%B3%95%E5%8C%BA%E6%BC%94%E8%BF%9B"><span class="nav-text">1.3 HotSpot 虚拟机 方法区演进</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-hotSpot-%E8%AE%BE%E7%BD%AE-%E6%96%B9%E6%B3%95%E5%8C%BA%E5%A4%A7%E5%B0%8F"><span class="nav-text">1.4 hotSpot 设置 方法区大小</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E6%96%B9%E6%B3%95%E5%8C%BA%E5%86%85%E9%83%A8%E7%BB%93%E6%9E%84"><span class="nav-text">2. 方法区内部结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E6%96%B9%E6%B3%95%E5%8C%BA%E4%B8%BB%E8%A6%81%E5%AD%98%E5%82%A8%E5%AF%B9%E8%B1%A1"><span class="nav-text">2.1 方法区主要存储对象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E5%85%A8%E5%B1%80%E5%B8%B8%E9%87%8F"><span class="nav-text">2.2 全局常量</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E5%B8%B8%E9%87%8F%E6%B1%A0-%E5%92%8C-%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0"><span class="nav-text">3. 常量池 和 运行时常量池</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BC%95%E5%85%A5-%E5%B8%B8%E9%87%8F%E6%B1%A0"><span class="nav-text">3.1 为什么引入 常量池</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E5%B8%B8%E9%87%8F%E6%B1%A0%E9%87%8C%E9%9D%A2%E9%83%BD%E5%AD%98%E5%95%A5%EF%BC%9F"><span class="nav-text">3.2 常量池里面都存啥？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0"><span class="nav-text">3.3 运行时常量池</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-JVM%E6%96%B9%E6%B3%95%E5%8C%BA%E7%9A%84%E6%BC%94%E8%BF%9B"><span class="nav-text">4. JVM方法区的演进</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1%E5%85%83%E7%A9%BA%E9%97%B4%E4%B8%BA%E4%BD%95%E8%A6%81%E5%8F%96%E4%BB%A3%E6%B0%B8%E4%B9%85%E4%BB%A3"><span class="nav-text">4.1元空间为何要取代永久代</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E5%A5%BD%E5%A4%84"><span class="nav-text">4.2 好处</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-StringTable-%E8%B0%83%E6%95%B4"><span class="nav-text">4.3 StringTable 调整</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E9%9D%99%E6%80%81%E6%88%90%E5%91%98%E6%94%BE%E5%9C%A8%E5%93%AA%E9%87%8C"><span class="nav-text">4.4 静态成员放在哪里</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%85%83%E7%A9%BA%E9%97%B4GC"><span class="nav-text">5. 元空间GC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6"><span class="nav-text">如何垃圾回收</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E5%88%9B%E5%BB%BA%E5%AF%B9%E8%B1%A1%E6%B5%81%E7%A8%8B"><span class="nav-text">6. 创建对象流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E5%88%9B%E5%BB%BA%E6%96%B9%E5%BC%8F"><span class="nav-text">6.1 创建方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-%E5%AD%97%E8%8A%82%E7%A0%81%E8%A7%92%E5%BA%A6%E7%9C%8B%E5%AF%B9%E8%B1%A1%E5%88%9B%E5%BB%BA"><span class="nav-text">6.2 字节码角度看对象创建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-3-%E5%85%B7%E4%BD%93%E7%9A%84%E5%88%9B%E5%BB%BA%E6%B5%81%E7%A8%8B"><span class="nav-text">6.3 具体的创建流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-1-%E5%88%A4%E6%96%AD%E5%AF%B9%E8%B1%A1%E5%AF%B9%E5%BA%94%E7%9A%84%E7%B1%BB%E6%98%AF%E5%90%A6%E5%8A%A0%E8%BD%BD-%E9%93%BE%E6%8E%A5-%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-text">6.3.1 判断对象对应的类是否加载 链接 初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-2-%E4%B8%BA%E5%AF%B9%E8%B1%A1%E5%88%86%E9%85%8D%E5%86%85%E5%AD%98"><span class="nav-text">6.3.2 为对象分配内存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-3-%E5%A4%84%E7%90%86%E5%B9%B6%E5%8F%91%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98"><span class="nav-text">6.3.3 处理并发安全问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-4-%E5%88%9D%E5%A7%8B%E5%8C%96%E5%88%86%E9%85%8D%E5%88%B0%E7%9A%84%E7%A9%BA%E9%97%B4"><span class="nav-text">6.3.4 初始化分配到的空间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-5-%E8%AE%BE%E7%BD%AE%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%AF%B9%E8%B1%A1%E5%A4%B4"><span class="nav-text">6.3.5 设置对象的对象头</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-6-%E8%B0%83%E7%94%A8-init-%E6%96%B9%E6%B3%95"><span class="nav-text">6.3.6 调用 init 方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-4-%E6%80%BB%E7%BB%93"><span class="nav-text">6.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%86%85%E5%AD%98%E5%88%86%E5%B8%83"><span class="nav-text">7. 对象的内存分布</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#7-1-%E5%AF%B9%E8%B1%A1%E5%A4%B4"><span class="nav-text">7.1 对象头</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-2-%E5%AE%9E%E4%BE%8B%E6%95%B0%E6%8D%AE"><span class="nav-text">7.2 实例数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-3-%E5%9B%BE%E8%A7%A3%E8%BF%87%E7%A8%8B"><span class="nav-text">7.3 图解过程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#8-%E5%AF%B9%E8%B1%A1%E7%9A%84%E8%AE%BF%E9%97%AE%E5%AE%9A%E4%BD%8D"><span class="nav-text">8. 对象的访问定位</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#8-1-%E5%8F%A5%E6%9F%84%E8%AE%BF%E9%97%AE"><span class="nav-text">8.1 句柄访问</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-2-%E7%9B%B4%E6%8E%A5%E6%8C%87%E9%92%88"><span class="nav-text">8.2 直接指针</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#9-%E7%9B%B4%E6%8E%A5%E5%86%85%E5%AD%98"><span class="nav-text">9. 直接内存</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#9-1-%E7%9B%B4%E6%8E%A5%E5%86%85%E5%AD%98%E6%A6%82%E5%BF%B5"><span class="nav-text">9.1 直接内存概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-2-NIO-%E5%92%8C-IO-%E7%9A%84%E6%AF%94%E8%BE%83"><span class="nav-text">9.2 NIO 和 IO 的比较</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#10-%E6%80%BB%E7%BB%93"><span class="nav-text">10. 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

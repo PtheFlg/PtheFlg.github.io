@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="很好，上一章讲了栈，这里开始看看堆是怎么一个情况。  首先要说的一点是，整个这一章，都是关于堆的，在网课里面堆讲了30集，着实离谱，而且东西奇多，所以笔记也会多到离谱">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM-堆">
+<meta property="og:url" content="http://example.com/2022/05/28/jvm-heap/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="很好，上一章讲了栈，这里开始看看堆是怎么一个情况。  首先要说的一点是，整个这一章，都是关于堆的，在网课里面堆讲了30集，着实离谱，而且东西奇多，所以笔记也会多到离谱">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/runtime/HeapOldGenAndYoungGen.png">
+<meta property="og:image" content="http://example.com/images/runtime/MemoryHandleSpecialCase.png">
+<meta property="og:image" content="http://example.com/images/runtime/TLAB.png">
+<meta property="article:published_time" content="2022-05-28T02:24:24.000Z">
+<meta property="article:modified_time" content="2022-06-02T03:39:45.505Z">
+<meta property="article:author" content="PtheF">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="底层">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/runtime/HeapOldGenAndYoungGen.png">
+
+<link rel="canonical" href="http://example.com/2022/05/28/jvm-heap/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>JVM-堆 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/28/jvm-heap/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JVM-堆
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-05-28 10:24:24" itemprop="dateCreated datePublished" datetime="2022-05-28T10:24:24+08:00">2022-05-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-06-02 11:39:45" itemprop="dateModified" datetime="2022-06-02T11:39:45+08:00">2022-06-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>很好，上一章讲了栈，这里开始看看堆是怎么一个情况。</p>
+<blockquote>
+<p>首先要说的一点是，整个这一章，都是关于堆的，在网课里面堆讲了30集，着实离谱，而且东西奇多，所以笔记也会多到离谱</p>
+</blockquote>
+<span id="more"></span>
+
+<h1 id="1-堆的概述"><a href="#1-堆的概述" class="headerlink" title="1. 堆的概述"></a>1. 堆的概述</h1><ul>
+<li><p>一个JVM实例只存在一个堆内存，堆也是 Java内存管理的核心区域</p>
+<blockquote>
+<p>一个进程对应一个JVM实例，JVM实例只有一个Runtime，Runtime里面只有堆和方法区是线程公用，所以说的直白了，一个进程只有一个堆</p>
+</blockquote>
+</li>
+<li><p>JVM启动时堆的大小已经确定</p>
+</li>
+<li><p>堆的大小可以调节</p>
+</li>
+<li><p>Java虚拟机规范中规定，堆可以处于物理不连续的内存上，但是逻辑上应视为连续。</p>
+<blockquote>
+<p>如何证明堆是进程唯一的？需要用到一个工具，在 java.bin 目录下，jvisualvm，这个东西可以看到目前的java进程信息，(需要安装一个插件，VisualGC，工具里面就能安装).然后进入 visualGC</p>
+</blockquote>
+</li>
+<li><p>即使整个线程共用一个堆，对内部还是有线程私有的缓冲区，最典型的就是 ThreadLocal，Buffer，TLAB Allocation，很好，目前我都不知道啥意思。</p>
+</li>
+<li><p>几乎所有的对象实例都分配在堆上，注意是几乎，不是所有，随着 JVM 的更新，JVM会进行逃逸检测，栈上也可以村对象了。</p>
+</li>
+<li><p>数组和对象可能永远不会存在栈上，栈帧中保存引用，这个引用指向对象或者数组在堆中的位置。</p>
+<blockquote>
+<p>官网中JVM规范说的是所有，所以引出了下一条</p>
+</blockquote>
+</li>
+<li><p>方法结束后，堆中的对象不会马上被删除，仅仅在垃圾收集的时候才会被删除。</p>
+<blockquote>
+<p>这里解释一下什么意思，一个方法，方法里面有引用，指向堆中的实例，当方法执行完成后，栈帧出栈，这时候引用就没了，就不在指向堆了，这个时候听不会马上GC，因为影响效率，他会在堆满了的时候去进行垃圾收集。</p>
+</blockquote>
+<blockquote>
+<p>这里老师的原话是：出栈后引用为空，很好现在回来看，显然是栈帧出栈，局部变量表停止指向</p>
+</blockquote>
+</li>
+<li><p>堆是GC作用的重点区域。</p>
+</li>
+</ul>
+<h1 id="2-堆空间内存细分"><a href="#2-堆空间内存细分" class="headerlink" title="2. 堆空间内存细分"></a>2. 堆空间内存细分</h1><p>现代垃圾收集器大部分都是基于分带收集论涉及，对空间细分为：</p>
+<ul>
+<li><p>java7 包括之前的JVM 堆内存逻辑上分为 3部分：新生区 + 养老区 + 永久区</p>
+<ul>
+<li><p>Young Generation Space -&gt; 新生区 Young&#x2F;New</p>
+<blockquote>
+<p>又被划分为 Eden 区 和 Survivor 区</p>
+</blockquote>
+</li>
+<li><p>Tenure Generation space -&gt; 养老区 Old&#x2F;Tenure</p>
+</li>
+<li><p>Permanent Space -&gt; 永久区 Perm</p>
+</li>
+</ul>
+</li>
+<li><p>java8 以后堆内存逻辑上分为3部分：新生区 + 养老区 + 元空间</p>
+<ul>
+<li><p>Young Generation Space 新生区 Young&#x2F;New</p>
+<blockquote>
+<p>同理分为 Eden Survivor</p>
+</blockquote>
+</li>
+<li><p>Tenure Generation Space 养老区 Old&#x2F;Tenure</p>
+</li>
+<li><p>Meta Space 元空间 Meta</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>需要注意的是，永久代和元空间其实并不属于 堆，而是属于方法区，所以在这里不细说永久代。 如何证明堆包括元空间和养老代？还是昨天那个工具：Jvisualvm，里面的 visualGC， 里面 三块，enden survivor tenure 加起来 就是你设置的 堆的大小。</p>
+<p>在Java 中分别叫 PSYoungGen&#x3D;新生区 ParOldGen&#x3D;养老区 MetaGen&#x2F;PSPermGen&#x3D;元空间&#x2F;永久区</p>
+<h1 id="3-设置堆空间大小"><a href="#3-设置堆空间大小" class="headerlink" title="3. 设置堆空间大小"></a>3. 设置堆空间大小</h1><ul>
+<li><p>堆的大小在JVM启动的时候就已经设定好了，可以通过 -Xmx 和 -Xms 来设置</p>
+<ul>
+<li><p>-Xms 用来表示堆区的初始内存，等价于： -XX:InitialHeapSize</p>
+</li>
+<li><p>-Xmx 用来表示堆区的最大内存，等价于：-XX:MaxHeapSize</p>
+<blockquote>
+<p>-X 是 JVM 参数，ms &#x3D; memory start</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><p>一旦堆区的内存大小超过 -Xmx，就会跑出 OutOfMemoryError异常。</p>
+</li>
+<li><p>通常会将-Xms 和 -Xmx配置相同的值，目的就是为了能够在Java垃圾回收机制清理完堆区后 不需要重新分割计算堆区的大小，从而提供性能。</p>
+</li>
+<li><p>默认情况下，初始内存大小：物理电脑内存大小 &#x2F; 64,最大内存：物理电脑内存大小 &#x2F; 4</p>
+</li>
+</ul>
+<h1 id="4-堆的年轻代和老年代"><a href="#4-堆的年轻代和老年代" class="headerlink" title="4. 堆的年轻代和老年代"></a>4. 堆的年轻代和老年代</h1><p>别说话，看图： </p>
+<p><img src="/../images/runtime/HeapOldGenAndYoungGen.png" alt="heap"></p>
+<p>存储在JVM中的Java对象可以分为两类：</p>
+<ul>
+<li><p>生命周期比较短的瞬时对象，创建消亡都非常迅速</p>
+</li>
+<li><p>生命周期比较长，极端情况下和JVM的声明周期一样长</p>
+</li>
+</ul>
+<p>创建出来的对象先放在 年轻代的Eden 区，进行一轮垃圾回收之后，如果是垃圾了，就直接回收了， 如果不是垃圾，说明对象幸存，则放到 survivor0 或者 survivor1 中。</p>
+<blockquote>
+<p>survivor 也叫 from &#x2F; to 区</p>
+</blockquote>
+<h2 id="内存占比"><a href="#内存占比" class="headerlink" title="内存占比"></a>内存占比</h2><p>默认情况下，年轻代和老年代占比 1:2，也就是年轻代占堆的1&#x2F;3，老年代占堆的 2&#x2F;3.能不能手动调整？可以，启动时添加JVM参数：<code>-XX:NewRatio=n</code> 设置年轻代和老年代占比 1:n。当然默认情况下是 <code>-XX:NewRatio=2</code>。但是这个数一般不建议改，除非你确定项目中有很多老对象。</p>
+<p>HotSpot虚拟机中，伊甸园区和幸存者区占比为 8:1:1。同理可以通过启动参数 <code>-XX:survivorRatio=n</code> 来调整。但是需要说一下，其实启动后占比是6:1:1，而不是8:1:1，你要是真想让他8:1:1符合规范，那你设置一下好了。</p>
+<p>几乎所有对象首先都是在Eden区创建，除非这个对象太大了直接放到OldGen，而且大部分对象的销毁都是放在Eden中，有研究表明 80%的对象都是朝生暮死，生命周期很短。如果我们嫌不够的话，可以使用参数 <code>-Xmn</code> 来调整新生代大小.</p>
+<h1 id="5-创建对象的大体流程"><a href="#5-创建对象的大体流程" class="headerlink" title="5. 创建对象的大体流程"></a>5. 创建对象的大体流程</h1><p>前文说道，创建对象一般发生在新生代，那么新生代具体发生了什么，让我们来详细说一说，注意，这里并没有提到类加载器，仅仅是在对重给对象分配内存流程。后面还会详细说一个对象创建具体的流程。</p>
+<h2 id="5-1-流程"><a href="#5-1-流程" class="headerlink" title="5.1 流程"></a>5.1 流程</h2><ol>
+<li><p>在Eden区分配空间，大部分情况都是吧对象分配在eden区，上文也说过，除非这个对象特别大</p>
+</li>
+<li><p>当Eden区满了的时候，出发年轻代的垃圾回收机制，叫 YGC(YoungGC) 或者叫 MinorGC，Eden中已经没有了引用的对象将会被回收，剩下的对象，将会进入 survivor0 或者 survivor1，这里我们先假设 survivor0 和 survivor1 都是空的，再假设 Eden中没有被回收的对象进入了 survivor0.这个时候 survivor0 就叫to区，同时进入 survivor0 的对象有一个年龄计数器，用来记录幸存次数，从 0 变成 1。</p>
+</li>
+<li><p>继续创建对象，放在 Eden中，当Eden再一次满了，再次触发 YGC，这回Eden中的幸存对象将会进入空的那个 survivor，这里空的是 survivor1，年龄计数器变为1，同时 survivor0 中的对象也进行YGC，s0中的幸存者也会进入s1，那么这个时候，s1就叫to区，s0就叫from 区，s区的垃圾回收是 Eden 回收，他也顺带回收一下，如果 s区满了，再说。</p>
+</li>
+<li><p>一直进行这个 Eden + from &#x3D;&gt; to 的过程，同时对象的年龄计数器累加。</p>
+</li>
+<li><p>当一个对象的年龄计数器值达到临界的时候，默认是15，那么就会认为这个对象的生命周期很长，就会把它放入 老年代。这个过程叫提升 ：Promotion</p>
+</li>
+</ol>
+<h2 id="5-2-总结"><a href="#5-2-总结" class="headerlink" title="5.2 总结"></a>5.2 总结</h2><ul>
+<li><p>针对 s区，复制之后有交换，谁空谁是to</p>
+</li>
+<li><p>关于垃圾回收，频繁在 新生代回收，很少在老年代回收，几乎不再永生代(Meta) 回收。</p>
+</li>
+<li><p>再出发 YGC 的时候，Eden区肯定是被清空了</p>
+</li>
+</ul>
+<h2 id="5-3-特殊情况"><a href="#5-3-特殊情况" class="headerlink" title="5.3 特殊情况"></a>5.3 特殊情况</h2><p>看图：</p>
+<p><img src="/../images/runtime/MemoryHandleSpecialCase.png" alt="heap_memory"></p>
+<p>解释一下： 正常流程肯定能看懂，说一点特殊情况：</p>
+<ul>
+<li><p>Eden 放不下了，可能是 Eden 满了，触发 YGC，然后Eden 还是放不下，这个时候Eden肯定是 空了，说明 对象大小超过了 Eden大小，则直接放入 老年代。</p>
+</li>
+<li><p>上面这种情况，如果 老年代也放不下，触发 FGC，还放不下，那完了，抛出 OOM错误。</p>
+</li>
+<li><p>触发YGC的时候，如果 s区放不下，就直接进入老年代。</p>
+</li>
+</ul>
+<h1 id="6-堆垃圾回收"><a href="#6-堆垃圾回收" class="headerlink" title="6. 堆垃圾回收"></a>6. 堆垃圾回收</h1><p>大体来看，Heap 中的 GC 分为 3种：</p>
+<ul>
+<li><p>Young GC &#x2F; MinorGC</p>
+</li>
+<li><p>Full GC</p>
+</li>
+<li><p>Old GC &#x2F; Major GC</p>
+</li>
+</ul>
+<p>根据 HotSpot 虚拟机，按照收集区域又分为两种：部分收集和整堆收集</p>
+<ul>
+<li><p>部分收集：不是完整收集整个Java 堆的收集，其中又分为：</p>
+<ul>
+<li><p>新生代收集 MinorGC&#x2F;YoungGC: 只收集年轻代的垃圾收集</p>
+</li>
+<li><p>老年代收集 MajorGC&#x2F;OldGC： 只收集老年代</p>
+<ul>
+<li><p>目前只有CMS GC会有单独收集老年代的行为</p>
+</li>
+<li><p>很多时候 MajorGC 会和 FullGC 混合使用，需要具体分辨是老年代回收还是整堆回收</p>
+</li>
+</ul>
+</li>
+<li><p>混合回收器 Mixed GC：收集整个新生代和部分老年代的垃圾</p>
+<ul>
+<li>只有G1 GC 有这种行为</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>整堆收集：收集整个 Java 堆 和 方法区 的垃圾，注意，还包括方法区。</p>
+</li>
+</ul>
+<p>下面说一下各个内存部分的垃圾回收触发机制：</p>
+<h2 id="6-1-年轻代触发机制"><a href="#6-1-年轻代触发机制" class="headerlink" title="6.1 年轻代触发机制"></a>6.1 年轻代触发机制</h2><ul>
+<li><p>年轻代空间不足，就会触发minor gc,这里说的空间不足指的是eden空间不足，survivor 满了不会触发 minor gc，只会发生提升。每次回收都会清空年轻代内存。</p>
+</li>
+<li><p>Java 对象大多数申明周期很短，所以minor gc 发生的特别频繁。</p>
+</li>
+<li><p>minor gc 会触发STW，也就是暂停用户线程，等垃圾回收结束，才会恢复用户线程</p>
+</li>
+</ul>
+<h2 id="6-2-老年代回收："><a href="#6-2-老年代回收：" class="headerlink" title="6.2 老年代回收："></a>6.2 老年代回收：</h2><ul>
+<li><p>发生在老年代的垃圾回收，当对象从老年代消失了，我们就认为 major gc 或者 full gc 发生了，</p>
+</li>
+<li><p>发生一次 major gc，一般来说，伴随着至少一次的minor gc，不是绝对的，以后再说。</p>
+<ul>
+<li>也就是当老年代空间不足时，西安出发一次 minor gc，如果空间还不足，触发 major gc</li>
+</ul>
+</li>
+<li><p>major gc 一般比 minor gc 慢10倍以上，stw 时间更长。</p>
+</li>
+<li><p>如果major gc后空间还是不够，抛出 OOM 异常。</p>
+</li>
+</ul>
+<h2 id="6-3-FullGC-触发机制："><a href="#6-3-FullGC-触发机制：" class="headerlink" title="6.3 FullGC 触发机制："></a>6.3 FullGC 触发机制：</h2><ul>
+<li><p>调用 System.gc() 时</p>
+</li>
+<li><p>老年代空间不足</p>
+</li>
+<li><p>方法区空间不足</p>
+</li>
+<li><p>通过 minor gc 后进入老年代的平均大小大于老年代的可用内存</p>
+</li>
+<li><p>eden from 的对象往 to 区复制，to区空间不够，提升到老年代，老年代空间也不够，触发 full gc</p>
+</li>
+<li><p>开发中尽量避免 full gc</p>
+</li>
+</ul>
+<h1 id="7-TLAB"><a href="#7-TLAB" class="headerlink" title="7. TLAB"></a>7. TLAB</h1><p>前文说过TLAB，说是 堆里面有每个线程的私有缓冲区，有 TLAB，ThreadLocal，Buffer，Allocation，其实后面的三个词全都在说 TLAB。</p>
+<h2 id="7-1-TLAB是啥"><a href="#7-1-TLAB是啥" class="headerlink" title="7.1 TLAB是啥"></a>7.1 TLAB是啥</h2><p>ThreadLocal Buffer Allocation： 线程私有缓冲区，用于结局线程安全问题。</p>
+<h2 id="7-2-为什么要设置TLAB"><a href="#7-2-为什么要设置TLAB" class="headerlink" title="7.2 为什么要设置TLAB"></a>7.2 为什么要设置TLAB</h2><p>堆是整个进程共享的一块区域，如果一大堆线程同事访问堆，会造成县城不安全，如果给数据加锁，那效率就太慢了，所以为了提高效率，加入了线程缓冲区。</p>
+<p>JVM给每个线程在 Eden 划分出来一块 TLAB，这种方式解决了线程安全问题，提高了内存分配吞吐量，我们就管这种方式叫“快速分配策略”.</p>
+<p>虽然说不是所有对象都可以分配在 TLAB上，但是TLAB确实是JVM分配对象的首选。TLAB非常小，仅仅占到了 Eden的 1%。</p>
+<p>如果对象在TLAB分配失败，JVM就会考虑给对象加锁，直接把对象放在Eden中。</p>
+<h2 id="7-3-一些参数"><a href="#7-3-一些参数" class="headerlink" title="7.3 一些参数"></a>7.3 一些参数</h2><ul>
+<li><p>-XX:useTLAB 是否开启TLAB，默认开启</p>
+</li>
+<li><p>-XX:TLABWasteTargetPercent 设置TLAB占Eden的百分比。</p>
+</li>
+</ul>
+<h2 id="7-4-对象创建过程"><a href="#7-4-对象创建过程" class="headerlink" title="7.4 对象创建过程"></a>7.4 对象创建过程</h2><p>有了TLAB以后，对象创建流程如下：</p>
+<p><img src="/../images/runtime/TLAB.png" alt="tlab"></p>
+<h2 id="7-5-剩下的"><a href="#7-5-剩下的" class="headerlink" title="7.5 剩下的"></a>7.5 剩下的</h2><p>p81 没好好看，以后可以补一补。</p>
+<h1 id="8-逃逸分析"><a href="#8-逃逸分析" class="headerlink" title="8. 逃逸分析"></a>8. 逃逸分析</h1><p>随着 JIT(编译器) 的发展，逃逸分析技术逐渐成熟，栈上分配，标量替换优化技术 导致技术上有了一点区别，那就是 堆上分配对象不再那么绝对了。</p>
+<p>大部分情况下，一个对象在堆上分配空间，但是在某些特殊情况下，这个对象经过了逃逸分析，发现这个方法并没有逃离方法，那么这个对象就有可能在栈上分配空间。</p>
+<p>但是提一句，HotSpot虚拟机可是没有逃逸分析里面的部分功能的，比如栈上分配这个，HotSpot就没有。</p>
+<h2 id="8-1-逃逸分析概述"><a href="#8-1-逃逸分析概述" class="headerlink" title="8.1 逃逸分析概述"></a>8.1 逃逸分析概述</h2><p>逃逸分析干嘛的？就是用来优化内存分配的，我们前面说对象都要分配到堆上，但是堆上涉及到GC，而栈却不涉及GC，所以可不可以把对象存到栈上，然后方法执行完成直接弹栈，省的GC了。所以这个就是逃逸分析要干的事，分配一个对象，就要看这个对象有没有发生逃逸，如果发生逃逸，也就是这个对象跑出了当前方法作用域，那么发生逃逸，该咋办咋办，如果没有，则可以进行优化。就可以把这个对象放到栈上。</p>
+<ul>
+<li><p>通过逃逸分析，Java Hotspot 编译器能够分析一个对象的引用从而决定这个对象是否分配到栈上。</p>
+</li>
+<li><p>逃逸分析的基本行为就是分析对象的作用域：</p>
+<ul>
+<li><p>一个对象被定义后，如果只在方法中调用，那么没有发生逃逸。</p>
+</li>
+<li><p>对象被定义后，方法外也引用了它，则发生了逃逸。比如方法中创建的对象最后被return了。</p>
+</li>
+</ul>
+</li>
+<li><p>没有发生逃逸，则对象可以分配到栈上，毕竟别的地方不用，方法执行完，栈帧出栈，对象也跟着出栈。</p>
+</li>
+<li><p>发生逃逸，那就老老实实往堆上分配。</p>
+</li>
+</ul>
+<p>举个例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这种情况下，user 对象仅仅在方法内部被调用，则没有逃逸，往栈上分配就行了  </span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">test</span><span class="params">()</span>&#123;  </span><br><span class="line">    <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>();  </span><br><span class="line">    user = <span class="literal">null</span>;  </span><br><span class="line">&#125;  </span><br><span class="line">​  </span><br><span class="line"><span class="comment">// 这种情况，StringBuffer 最终被return，发生了逃逸。  </span></span><br><span class="line"><span class="keyword">public</span> StringBuffer <span class="title function_">getString</span><span class="params">(String a, String b)</span>&#123;  </span><br><span class="line">    <span class="type">StringBuffer</span> <span class="variable">buffer</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">StringBuffer</span>();  </span><br><span class="line">    buffer.append(a);  </span><br><span class="line">    buffer.append(b);  </span><br><span class="line">    <span class="keyword">return</span> buffer;  </span><br><span class="line">&#125;  </span><br><span class="line">​  </span><br><span class="line"><span class="comment">// 上面的 StringBuffer 改成这种，就不会发生逃逸  </span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">getString</span><span class="params">(String a, String b)</span>&#123;  </span><br><span class="line">    <span class="type">StringBuffer</span> <span class="variable">stringBuffer</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">StringBuffer</span>();  </span><br><span class="line">    stringBuffer.append(a);  </span><br><span class="line">    stringBuffer.append(b);  </span><br><span class="line">    <span class="keyword">return</span> stringBuffer.toString();  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>参数如下：</strong></p>
+<ul>
+<li><p>-XX:-DoEscapeAnalysis 关闭逃逸分析</p>
+</li>
+<li><p>-XX:+DoEscapeAnalysis 开启逃逸分析</p>
+</li>
+</ul>
+<h2 id="8-2-逃逸分析：代码优化"><a href="#8-2-逃逸分析：代码优化" class="headerlink" title="8.2 逃逸分析：代码优化"></a>8.2 逃逸分析：代码优化</h2><p>总的来说，可以通过逃逸分析干好多事，上面那个，仅仅是一个 栈上分配。</p>
+<p>逃逸检测的优化：</p>
+<ul>
+<li><p>栈上分配</p>
+</li>
+<li><p>同步省略</p>
+</li>
+<li><p>分离对象&#x2F;标量替换</p>
+</li>
+</ul>
+<h3 id="8-2-1-栈上分配"><a href="#8-2-1-栈上分配" class="headerlink" title="8.2.1 栈上分配"></a>8.2.1 栈上分配</h3><p>就是前面说的，站上分配对象，如果实体仅仅在方法内部使用没有进入外部，则对象会被分配到栈上。</p>
+<h3 id="8-2-2-同步省略"><a href="#8-2-2-同步省略" class="headerlink" title="8.2.2 同步省略"></a>8.2.2 同步省略</h3><p>如果一个对象仅在一个线程中使用，或者说，一个对象只能从一个线程中被访问，那么对于这个对象的操作就不考虑同步。</p>
+<ul>
+<li><p>线程同步的代价是很高的。</p>
+</li>
+<li><p>在动态编译同步代码块的时候，如果JIT 检测到一个对象仅仅在一个线程中被访问，而没有发布到其他线程，则运行时 JVM 就会取消对这个对象进行上锁，大大的提高效率，这就叫 锁消除。</p>
+</li>
+</ul>
+<p>举个例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">test</span><span class="params">()</span>&#123;  </span><br><span class="line">    <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>();  </span><br><span class="line">    <span class="keyword">synchronized</span>(user)&#123;  </span><br><span class="line">        System.out.println(user);  </span><br><span class="line">   &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">​  </span><br><span class="line"><span class="comment">// 上面这种情况，user 对象仅仅在一个线程中被访问，并没有多个线程共享，所以几遍你给他加了锁，  </span></span><br><span class="line"><span class="comment">// JVM也不会执行，但是废话，这种情况，本来我们就不应该加锁。</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="8-2-3分离对象或标量替换"><a href="#8-2-3分离对象或标量替换" class="headerlink" title="8.2.3分离对象或标量替换"></a>8.2.3分离对象或标量替换</h3><p>有的对象可能不需要作为一个连续的内存结构存入到内存中，而且也可以被访问到。那么这部分对象的部分(甚至全部) 就可以存到 CPU的寄存器中。</p>
+<p>用Java 说，就是这个对象不用存在 堆中，那就可以放到 栈 中。这里还需要解释几个概念：</p>
+<p><strong>标量</strong></p>
+<p>无法被分解成更小的数据，比如基本数据类型。</p>
+<p><strong>对应聚合量</strong></p>
+<p>还可以被分解的对象就是聚合量，比如我们自己写的类的实例。</p>
+<p><strong>标量替换</strong></p>
+<p>如果经过逃逸分析，发现你目前的对象没有在方法外面使用，他就会把你的聚合量，分解为几个标量，这个过程就叫标量替换。</p>
+<p>说白了，就是吧对象打散了，分配到栈上。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">test</span><span class="params">()</span>&#123;  </span><br><span class="line">    <span class="type">Point</span> <span class="variable">p</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Point</span>();  </span><br><span class="line">    System.out.println(<span class="string">&quot;Point.x=&quot;</span> + p.x + <span class="string">&quot; Point.y=&quot;</span> + p.y);  </span><br><span class="line">&#125;  </span><br><span class="line">​  </span><br><span class="line"><span class="comment">// 最终这个东西会被优化成  </span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">test</span><span class="params">()</span>&#123;  </span><br><span class="line">    <span class="type">int</span> <span class="variable">x</span> <span class="operator">=</span> <span class="number">1</span>;  </span><br><span class="line">    <span class="type">int</span> <span class="variable">y</span> <span class="operator">=</span> <span class="number">2</span>;  </span><br><span class="line">    System.out.println(<span class="string">&quot;Point.x=&quot;</span> + x + <span class="string">&quot; Point.y=&quot;</span> + y);  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>-XX:+EliminateAllocation 开启标量替换，默认就是开启的。</p>
+<h2 id="8-3-总结"><a href="#8-3-总结" class="headerlink" title="8.3 总结"></a>8.3 总结</h2><p>大体说几点：</p>
+<ul>
+<li><p>逃逸分析并不成熟</p>
+</li>
+<li><p>逃逸分析本身也消耗性能，如果分析了半天，结果发现都逃逸了，那完犊子了</p>
+</li>
+<li><p>Oracle HotSpot 并没有栈上分配，所以肯定对象都在堆上</p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+              <a href="/tags/%E5%BA%95%E5%B1%82/" rel="tag"># 底层</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/05/27/jvm-stack/" rel="prev" title="虚拟机栈">
+      <i class="fa fa-chevron-left"></i> 虚拟机栈
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/05/30/jvm-methodarea/" rel="next" title="JVM-方法区">
+      JVM-方法区 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E5%A0%86%E7%9A%84%E6%A6%82%E8%BF%B0"><span class="nav-text">1. 堆的概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E5%A0%86%E7%A9%BA%E9%97%B4%E5%86%85%E5%AD%98%E7%BB%86%E5%88%86"><span class="nav-text">2. 堆空间内存细分</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E8%AE%BE%E7%BD%AE%E5%A0%86%E7%A9%BA%E9%97%B4%E5%A4%A7%E5%B0%8F"><span class="nav-text">3. 设置堆空间大小</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E5%A0%86%E7%9A%84%E5%B9%B4%E8%BD%BB%E4%BB%A3%E5%92%8C%E8%80%81%E5%B9%B4%E4%BB%A3"><span class="nav-text">4. 堆的年轻代和老年代</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%8D%A0%E6%AF%94"><span class="nav-text">内存占比</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%88%9B%E5%BB%BA%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%A4%A7%E4%BD%93%E6%B5%81%E7%A8%8B"><span class="nav-text">5. 创建对象的大体流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E6%B5%81%E7%A8%8B"><span class="nav-text">5.1 流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E6%80%BB%E7%BB%93"><span class="nav-text">5.2 总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E7%89%B9%E6%AE%8A%E6%83%85%E5%86%B5"><span class="nav-text">5.3 特殊情况</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E5%A0%86%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6"><span class="nav-text">6. 堆垃圾回收</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E5%B9%B4%E8%BD%BB%E4%BB%A3%E8%A7%A6%E5%8F%91%E6%9C%BA%E5%88%B6"><span class="nav-text">6.1 年轻代触发机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-%E8%80%81%E5%B9%B4%E4%BB%A3%E5%9B%9E%E6%94%B6%EF%BC%9A"><span class="nav-text">6.2 老年代回收：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-3-FullGC-%E8%A7%A6%E5%8F%91%E6%9C%BA%E5%88%B6%EF%BC%9A"><span class="nav-text">6.3 FullGC 触发机制：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-TLAB"><span class="nav-text">7. TLAB</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#7-1-TLAB%E6%98%AF%E5%95%A5"><span class="nav-text">7.1 TLAB是啥</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-2-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%AE%BE%E7%BD%AETLAB"><span class="nav-text">7.2 为什么要设置TLAB</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-3-%E4%B8%80%E4%BA%9B%E5%8F%82%E6%95%B0"><span class="nav-text">7.3 一些参数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-4-%E5%AF%B9%E8%B1%A1%E5%88%9B%E5%BB%BA%E8%BF%87%E7%A8%8B"><span class="nav-text">7.4 对象创建过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-5-%E5%89%A9%E4%B8%8B%E7%9A%84"><span class="nav-text">7.5 剩下的</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#8-%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90"><span class="nav-text">8. 逃逸分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#8-1-%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90%E6%A6%82%E8%BF%B0"><span class="nav-text">8.1 逃逸分析概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-2-%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90%EF%BC%9A%E4%BB%A3%E7%A0%81%E4%BC%98%E5%8C%96"><span class="nav-text">8.2 逃逸分析：代码优化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#8-2-1-%E6%A0%88%E4%B8%8A%E5%88%86%E9%85%8D"><span class="nav-text">8.2.1 栈上分配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-2-2-%E5%90%8C%E6%AD%A5%E7%9C%81%E7%95%A5"><span class="nav-text">8.2.2 同步省略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-2-3%E5%88%86%E7%A6%BB%E5%AF%B9%E8%B1%A1%E6%88%96%E6%A0%87%E9%87%8F%E6%9B%BF%E6%8D%A2"><span class="nav-text">8.2.3分离对象或标量替换</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-3-%E6%80%BB%E7%BB%93"><span class="nav-text">8.3 总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

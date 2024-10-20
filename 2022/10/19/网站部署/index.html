@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="最近写了个小网站，用于给别人的大创项目结项，同时自己也练练技术，本着大学最后一次做应用项目的原因，打算把这个项目做的正式一点，所以开发，部署，dns，备案 一串工作全做了，挺费劲。这里总结一下这次部署网站的流程。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网站部署">
+<meta property="og:url" content="http://example.com/2022/10/19/%E7%BD%91%E7%AB%99%E9%83%A8%E7%BD%B2/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="最近写了个小网站，用于给别人的大创项目结项，同时自己也练练技术，本着大学最后一次做应用项目的原因，打算把这个项目做的正式一点，所以开发，部署，dns，备案 一串工作全做了，挺费劲。这里总结一下这次部署网站的流程。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-10-19T09:11:20.000Z">
+<meta property="article:modified_time" content="2022-10-19T10:52:55.640Z">
+<meta property="article:author" content="PtheF">
+<meta property="article:tag" content="部署">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2022/10/19/%E7%BD%91%E7%AB%99%E9%83%A8%E7%BD%B2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>网站部署 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/19/%E7%BD%91%E7%AB%99%E9%83%A8%E7%BD%B2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          网站部署
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-10-19 17:11:20 / 修改时间：18:52:55" itemprop="dateCreated datePublished" datetime="2022-10-19T17:11:20+08:00">2022-10-19</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E9%83%A8%E7%BD%B2/" itemprop="url" rel="index"><span itemprop="name">部署</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>最近写了个小网站，用于给别人的大创项目结项，同时自己也练练技术，本着大学最后一次做应用项目的原因，打算把这个项目做的正式一点，所以开发，部署，dns，备案 一串工作全做了，挺费劲。这里总结一下这次部署网站的流程。</p>
+<span id="more"></span>
+
+<blockquote>
+<p>create by P-F on 2022&#x2F;10&#x2F;19</p>
+</blockquote>
+<h1 id="1-开发阶段"><a href="#1-开发阶段" class="headerlink" title="1. 开发阶段"></a>1. 开发阶段</h1><p>开发阶段没什么好说的，前端用的是 Vue+element+axios，后端是 go+beego+mysql+redis+jwt，很正常的技术栈。需要说的是平时调试，平时调试的时候 Vue 项目就是 <code>npm run serve</code> 开8080端口简单启动一下，然后 beego 项目那就是 <code>bee run</code> 开 9090 端口，这个时候就有个问题，两个不同端口之间通讯会跨域，同时我每次打开浏览器还得输入 <code>:8080</code>，很麻烦，所以怎么办呢？</p>
+<p>我用本机的 Nginx 做了一下反向代理，直接访问 &#x2F; 转发到 <code>localhost:8080</code>，访问 &#x2F;v1&#x2F;* 就会转发到 <code>localhost:9090</code>，这样前端就直接访问 localhost&#x2F;v1&#x2F;xxx 就可以走 beego 服务，也不用担心跨域。看一下本机 Nginx 的配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> <span class="regexp">~ ^/v1/.*$</span> &#123;</span><br><span class="line">    <span class="attribute">proxy_pass</span> http://localhost:9090;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">location</span> / &#123;</span><br><span class="line">    <span class="attribute">proxy_pass</span> http://localhost:8080;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里顺带复习一下 Nginx 的 location 配置：<code>location ~</code> 后面接的是正则，会根据正则来判断是否进入这个 location。</p>
+<p>剩下的倒是十分的顺利，因为开发阶段嘛，就在本机，也没有网络的影响，总体感觉十分良好，但是到了真正上线的时候那问题就大了。</p>
+<h1 id="2-前端部署"><a href="#2-前端部署" class="headerlink" title="2. 前端部署"></a>2. 前端部署</h1><p>前端的部署，属实非常的坎坷。</p>
+<h2 id="2-1-项目拉取"><a href="#2-1-项目拉取" class="headerlink" title="2.1 项目拉取"></a>2.1 项目拉取</h2><p>把前段项目部署到服务器，首先就是如何把项目放到服务器上，之前我的做法是通过 scp 命令直接从本机复制到服务器，但是实在麻烦，所以这回变了。我在服务器上通过 git 把项目源码拉下来，然后修改一些启动参数，再 <code>npm install; npm run build</code> 即可得到 Vue 项目的 dist 包。</p>
+<h2 id="2-2-项目部署"><a href="#2-2-项目部署" class="headerlink" title="2.2 项目部署"></a>2.2 项目部署</h2><p>Vue 本质上是一个单页面应用，也就是整个网站本质上就是那个 index.html，但是通过各种 js 啥玩意的可以让这个 index.html 根据不同的 url 显示不同的东西。我第一次部署 Vue 还真就是在服务器上运行 <code>npm run serve</code> 然后就没事了，结果就是关闭终端以后项目也就没了。所以正确姿势就是：将 Vue 打包成 dist，然后配置后端服务器，比如 Nginx，Tomcat，或者自己用 nodejs 自己写一个也行，要实现将找不到对应静态资源的请求全部转发到 vue 生成的 index.html 中。下面就是使用 Nginx 部署 Vue 项目的配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">root</span> /usr/local/www/manyin-tech-frontend/dist;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ <span class="variable">@router</span>;</span><br><span class="line">        <span class="attribute">index</span> index.html;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">location</span> <span class="variable">@router</span> &#123;</span><br><span class="line">        <span class="attribute">rewrite</span><span class="regexp"> ^.*$</span> /index.html <span class="literal">last</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>具体含义就是：首先，访问了 &#x2F; 以后，先去找有没有对应的静态资源，比如前端请求图片你也给他转发到 index.html 这显然不合适，所以首先 <code>try_files @uri @uri/</code> 来判断请求的静态资源是否存在，如果不存在，则转发到 @router 这个location，@router location 再将请求转发给 index.html。</p>
+<p>同时配置一下后端的反向代理：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这段在 server 块外面</span></span><br><span class="line">upstream manyin_service &#123;</span><br><span class="line">        server <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">9090</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">location ~ ^<span class="regexp">/v1/</span>.+$ &#123;</span><br><span class="line">        proxy_pass <span class="attr">http</span>:<span class="comment">//manyin_service;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>OK，到这里算是初步的部署完了，可以通过 IP 地址访问了。</p>
+<h2 id="2-3-静态资源优化"><a href="#2-3-静态资源优化" class="headerlink" title="2.3 静态资源优化"></a>2.3 静态资源优化</h2><p>结果一访问发现问题了，页面加载速度特别的慢，可能得一分钟才能把首页加载完，这是为啥？一看浏览器控制台，好家伙，首页三张图片就 20m 多，怪不得慢。那咋办？压缩一下图片。</p>
+<p>结果网上找了一圈，要么让我下软件，要么就是在线压缩跟我要钱，好在最后找到一个非常好用的网站，功能还挺多，还能压缩图片：</p>
+<p><a target="_blank" rel="noopener" href="https://oktools.net/">oktools</a></p>
+<p>通过这个网站，把图片的大小降低到了一张 200-300k 的大小，还算是ok。但是图片压缩了以后访问还是略慢，这个时候想到了 Nginx 的 gzip 功能，Nginx 可以将一些静态资源进行 gzip 压缩发送给浏览器，然后浏览器会自动解压，我寻思这样可能可以再加快一点访问速度，于是开始配置 Nginx 的压缩。实测图片不需要压缩，因为根本压不了多少，但是 Vue 打包后一些巨大的 js 文件倒是压缩效果非常不错，可能一个 3 400k 的 js 文件压缩以后就不到100k，css 也可以压缩。下面直接贴配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">sendfile</span> <span class="literal">on</span>;</span><br><span class="line"></span><br><span class="line"><span class="attribute">gzip</span> <span class="literal">on</span>;</span><br><span class="line"><span class="attribute">gzip_types</span> application/javascript text/css;</span><br><span class="line"><span class="attribute">gzip_vary</span> <span class="literal">on</span>;</span><br><span class="line"><span class="attribute">gzip_disable</span> <span class="string">&quot;MSIE [1-6]\.&quot;</span></span><br><span class="line">gzip_min_length <span class="number">1024</span>;</span><br><span class="line"><span class="attribute">gzip_proxied</span> <span class="literal">off</span>;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>gzip gzip_types gzip_vary 这几个配置比较重要，剩下的似乎不那么要紧，啥意思也忘了，用到的时候再查。</p>
+</blockquote>
+<p>这块配置放到了 nginx 目录的 conf&#x2F;conf.d 目录下的 gzip.conf 中，这个目录里面就是一些我自己的配置文件，比如上面部署 Vue 的配置我就写在了这个目录的 manyin.conf 文件中，然后在 nginx.conf 文件中 include 就行了。</p>
+<p>配置完这些以后就算是差不多了，访问速度反正是说得过去。</p>
+<h1 id="3-后端部署"><a href="#3-后端部署" class="headerlink" title="3. 后端部署"></a>3. 后端部署</h1><p>后端倒是部署的方便，为啥？没那么多要求，就是改个启动配置，比如 mysql 的连接，redis 的连接这些的。</p>
+<p>整个项目用 go 开发，首先服务器下个 go，直接 <code>yum install -y go</code> 就行了，懒得用源码包安装。然后同理用 git 把后端代码拉取下来，安装项目的依赖包，首先得配置一下代理，否则下载 go 的第三方宝可能会比较慢：<code>go env -w GOPROXY=https://goproxy.cn,direct</code>（忘了是不是这个了，反正是当时配置了代理）。然后就是下载依赖包，好像直接 <code>go mod tidy</code> 就行了。最后一步是 <code>go mod vendor</code> 将依赖包拉到项目目录中，这样项目就可以脱离 gopath 了。</p>
+<p>然后 <code>go run main.go</code> 测试一下ok不，ok的话打包：<code>go build</code> 然后设置后台执行：<code>nohup ./go-service &gt; logs.log &amp;</code> 就可以了。</p>
+<p>到这里，前后端就算是部署完了，总结一下：后端开放 9090 端口，Nginx 将 &#x2F;v1&#x2F;* 请求转发到 9090 口实现反向代理，同时避免了跨域。Vue 项目部署在 Nginx 上，开启 gzip 帮忙加速。然后就可以愉快的通过 IP 地址访问项目了。</p>
+<h1 id="4-域名、DNS、备案"><a href="#4-域名、DNS、备案" class="headerlink" title="4. 域名、DNS、备案"></a>4. 域名、DNS、备案</h1><p>后面的倒是比较的简单吧算是，主要是麻烦，特别的麻烦，但是因为我整个流程是在腾讯云办的，所以跟着腾讯云的文档全程没有问题。</p>
+<h2 id="4-1-域名"><a href="#4-1-域名" class="headerlink" title="4.1 域名"></a>4.1 域名</h2><p>首先第一步就是买域名，买完了以后还需要买个 DNS 套餐。我这里用的是腾讯买的域名，买完以后进入腾讯的 DNSPod，给域名添加一个 A 记录（IPv4记录），指向我们从腾讯云买的服务器。然后不出意外一会儿就能通过域名访问了。</p>
+<p>但是过一阵子可能再访问会告诉你未通过报备，不让你访问，这就需要进行下一步，报备。</p>
+<h2 id="4-2-报备"><a href="#4-2-报备" class="headerlink" title="4.2 报备"></a>4.2 报备</h2><p>这一步其实也简单，跟着腾讯的文档做就可以了。首先第一步是腾讯备案，腾讯会先给把关，通过微信小程序进行备案，然后提供相关材料即可，具体啥材料文档有说的。</p>
+<p>对了，备案的时候可能需要把 DNS 的解析关掉。</p>
+<p>其实作为我们用户只需要做第一步就行了，就是填上你的报备信息，然后腾讯审核完了就会送给省里去申，这个倒是很慢，我10月3号提交的，10月19号才审核完。</p>
+<p>审完了以后会给你一个备案号，把这个备案号贴到网站的底部：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">&quot;https://beian.miit.gov.cn/&quot;</span> <span class="attr">target</span>=<span class="string">&quot;_blank&quot;</span>&gt;</span>冀ICP备xxx号-1<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>就可以了。说是不贴的话要罚款。</p>
+<h2 id="4-3-公安备案"><a href="#4-3-公安备案" class="headerlink" title="4.3 公安备案"></a>4.3 公安备案</h2><p>管局备案完了就要去公安备案，也是跟着腾讯的文档就行了，我也是今天刚提交的，不知道结果咋样。顺带一提，腾讯的文档写的是真不错。</p>
+<h2 id="4-4-SSL-证书"><a href="#4-4-SSL-证书" class="headerlink" title="4.4 SSL 证书"></a>4.4 SSL 证书</h2><p>腾讯给提供一年的免费 SSL 证书，进入腾讯的 SSL 那个控制台就能看见，申请一个，然后怎么把证书部署到 Nginx，同样有详细的文档，这里就不说了。</p>
+<h1 id="5-总结"><a href="#5-总结" class="headerlink" title="5. 总结"></a>5. 总结</h1><p>总结一下奥，域名、DNS、备案、SSL 着一系列操作只需要跟着腾讯的文档就完全没有问题，就死死把握一个流程：购买域名和DNS -&gt; 添加解析记录 -&gt; 提交备案 -&gt; 安装 SSL -&gt; 公安备案 。然后哪个流程不会去腾讯文档查就行了。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E9%83%A8%E7%BD%B2/" rel="tag"># 部署</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/10/17/%E9%A1%B5%E9%9D%A2%E9%98%B2%E6%8A%96-md/" rel="prev" title="页面防抖">
+      <i class="fa fa-chevron-left"></i> 页面防抖
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-01-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5/" rel="next" title="01.操作系统基础概念">
+      01.操作系统基础概念 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E5%BC%80%E5%8F%91%E9%98%B6%E6%AE%B5"><span class="nav-text">1. 开发阶段</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E5%89%8D%E7%AB%AF%E9%83%A8%E7%BD%B2"><span class="nav-text">2. 前端部署</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E9%A1%B9%E7%9B%AE%E6%8B%89%E5%8F%96"><span class="nav-text">2.1 项目拉取</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E9%A1%B9%E7%9B%AE%E9%83%A8%E7%BD%B2"><span class="nav-text">2.2 项目部署</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E4%BC%98%E5%8C%96"><span class="nav-text">2.3 静态资源优化</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E5%90%8E%E7%AB%AF%E9%83%A8%E7%BD%B2"><span class="nav-text">3. 后端部署</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E5%9F%9F%E5%90%8D%E3%80%81DNS%E3%80%81%E5%A4%87%E6%A1%88"><span class="nav-text">4. 域名、DNS、备案</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E5%9F%9F%E5%90%8D"><span class="nav-text">4.1 域名</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E6%8A%A5%E5%A4%87"><span class="nav-text">4.2 报备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E5%85%AC%E5%AE%89%E5%A4%87%E6%A1%88"><span class="nav-text">4.3 公安备案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-SSL-%E8%AF%81%E4%B9%A6"><span class="nav-text">4.4 SSL 证书</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E6%80%BB%E7%BB%93"><span class="nav-text">5. 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

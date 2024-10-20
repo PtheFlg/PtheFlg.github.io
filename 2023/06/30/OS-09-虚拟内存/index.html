@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="虚拟内存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="09.虚拟内存">
+<meta property="og:url" content="http://example.com/2023/06/30/OS-09-%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="虚拟内存">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230628231408.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230628232041.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230628232837.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230628233547.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230628233922.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230628235452.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230628235917.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230629064833.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230629065651.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230629070308.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230629070501.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230629070703.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230629071456.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230629071520.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230629073646.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630082003.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630082036.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630103536.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630104129.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630104147.png">
+<meta property="article:published_time" content="2023-06-30T03:06:45.000Z">
+<meta property="article:modified_time" content="2023-07-12T15:35:36.900Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230628231408.png">
+
+<link rel="canonical" href="http://example.com/2023/06/30/OS-09-%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>09.虚拟内存 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/30/OS-09-%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          09.虚拟内存
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-30 11:06:45" itemprop="dateCreated datePublished" datetime="2023-06-30T11:06:45+08:00">2023-06-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-07-12 23:35:36" itemprop="dateModified" datetime="2023-07-12T23:35:36+08:00">2023-07-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>虚拟内存</p>
+<span id="more"></span>
+
+<h1 id="1-虚拟内存概念"><a href="#1-虚拟内存概念" class="headerlink" title="1. 虚拟内存概念"></a>1. 虚拟内存概念</h1><p>传统的内存管理分为连续分配和非连续分配，共同点都是需要将全部的进程数据加载到内存中才可以运行。这就会造成两个问题：</p>
+<ul>
+<li>作业很大时，不能全部装入内存，导致大作业无法运行，比如各种大型游戏</li>
+<li>大量作业要求运行时，由于内存无法装入所有作业，因此只有少量作业能够运行，导致多道程序并发度下降</li>
+</ul>
+<p>驻留性：一旦作业被装入内存，就会一直驻留在内存中，直到作业运行结束，实际上一个时间段内只需要访问作业的一小部分数据即可正常运行，这就导致内存中驻留大量的暂时用不到的数据，浪费资源。</p>
+<h2 id="1-1-局部性原理"><a href="#1-1-局部性原理" class="headerlink" title="1.1 局部性原理"></a>1.1 局部性原理</h2><p>虚拟内存就是基于局部性原理出来的，局部性分为两种：</p>
+<ul>
+<li>时间局部性：如果执行了程序中的某条指令，那么不久后这条指令很可能再次被执行</li>
+<li>空间局部性：如果访问了某个存储单元，那么附近的其他存储单元也可能被访问</li>
+</ul>
+<h2 id="1-2-虚拟内存定义和特征"><a href="#1-2-虚拟内存定义和特征" class="headerlink" title="1.2 虚拟内存定义和特征"></a>1.2 虚拟内存定义和特征</h2><p>基于局部性原理，当程序装入内存时，可以将程序中很快会被用到的部分装入内存，暂时用不到的部分留在外存，然后开始执行。</p>
+<p>执行过程中，当访问信息不在内存中时，操作系统将所需要信息从外存调入内存，然后继续执行进程。</p>
+<p>如果内存空间不够，操作系统负责将内存中暂时不到的信息换出内存。</p>
+<p>所以在操作系统的管理下，用户就会觉得似乎有一个比实际内存大的多的内存空间，这个就是虚拟内存。</p>
+<p>虚拟内存的三个主要特征：</p>
+<ul>
+<li>多次性：无需在作业运行时一次性装入内存，而是允许多次调入内存</li>
+<li>对换性：在作业运行时无需一直常驻内存，而是运行在作业运行过程中将作业换入换出</li>
+<li>虚拟性：在逻辑上扩充了内存容量，在用户看来内存多于实际容量</li>
+</ul>
+<h2 id="1-3-如何实现虚拟内存技术"><a href="#1-3-如何实现虚拟内存技术" class="headerlink" title="1.3 如何实现虚拟内存技术"></a>1.3 如何实现虚拟内存技术</h2><p>既然允许多次调入内存，那么连续分配方式就不太合适了。因此虚拟内存的前提是操作系统支持离散分配内存的管理方式。</p>
+<p>传统的离散管理方式：</p>
+<ul>
+<li>分页式管理</li>
+<li>分段式管理</li>
+<li>段页式管理</li>
+</ul>
+<p>虚拟内存的实现方式：</p>
+<ul>
+<li>请求分页存储管理</li>
+<li>请求分段存储管理</li>
+<li>请求段页式存储管理</li>
+</ul>
+<p>区别在于，进程执行过程中，当访问的信息不在内存时，操作系统负责将所需信息从外存调入内存，然后继续执行，操作系统需要提供请求调页功能。空间不够时，操作系统负责将内存中暂时用不到的信息换出到外存，操作系统需要提供页面置换功能。</p>
+<h2 id="1-4-总结"><a href="#1-4-总结" class="headerlink" title="1.4 总结"></a>1.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230628231408.png" alt="image.png"></p>
+<h1 id="2-请求分页存储管理方式"><a href="#2-请求分页存储管理方式" class="headerlink" title="2. 请求分页存储管理方式"></a>2. 请求分页存储管理方式</h1><p>对比基本分页管理方式，主要需要提供两个功能：</p>
+<ul>
+<li>请求调页：发现访问的信息不在内存中，OS将所需信息从外存调入内存</li>
+<li>页面置换：内存空间不够，OS负责将不需要的信息换出到外存</li>
+</ul>
+<h2 id="2-1-页表机制"><a href="#2-1-页表机制" class="headerlink" title="2.1 页表机制"></a>2.1 页表机制</h2><p>与基本分页管理中的页表相比，有以下区别：</p>
+<ul>
+<li>OS 需要知道每个页面是否已经调入内存，如果没有，也需要知道页面在外存中的位置。</li>
+<li>内存不够时需要进行页面置换，OS 需要通过某些指标来决定到底换出哪个页面；有的页面没有被修改过就不需要换出，修改过的页面就需要会写到外存覆盖旧数据。</li>
+</ul>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230628232041.png" alt="image.png"></p>
+<h2 id="2-2-缺页中断机构"><a href="#2-2-缺页中断机构" class="headerlink" title="2.2 缺页中断机构"></a>2.2 缺页中断机构</h2><p>根据上图，假设我们现在要访问页号为0的页面，结果OS发现0号页面不在内存中，就会产生一个缺页中断，然后由OS的缺页中断处理程序处理中断。</p>
+<p>此时缺页的进程阻塞，放入阻塞队列，调页完成后再唤醒，放回阻塞队列。</p>
+<p>在调页的过程中，如果发现内存中有空闲页框，就将页框分配给0号页，同时修改页表中的内存块号为响应的页框号。如果发现内存中没有空闲位置了，就会由页面置换算法选择一个页面淘汰，比如淘汰2号页面，发现页面被修改，则将内存块c的内容覆盖回外存z的位置，然后修改内存块号为无，修改位为0，再将内存块c分配给0号页面，修改内存块号为c。</p>
+<p>缺页中断是因为当前执行的指令想要访问的目标页面未调入内存而产生，属于内中断，可以被修复，所以属于故障。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230628232837.png" alt="image.png"></p>
+<h2 id="2-3-地址转换"><a href="#2-3-地址转换" class="headerlink" title="2.3 地址转换"></a>2.3 地址转换</h2><p>这个和基本的分页管理其实没啥大的不同，只是多了三步：</p>
+<ol>
+<li>如果发现页面不在内存则请求调页</li>
+<li>如果发现没有空闲的页框则则页面置换</li>
+<li>需要修改页表中的页表项</li>
+</ol>
+<p>完整流程如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230628233547.png" alt="image.png"></p>
+<p>这里再说一个点：如果页面被调出内存放入外存，快表中的表项会一并删除，双写一致性了属于是。</p>
+<h2 id="2-4-总结"><a href="#2-4-总结" class="headerlink" title="2.4 总结"></a>2.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230628233922.png" alt="image.png"></p>
+<h1 id="3-页面置换算法"><a href="#3-页面置换算法" class="headerlink" title="3. 页面置换算法"></a>3. 页面置换算法</h1><p>将页面置换出外存需要额外的IO开销，所以好的页面置换算法就要追求更少的缺页率，下面介绍5个页面置换算法。</p>
+<h2 id="3-1-最佳置换算法OPT"><a href="#3-1-最佳置换算法OPT" class="headerlink" title="3.1 最佳置换算法OPT"></a>3.1 最佳置换算法OPT</h2><p>每次淘汰的页面都是以后永不使用，或者最长时间内不再被访问的页面，这样可以保证最低的缺页率。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230628235452.png" alt="image.png"></p>
+<p>第一次缺页发生在第四列，也就是第一次访问2的时候，当前内存中有7 0 1 三个页面，然后用这三个页面挨个往后数，最后出现的那个页面，就是要被置换出去的页面，所以置换出7，将2放在内存块1的位置。往后每次缺页都按照这个方法确定置换出的页面。</p>
+<p>最佳置换算法可以保证最低的缺页率，但是进程执行过程中才能知道接下来会访问到哪个位置页面。操作系统无法提前预判页面访问序列，所以这种算法实际无法实现。</p>
+<h2 id="3-2-先进先出置换算法FIFO"><a href="#3-2-先进先出置换算法FIFO" class="headerlink" title="3.2 先进先出置换算法FIFO"></a>3.2 先进先出置换算法FIFO</h2><p>很好理解，每次置换出去的页面都是最早进入内存的页面。实现方法也很简单，将调入内存的页面根据调入顺序排成一个队列，需要换出页面时选择队头页面即可，队列最大长度取决于系统为进程分配了多少个内存块。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230628235917.png" alt="image.png"></p>
+<p>这个图十分好理解，而且很有规律，反正就是依次往后按顺序置换就是了。</p>
+<p>这种置换算法可能有个异常：Belady 异常：当为进程分配的内存块增多时，缺页次数不减反增。只有FIFO 算法会出现这种异常，另外，这种算法虽然实现简单，但是算法与进程的实际运行时的规律不适应，因此算法性能很差。</p>
+<h2 id="3-3-最近最久未使用置换算法LRU"><a href="#3-3-最近最久未使用置换算法LRU" class="headerlink" title="3.3 最近最久未使用置换算法LRU"></a>3.3 最近最久未使用置换算法LRU</h2><p>每次淘汰的页面都是最近最久未使用的页面。实现方法也简单，页表中加一项访问字段，该字段记录该页面自上次被访问以来所经历的时间t。每当要淘汰一个页面时，选择现有页面中t最大的。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230629064833.png" alt="image.png"></p>
+<p>怎么算呢，和前面的OPT一样的思路，在访问3号页面的时候需要调入页面，此时内存中有1、8、7、2 四个页面，那就从3开始往前数，这四个数字最晚出现的那个就是最近最久未使用的，淘汰即可。这里从3往前数分别是8、1、2、7，7最后出现，所以淘汰7号页面。</p>
+<p>这种算法需要专门的硬件支持，虽然算法性能很好，但是实现困难，开销大。</p>
+<h2 id="3-5-时钟置换算法CLOCK"><a href="#3-5-时钟置换算法CLOCK" class="headerlink" title="3.5 时钟置换算法CLOCK"></a>3.5 时钟置换算法CLOCK</h2><p>也叫最近未用算法NRU，分为两种：简单的CLOCK算法和改进型CLOCK算法。</p>
+<h3 id="3-5-1-简单的时钟置换算法"><a href="#3-5-1-简单的时钟置换算法" class="headerlink" title="3.5.1 简单的时钟置换算法"></a>3.5.1 简单的时钟置换算法</h3><p>为每个页面设置一个访问位，再将内存中的页面都通过链接指针连接成一个循环队列。当某个页被访问时，其访问位时1。当要淘汰一个页面时，只需要检查页的访问位。如果是0，则该页换出；如果是1，则将其改为0，暂不换出，继续顺着循环队列检查下一个页面。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230629065651.png" alt="image.png"></p>
+<p>如果第一轮扫描所有页面的访问位都是1，第二轮扫描肯定能扫到了。</p>
+<p>假设系统为某个进程分配了5个内存块，并考虑到有以下页面号引用串：1，3，4，2，5，6，3，4，7.</p>
+<p>首先一上来 1，3，4，2，5 五个页面会组成一个循环链表：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230629070308.png" alt="image.png"></p>
+<p>然后访问6号页面的时候就会开始选择一个页面淘汰，从1号页面扫描到5号页面，访问位都是1，全部改为0后开始第二轮扫描，发现1的访问位是0，则换出1号页面，将6号页面加载进来，访问位设为1。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230629070501.png" alt="image.png"></p>
+<p>然后访问3，4，7号页面。3号和4号页面再次访问，所以给访问位设为1，访问7号页面时需要置换，则从3号页面开始扫描，3号和4号的访问位刚刚被设为1，所以暂时不淘汰并访问位设为0，最终淘汰2号页面，将7号页面加载。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230629070703.png" alt="image.png"></p>
+<p>我们会发现他的淘汰策略就像时钟一样一直在转圈扫描，所以这种算法就叫时钟置换算法。</p>
+<h3 id="3-5-2-改进型时钟置换算法"><a href="#3-5-2-改进型时钟置换算法" class="headerlink" title="3.5.2 改进型时钟置换算法"></a>3.5.2 改进型时钟置换算法</h3><p>这种算法还考虑了页面是否被修改过。如果淘汰的页面没有被修改过，是不需要往外存里面回写的，因此在页表里面加一个修改位，修改位&#x3D;0，说明页面没有被修改，修改位&#x3D;1则修改过。根据（访问位，修改位）来决定是否淘汰。</p>
+<p>算法规则：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230629071456.png" alt="image.png"></p>
+<p>还是挺好理解的。</p>
+<h2 id="3-6-总结"><a href="#3-6-总结" class="headerlink" title="3.6 总结"></a>3.6 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230629071520.png" alt="image.png"></p>
+<h1 id="4-页面分配策略"><a href="#4-页面分配策略" class="headerlink" title="4. 页面分配策略"></a>4. 页面分配策略</h1><h2 id="4-1-页面分配、置换策略"><a href="#4-1-页面分配、置换策略" class="headerlink" title="4.1 页面分配、置换策略"></a>4.1 页面分配、置换策略</h2><p>首先说一个概念：驻留集：请求分页存储管理中给进程分配的物理块的集合；说白了就是进程持有的全部内存块。</p>
+<p>页面分配策略有两种：</p>
+<ul>
+<li>固定分配：操作系统为每个进程分配一组固定数目的物理块，进程运行期间不再改变，也就是驻留集大小不变。</li>
+<li>可变分配：很好理解，进程运行期间视情况修改物理块数目，也就是驻留集大小可变。</li>
+</ul>
+<p>页面置换策略也有两种：</p>
+<ul>
+<li>局部置换：一个进程只能将自己进程的页面置换出内存</li>
+<li>全局置换：操作系统可以将空闲的内存块分配给缺页进程，也可以将其他进程的内存块置换到外存，在跟配给缺页进程。</li>
+</ul>
+<p>两种分配、置换策略组合，得到三种模式：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>局部置换</th>
+<th>全局置换</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>固定分配</td>
+<td>Y</td>
+<td>-</td>
+</tr>
+<tr>
+<td>可变分配</td>
+<td>Y</td>
+<td>Y</td>
+</tr>
+</tbody></table>
+<p>三种策略具体如下，太多了直接看图吧，还算好理解：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230629073646.png" alt="image.png"></p>
+<h2 id="4-2-如何调入页面"><a href="#4-2-如何调入页面" class="headerlink" title="4.2 如何调入页面"></a>4.2 如何调入页面</h2><p>两种办法：</p>
+<ul>
+<li>预调页策略：根据局部性原理，访问一个页的话，附近的页最近也可能被访问到。所以一次调入若干个相邻的页面可能比调入一个页面更高效。但是如果预先调入的页面没有被使用，则又是低效的。因此可以预测不久后会用到的页面将他们一批调入内存，但是预测率只有50%左右。所以这种策略主要用于进程首次调入内存，由程序猿制定应该先调入哪些部分。核心是运行前调入。</li>
+<li>请求调页策略：这个就是之前说的，只有在运行期间发现缺页才会将页面调入内存。这种策略调入的页面肯定会被访问到，但是每次只能调入一个页面，因此IO开销大。运行时调入。</li>
+</ul>
+<h2 id="4-3-从哪里调入页面"><a href="#4-3-从哪里调入页面" class="headerlink" title="4.3 从哪里调入页面"></a>4.3 从哪里调入页面</h2><p>我们之前学进程挂起的时候学过磁盘中有一块地方叫对换区，里面数据连续存储，IO速度更快，所以围绕对换区，有三种办法：</p>
+<ol>
+<li>如果磁盘对换区空间够的话，在进程运行前就会将数据从文件区复制到对换区，往后的调页和页面置换都会在对换区完成</li>
+<li>对换区空间不够，则不会被修改的数据直接从文件区调入内存，毕竟不需要回写，下次使用仍旧从文件区调入，需要被修改的数据一开始也是从文件区调入，但是页面置换会置换到交换区，下次再从置换去调页。</li>
+<li>UNIX方式：运行前所有文件放在文件区，故未使用过的页面都可以从文件区调入。若被使用过的页面需要换出，则回写到交换区，下次再从交换区调入。</li>
+</ol>
+<h2 id="4-4-抖动（颠簸）现象"><a href="#4-4-抖动（颠簸）现象" class="headerlink" title="4.4 抖动（颠簸）现象"></a>4.4 抖动（颠簸）现象</h2><p>刚刚调入的页面马上又被换出内存，刚刚被换出的页面马上又被调入，这种频繁的调度行为称为抖动。主要原因就是进程频繁访问的页面数目高于实际可用的物理块，简单说就是物理块分配少了。</p>
+<h2 id="4-5-工作集"><a href="#4-5-工作集" class="headerlink" title="4.5 工作集"></a>4.5 工作集</h2><p>上面的问题，如果分配的物理块少，会发生抖动，如果多了，可能造成浪费，所以提出了工作集的概念。</p>
+<p>和驻留集类似，驻留集：给进程分配的所有物理块的集合。工作集：在某段时间内，进程实际访问页面的集合。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630082003.png" alt="image.png"></p>
+<h2 id="4-6-总结"><a href="#4-6-总结" class="headerlink" title="4.6 总结"></a>4.6 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630082036.png" alt="image.png"></p>
+<h1 id="5-内存映射文件"><a href="#5-内存映射文件" class="headerlink" title="5. 内存映射文件"></a>5. 内存映射文件</h1><h2 id="5-1-传统文件读写方式"><a href="#5-1-传统文件读写方式" class="headerlink" title="5.1 传统文件读写方式"></a>5.1 传统文件读写方式</h2><p>传统读文件方式相当复杂，假设有一个文件 index.txt，磁盘里面都是分块存的，所以文件也被分成了好几个块放在磁盘。读取的顺序如下：</p>
+<ul>
+<li>open 系统调用：打开文件</li>
+<li>seek 系统调用：将读写指针移到某个位置，比如移到了第二个磁盘块的位置</li>
+<li>read 系统调用：从读写指针位置读入多个数据放入内存，比如将第二个磁盘块调入内存</li>
+<li>然后就可以访问内存读取文件</li>
+<li>如果在内存中修改文件的话，最后要使用 write 系统调用，根据读写指针将内存中的制定数据写回磁盘</li>
+</ul>
+<h2 id="5-2-内存映射文件"><a href="#5-2-内存映射文件" class="headerlink" title="5.2 内存映射文件"></a>5.2 内存映射文件</h2><p>内存映射文件可以让读写文件变得更简单，操作文件的时候，会将文件在磁盘中的位置映射到进程的虚拟内存上，但不会真正将文件加载到内存。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630103536.png" alt="image.png"></p>
+<p>当我们真正访问1号地址的时候，就会发生缺页异常，操作系统就会自动将磁盘中的内存调入内存。如果我们要修改文件内容，直接修改内存中的数据即可，结束后操作系统会自动将修改过的内存块回写到磁盘。</p>
+<p>流程如下：</p>
+<ul>
+<li>open 系统调用：打开文件</li>
+<li>mmap 系统调用：将文件映射到进程的虚拟地址空间</li>
+</ul>
+<p>然后我们就可以以访问内存的方式访问文件数据，文件数据的读入和写出都由操作系统自动完成。进程关闭文件时，操作系统自动将文件被修改的数据写回磁盘。</p>
+<p>同时，内存映射文件还可以实现文件共享。两个进程访问一个文件，两个进程的虚拟存储空间都会映射这个文件，两个进程的虚拟空间会通过页表映射到同一块物理内存。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630104129.png" alt="image.png"></p>
+<h2 id="5-3-总结"><a href="#5-3-总结" class="headerlink" title="5.3 总结"></a>5.3 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630104147.png" alt="image.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-08-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" rel="prev" title="08.内存管理">
+      <i class="fa fa-chevron-left"></i> 08.内存管理
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/02/OS-10-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/" rel="next" title="10.文件管理">
+      10.文件管理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E6%A6%82%E5%BF%B5"><span class="nav-text">1. 虚拟内存概念</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E5%B1%80%E9%83%A8%E6%80%A7%E5%8E%9F%E7%90%86"><span class="nav-text">1.1 局部性原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E5%AE%9A%E4%B9%89%E5%92%8C%E7%89%B9%E5%BE%81"><span class="nav-text">1.2 虚拟内存定义和特征</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E6%8A%80%E6%9C%AF"><span class="nav-text">1.3 如何实现虚拟内存技术</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-%E6%80%BB%E7%BB%93"><span class="nav-text">1.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E8%AF%B7%E6%B1%82%E5%88%86%E9%A1%B5%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86%E6%96%B9%E5%BC%8F"><span class="nav-text">2. 请求分页存储管理方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E9%A1%B5%E8%A1%A8%E6%9C%BA%E5%88%B6"><span class="nav-text">2.1 页表机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E7%BC%BA%E9%A1%B5%E4%B8%AD%E6%96%AD%E6%9C%BA%E6%9E%84"><span class="nav-text">2.2 缺页中断机构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2"><span class="nav-text">2.3 地址转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%E6%80%BB%E7%BB%93"><span class="nav-text">2.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E9%A1%B5%E9%9D%A2%E7%BD%AE%E6%8D%A2%E7%AE%97%E6%B3%95"><span class="nav-text">3. 页面置换算法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E6%9C%80%E4%BD%B3%E7%BD%AE%E6%8D%A2%E7%AE%97%E6%B3%95OPT"><span class="nav-text">3.1 最佳置换算法OPT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E5%85%88%E8%BF%9B%E5%85%88%E5%87%BA%E7%BD%AE%E6%8D%A2%E7%AE%97%E6%B3%95FIFO"><span class="nav-text">3.2 先进先出置换算法FIFO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E6%9C%80%E8%BF%91%E6%9C%80%E4%B9%85%E6%9C%AA%E4%BD%BF%E7%94%A8%E7%BD%AE%E6%8D%A2%E7%AE%97%E6%B3%95LRU"><span class="nav-text">3.3 最近最久未使用置换算法LRU</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-%E6%97%B6%E9%92%9F%E7%BD%AE%E6%8D%A2%E7%AE%97%E6%B3%95CLOCK"><span class="nav-text">3.5 时钟置换算法CLOCK</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-1-%E7%AE%80%E5%8D%95%E7%9A%84%E6%97%B6%E9%92%9F%E7%BD%AE%E6%8D%A2%E7%AE%97%E6%B3%95"><span class="nav-text">3.5.1 简单的时钟置换算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-2-%E6%94%B9%E8%BF%9B%E5%9E%8B%E6%97%B6%E9%92%9F%E7%BD%AE%E6%8D%A2%E7%AE%97%E6%B3%95"><span class="nav-text">3.5.2 改进型时钟置换算法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-6-%E6%80%BB%E7%BB%93"><span class="nav-text">3.6 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E9%A1%B5%E9%9D%A2%E5%88%86%E9%85%8D%E7%AD%96%E7%95%A5"><span class="nav-text">4. 页面分配策略</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E9%A1%B5%E9%9D%A2%E5%88%86%E9%85%8D%E3%80%81%E7%BD%AE%E6%8D%A2%E7%AD%96%E7%95%A5"><span class="nav-text">4.1 页面分配、置换策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E5%A6%82%E4%BD%95%E8%B0%83%E5%85%A5%E9%A1%B5%E9%9D%A2"><span class="nav-text">4.2 如何调入页面</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E4%BB%8E%E5%93%AA%E9%87%8C%E8%B0%83%E5%85%A5%E9%A1%B5%E9%9D%A2"><span class="nav-text">4.3 从哪里调入页面</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E6%8A%96%E5%8A%A8%EF%BC%88%E9%A2%A0%E7%B0%B8%EF%BC%89%E7%8E%B0%E8%B1%A1"><span class="nav-text">4.4 抖动（颠簸）现象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E5%B7%A5%E4%BD%9C%E9%9B%86"><span class="nav-text">4.5 工作集</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-6-%E6%80%BB%E7%BB%93"><span class="nav-text">4.6 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84%E6%96%87%E4%BB%B6"><span class="nav-text">5. 内存映射文件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E4%BC%A0%E7%BB%9F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%86%99%E6%96%B9%E5%BC%8F"><span class="nav-text">5.1 传统文件读写方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84%E6%96%87%E4%BB%B6"><span class="nav-text">5.2 内存映射文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E6%80%BB%E7%BB%93"><span class="nav-text">5.3 总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

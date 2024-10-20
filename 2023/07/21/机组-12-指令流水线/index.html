@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="流水线就是说，将指令执行分为多个阶段，每个阶段尽可能使用不同的硬件。当前指令执行完第一阶段后，第一阶段用到的硬件空闲，就可以紧接着指令下一条指令的第一阶段。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="12-指令流水线">
+<meta property="og:url" content="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-12-%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="流水线就是说，将指令执行分为多个阶段，每个阶段尽可能使用不同的硬件。当前指令执行完第一阶段后，第一阶段用到的硬件空闲，就可以紧接着指令下一条指令的第一阶段。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718222749.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718222830.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718223246.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718223330.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718223737.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718224359.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718224817.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718225017.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718225655.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718231452.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718231658.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718232145.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718232525.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718232719.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718233613.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718233650.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718233946.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718234100.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718234408.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718234746.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718234955.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718235057.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719093048.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719093818.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719094048.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719094613.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719095017.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719095217.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719095612.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719095834.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719100207.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719100317.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230719100729.png">
+<meta property="article:published_time" content="2023-07-21T10:01:55.000Z">
+<meta property="article:modified_time" content="2023-07-21T10:10:54.346Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230718222749.png">
+
+<link rel="canonical" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-12-%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>12-指令流水线 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-12-%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          12-指令流水线
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-07-21 18:01:55 / 修改时间：18:10:54" itemprop="dateCreated datePublished" datetime="2023-07-21T18:01:55+08:00">2023-07-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">计算机组成原理</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>流水线就是说，将指令执行分为多个阶段，每个阶段尽可能使用不同的硬件。当前指令执行完第一阶段后，第一阶段用到的硬件空闲，就可以紧接着指令下一条指令的第一阶段。</p>
+<span id="more"></span>
+
+<h1 id="1-指令流水线"><a href="#1-指令流水线" class="headerlink" title="1. 指令流水线"></a>1. 指令流水线</h1><h2 id="1-1-指令流水线的定义"><a href="#1-1-指令流水线的定义" class="headerlink" title="1.1 指令流水线的定义"></a>1.1 指令流水线的定义</h2><p>将一个指令分为多个阶段，每个阶段所用到的硬件可能各不相同，所以说可以在第一条指令执行完第一阶段后，第二条指令就开始执行第一阶段，不必非要等到第一条指令执行完毕。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718222749.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718222830.png" alt="image.png"></p>
+<p>这里说一下这个时间是怎么算的，一次重叠的话，第一条指令执行完毕需要 3t，往后每过 2t 就会执行完一条指令，还剩 （n-1）。所以 <code>3t + (n-1) x 2t</code>。下面两次重叠同理。</p>
+<h2 id="1-2-流水线的表示方法"><a href="#1-2-流水线的表示方法" class="headerlink" title="1.2 流水线的表示方法"></a>1.2 流水线的表示方法</h2><p>两种图可以表示流水线：</p>
+<h3 id="1-2-1-指令执行过程图"><a href="#1-2-1-指令执行过程图" class="headerlink" title="1.2.1 指令执行过程图"></a>1.2.1 指令执行过程图</h3><p>主要用来分析指令执行过程以及影响流水线的因素：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718223246.png" alt="image.png"></p>
+<h3 id="1-2-2-时空图"><a href="#1-2-2-时空图" class="headerlink" title="1.2.2 时空图"></a>1.2.2 时空图</h3><p>这个更好玩了，主要用于分析流水线性能：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718223330.png" alt="image.png"></p>
+<p>这个图里面一条指令是斜着向上的，代表着一条指令随着时间推移执行哪些阶段。</p>
+<h2 id="1-3-流水型的性能指标"><a href="#1-3-流水型的性能指标" class="headerlink" title="1.3 流水型的性能指标"></a>1.3 流水型的性能指标</h2><h3 id="1-3-1-吞吐率-TP"><a href="#1-3-1-吞吐率-TP" class="headerlink" title="1.3.1 吞吐率 TP"></a>1.3.1 吞吐率 TP</h3><p>单位时间内流水线可以完成的任务数量，或者是输出结果的数量。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718223737.png" alt="image.png"></p>
+<p>总时间应该会算吧，和之前一样，如果说执行这条指令总共有 k 个阶段，每个阶段 t 时间，则 kt 就是完成一条指令的时间，往后每隔 t 就会完成一条指令，总共 n - 1 条。有了总时间用 n 一除就行了。</p>
+<p>这俩时间也好理解，装入时间就是第一条指令从开始到结束的时间；排空指令就是最后一条指令开始到结束的时间。或者这么理解，装入时间，就是让这些硬件逐步开始工作的时间；排空就是这些硬件逐步退出工作的时间。</p>
+<p>这里为啥让 t &#x3D; 一个时钟周期，因为我们之前说过，指令的每个阶段都可以对应一个机器周期，每个机器周期内部又有多个时钟周期，这里说的是最理想情况，所以假设每个机器周期只有一个时钟周期。</p>
+<h3 id="1-3-2-加速比-S"><a href="#1-3-2-加速比-S" class="headerlink" title="1.3.2 加速比 S"></a>1.3.2 加速比 S</h3><p>就是说使用了流水线完成这些指令要比没用流水线快多少，计算方法也很简单，流水线时间 &#x2F; 串行时间。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718224359.png" alt="image.png"></p>
+<h3 id="1-3-3-效率-E"><a href="#1-3-3-效率-E" class="headerlink" title="1.3.3 效率 E"></a>1.3.3 效率 E</h3><p>流水线的设备利用率，这个设备就可以理解成指令执行每个阶段要用到的设备。反映到时空图上就是，从头到尾整个的矩形就是总时间，然后里面占着的地方总面积，就是设备处于忙碌的时间：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718224817.png" alt="image.png"></p>
+<p>看图的话就是红色的总面积比上蓝色总面积，红色长拼接一下就是 nt，然后蓝色长就是 (k+n-1)t，俩做个比就行了。</p>
+<h2 id="1-4-总结"><a href="#1-4-总结" class="headerlink" title="1.4 总结"></a>1.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718225017.png" alt="image.png"></p>
+<h1 id="2-指令流水线的影响因素"><a href="#2-指令流水线的影响因素" class="headerlink" title="2. 指令流水线的影响因素"></a>2. 指令流水线的影响因素</h1><h2 id="2-1-机器周期的设置"><a href="#2-1-机器周期的设置" class="headerlink" title="2.1 机器周期的设置"></a>2.1 机器周期的设置</h2><p>这里引入一个五短式的指令设计，将指令执行划分为5个阶段：取指、解码、执行、访存、回写。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718225655.png" alt="image.png"></p>
+<p>这里每个机器周期的时间可能不同，为了适配流水线，我们这里规定，每个指令的机器周期数相同，且机器周期耗时也相同，这里就让所有的机器周期耗时统一为 100ns。</p>
+<p>上面这个五短式的设计，就是经典的 MIPS 架构，是一种 RICS（精简指令集设计）。</p>
+<p>还有个问题，比如 ID 阶段只需要 80ns 即可完成，然而我们规定必须耗时 100ns，那剩下的那 20ns，总不能把数据提前传给 EX 阶段的硬件吧。所以图里面每条虚线上都有一些缓冲寄存器。这个东西也叫锁存器，作用就是保存本流水段的执行结果，提供给下一流水段使用。</p>
+<p>详细说说里面的每个阶段：</p>
+<ul>
+<li>IF 和 M 阶段：就是取指和访存阶段，但是需要注意，图里面画的是两个缓存，一个是指令缓存，另一个是数据缓存。这么做的意义就是可以在不同阶段使用不同的硬件。同时因为缓存的命中率很高，所以大多数情况下，数据都是直接来自缓存。如果缓存里面没有则必须去主存里找，就会出现流水线断流的情况。</li>
+<li>ID 阶段，这里因为是用 RISC 举例，RISC 规定进入 ALU 的操作数必须来自通用寄存器，所以 ID阶段除了译码，还需要将操作数从通用寄存器放入锁存器 A 和 B，等待指令执行</li>
+<li>EX 阶段，上面还有个锁存器 Imm，用来存放立即数，因为有的立即数会在指令中直接给出，所以 Imm 会和 IR 相连。</li>
+<li>M 阶段，看图，它可能不需要将数据写回数据缓存，而是直接写回寄存器，所以会有根线连着最后面的锁存器，然后在 WB 阶段返回寄存器。</li>
+</ul>
+<h2 id="2-2-影响流水线的因素"><a href="#2-2-影响流水线的因素" class="headerlink" title="2.2 影响流水线的因素"></a>2.2 影响流水线的因素</h2><p>总共有三个：结构相关（资源冲突）、数据相关（数据冲突）、控制相关（控制冲突）。</p>
+<h3 id="2-2-1-结构相关"><a href="#2-2-1-结构相关" class="headerlink" title="2.2.1 结构相关"></a>2.2.1 结构相关</h3><p>这个就很像 OS 里面的互斥资源，同一时间内，只有一个操作可以访问硬件。官方的话说的是：由于多条指令在同一时刻争用同一资源而形成的冲突，就是结构冲突：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718231452.png" alt="image.png"></p>
+<p>图里面画的很清楚了，第一条指令在 M 阶段需要使用主存，而 第四条指令在 IF 阶段就需要使用主存，同一时间访问主存可能导致冲突。同时在 WB 阶段，如果两条指令用的是同一个寄存器，也会导致冲突。</p>
+<p>第一个解决办法简单，就是把 Instr3 往后错一位，第二个解决办法：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718231658.png" alt="image.png"></p>
+<p>使用多个 Cache，指令用 IM ，数据用 Dm，错开硬件就行了。</p>
+<h3 id="2-2-2-数据相关"><a href="#2-2-2-数据相关" class="headerlink" title="2.2.2 数据相关"></a>2.2.2 数据相关</h3><p>这个就类似 OS 的同步问题，在一个程序中，存在必须等前一条指令执行完才能执行后一条指令的情况，则这两条指令数据相关。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718232145.png" alt="image.png"></p>
+<p>第一条指令，r2 - r3 回写到 r1，需要在 WB 阶段才能完成，而下面的 2 3 4 条指令在 ID 阶段就要将 r1 的操作数放到锁存器里，就出现了同步问题。</p>
+<p>解决办法：可以等，但是等的空闲时间 CPU 在干啥？这个有两种：</p>
+<p>通过硬件阻塞（stall）方式，如果发现了硬件阻塞，就用气泡，把第二条后面的指令往后拖：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718232525.png" alt="image.png"></p>
+<p>第二种办法，就是通过软件检测两个指令之间有了数据冲突，则编译器在两条指令之间就会插入多个空指令，每个指令也会占用 5 个周期，本质还是延迟冲突指令的执行时间：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718232719.png" alt="image.png"></p>
+<p>另一个解决办法是数据旁路技术，根据图我们发现，第二步要的 r1 其实在 第一步的 EX 就已经得到了，我们可以让第一条指令 EX 完以后，直接把计算结果送回 ALU，供第二条指令执行。</p>
+<p>第三种办法是编译优化，编译器调整指令顺序来解决同步问题，本质还是延后指令，但是不是空指令，而是执行后面没有同步问题的指令。</p>
+<h3 id="2-2-3-控制相关"><a href="#2-2-3-控制相关" class="headerlink" title="2.2.3 控制相关"></a>2.2.3 控制相关</h3><p>流水线遇到转移指令和其他改变 PC 的指令而造成断流时，引起控制相关，还有比如函数调用，函数返回等也会导致这个：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718233613.png" alt="image.png"></p>
+<p>比如一上来执行一条跳转指令，要跳转到最后一条指令，这就导致了断流。</p>
+<h3 id="2-2-4-总结"><a href="#2-2-4-总结" class="headerlink" title="2.2.4 总结"></a>2.2.4 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718233650.png" alt="image.png"></p>
+<h1 id="3-流水线的分类"><a href="#3-流水线的分类" class="headerlink" title="3. 流水线的分类"></a>3. 流水线的分类</h1><p>一点也不想写：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718233946.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718234100.png" alt="image.png"></p>
+<h1 id="4-流水线多发技术"><a href="#4-流水线多发技术" class="headerlink" title="4. 流水线多发技术"></a>4. 流水线多发技术</h1><h2 id="4-1-超标量技术"><a href="#4-1-超标量技术" class="headerlink" title="4.1 超标量技术"></a>4.1 超标量技术</h2><p>就是在 CPU 内配置多个功能部件，让多条指令并行的执行一个阶段：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718234408.png" alt="image.png"></p>
+<p>为啥不能调整指令顺序，因为指令顺序是编译器根据哪些指令可以并发执行而专门设计的，不能随便动。</p>
+<h2 id="4-2-超流水技术"><a href="#4-2-超流水技术" class="headerlink" title="4.2 超流水技术"></a>4.2 超流水技术</h2><p>就是说把一个机器周期，再细分成多个节拍，以节拍为单位设计流水线，一个机器周期内一个功能部件可以使用多次：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718234746.png" alt="image.png"></p>
+<p>图里为啥叫时钟周期？因为这里说的就是最佳情况，一个机器周期内只有一个时钟周期，理解就行了。</p>
+<p>这样的话速度提升三倍。</p>
+<h2 id="4-3-超长指令字"><a href="#4-3-超长指令字" class="headerlink" title="4.3 超长指令字"></a>4.3 超长指令字</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718234955.png" alt="image.png"></p>
+<p>这个也需要提供多个功能部件，来让一个超长指令并发执行。</p>
+<h2 id="8-4-总结"><a href="#8-4-总结" class="headerlink" title="8.4 总结"></a>8.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230718235057.png" alt="image.png"></p>
+<h1 id="5-五段式流水线"><a href="#5-五段式流水线" class="headerlink" title="5. 五段式流水线"></a>5. 五段式流水线</h1><p>这里说五个考试中常见的指令：运算类指令、LOAD 指令、STORE 指令、条件转移指令、无条件转移指令。看看这些指令在五短式流水线里面会经历哪些流程。</p>
+<h2 id="5-1-运算类指令"><a href="#5-1-运算类指令" class="headerlink" title="5.1 运算类指令"></a>5.1 运算类指令</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719093048.png" alt="image.png"></p>
+<ul>
+<li>IF 阶段：将指令从 指令缓存中取出，放到 IR 中</li>
+<li>ID 阶段：译码，然后将操作数放到相应的锁存器中，如果有立即数的话就从 IR 中将其读入到 Imm 锁存器</li>
+<li>EX 阶段：指令指令，将结果存入 EX 段锁存器</li>
+<li>M 阶段：因为这是 RISC 指令集，规定运算指令操作数必须来自寄存器，所以这里不需要往主存活着缓冲区回写，所以这个阶段啥也不干。但是这个阶段还是会占用 100ns。</li>
+<li>WB 阶段：根据图里的线，ALU 锁存器往下走到最后面的锁存器，然后回写到寄存器里</li>
+</ul>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719093818.png" alt="image.png"></p>
+<p>这种指令不需要访问主存。</p>
+<h2 id="5-2-存数指令-LOAD"><a href="#5-2-存数指令-LOAD" class="headerlink" title="5.2 存数指令 LOAD"></a>5.2 存数指令 LOAD</h2><p>RISC 下很重要的两条指令，LOAD 和 STORE，同行来说，RISC 处理器只有 “取数 LOAD” 和 “存数 STORE” 会访问主存，其他指令的操作数都直接来自寄存器。</p>
+<p>先说 LOAD，将主存中的数取到寄存器中：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719094048.png" alt="image.png"></p>
+<p>这里的 <code>(996 + (Rs)) -&gt; Rd</code>，说的就是一个基址寻址，这个进程的基址可能是放在 Rs 寄存器里，所以给 Rs 寄存器的值往后偏移 996，就得到了 Rd 的物理地址。所以说 LOAD 指令也会执行一个加法。</p>
+<p>也可以简写成后面那种，就是直接给一个物理地址，但是通常这个 mem 也是根据上面偏移得到的。</p>
+<p>流程：</p>
+<ul>
+<li>IF ：一样，放到 IR </li>
+<li>ID ：将极致寄存器的值放到锁存器 A，将偏移值也就是指令中的立即数放到 Imm</li>
+<li>EX ：运算，得到物理地址</li>
+<li>M ：从数据 Cache 中取数并放到锁存器</li>
+<li>WB ： 将取出的数协会寄存器</li>
+</ul>
+<p>M 阶段直接写的是数据 Cache，因为数据一般来说很大概率会在缓存中被找到，如果没找到，确实是要访问主存的。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719094613.png" alt="image.png"></p>
+<h2 id="5-3-存储-STORE"><a href="#5-3-存储-STORE" class="headerlink" title="5.3 存储 STORE"></a>5.3 存储 STORE</h2><p>将寄存器中的值存回主存：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719095017.png" alt="image.png"></p>
+<p>流程：</p>
+<ul>
+<li>IF：同理</li>
+<li>ID：将基址 Rd 的值放到锁存器 A 种，将立即数放到 Imm 中，然后我们要把 Rs 中的数存到主存，所以也需要读取 Rs 的值，将其放到 B 锁存器。</li>
+<li>EX：运算，将运算结果放到 ALU 的锁存器，然后将 B 里面要存的数放到 Store 搜存器里，涮和下面绿色的线</li>
+<li>M：写入数据 Cache</li>
+<li>WB ：啥也不干</li>
+</ul>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719095217.png" alt="image.png"></p>
+<h2 id="5-4-条件转移指令"><a href="#5-4-条件转移指令" class="headerlink" title="5.4 条件转移指令"></a>5.4 条件转移指令</h2><p>这里说两个：beq 和 bne 指令：<code>beq Rs, Rt, #偏移量</code> 和 <code>bne Rs, Rt, #偏移量</code>，这种指令通常采用相对寻址，就是说在 PC 的基础上跳转多少：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719095612.png" alt="image.png"></p>
+<p>解释一下这个大长式子，把指令字长就理解成一条指令就行了，如果条件成立，则在当前指令（PC）的下一条指令（+指令字长）的基础上偏移多少个指令，然后将这个数回写 PC，否则正常 PC + 1。通常这个 PC + 1 是在 IF 端结束后自动完成的。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719095834.png" alt="image.png"></p>
+<p>需要注意的是 PC 回写发生在 M 段，因为 WB 是回写通用寄存器，PC 可不属于通用寄存器，所以不在 WB 完成。</p>
+<p>有的教材会把回写 PC 说成 “WrPC” 段，不属于 M 也不熟 WB，可以安排在 M 段完成。</p>
+<h2 id="5-5-无条件跳转指令"><a href="#5-5-无条件跳转指令" class="headerlink" title="5.5 无条件跳转指令"></a>5.5 无条件跳转指令</h2><p>同样是相对寻址，这里就是 <code>jmp #偏移量</code>，功能就是：<code>(PC) + 指令字长 + (偏移量 x 指令字长) -&gt; PC</code>。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719100207.png" alt="image.png"></p>
+<p>这里 9.4 和 9.5 两步都是今早修改 PC 的值，原因：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719100317.png" alt="image.png"></p>
+<h2 id="5-6-例题"><a href="#5-6-例题" class="headerlink" title="5.6 例题"></a>5.6 例题</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230719100729.png" alt="image.png"></p>
+<p>这个题就是，我们必须知道这些指令在什么阶段要干啥，才能知道为啥阻塞。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-11-%E6%8E%A7%E5%88%B6%E5%99%A8%E8%AE%BE%E8%AE%A1/" rel="prev" title="11-控制器设计">
+      <i class="fa fa-chevron-left"></i> 11-控制器设计
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-13-%E6%80%BB%E7%BA%BF/" rel="next" title="13-总线">
+      13-总线 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF"><span class="nav-text">1. 指令流水线</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="nav-text">1.1 指令流水线的定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E6%B5%81%E6%B0%B4%E7%BA%BF%E7%9A%84%E8%A1%A8%E7%A4%BA%E6%96%B9%E6%B3%95"><span class="nav-text">1.2 流水线的表示方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-1-%E6%8C%87%E4%BB%A4%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B%E5%9B%BE"><span class="nav-text">1.2.1 指令执行过程图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-2-%E6%97%B6%E7%A9%BA%E5%9B%BE"><span class="nav-text">1.2.2 时空图</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E6%B5%81%E6%B0%B4%E5%9E%8B%E7%9A%84%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87"><span class="nav-text">1.3 流水型的性能指标</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-1-%E5%90%9E%E5%90%90%E7%8E%87-TP"><span class="nav-text">1.3.1 吞吐率 TP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-2-%E5%8A%A0%E9%80%9F%E6%AF%94-S"><span class="nav-text">1.3.2 加速比 S</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-3-%E6%95%88%E7%8E%87-E"><span class="nav-text">1.3.3 效率 E</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-%E6%80%BB%E7%BB%93"><span class="nav-text">1.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E6%8C%87%E4%BB%A4%E6%B5%81%E6%B0%B4%E7%BA%BF%E7%9A%84%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0"><span class="nav-text">2. 指令流水线的影响因素</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E6%9C%BA%E5%99%A8%E5%91%A8%E6%9C%9F%E7%9A%84%E8%AE%BE%E7%BD%AE"><span class="nav-text">2.1 机器周期的设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E5%BD%B1%E5%93%8D%E6%B5%81%E6%B0%B4%E7%BA%BF%E7%9A%84%E5%9B%A0%E7%B4%A0"><span class="nav-text">2.2 影响流水线的因素</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-1-%E7%BB%93%E6%9E%84%E7%9B%B8%E5%85%B3"><span class="nav-text">2.2.1 结构相关</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-2-%E6%95%B0%E6%8D%AE%E7%9B%B8%E5%85%B3"><span class="nav-text">2.2.2 数据相关</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-3-%E6%8E%A7%E5%88%B6%E7%9B%B8%E5%85%B3"><span class="nav-text">2.2.3 控制相关</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-4-%E6%80%BB%E7%BB%93"><span class="nav-text">2.2.4 总结</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E6%B5%81%E6%B0%B4%E7%BA%BF%E7%9A%84%E5%88%86%E7%B1%BB"><span class="nav-text">3. 流水线的分类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E6%B5%81%E6%B0%B4%E7%BA%BF%E5%A4%9A%E5%8F%91%E6%8A%80%E6%9C%AF"><span class="nav-text">4. 流水线多发技术</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E8%B6%85%E6%A0%87%E9%87%8F%E6%8A%80%E6%9C%AF"><span class="nav-text">4.1 超标量技术</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E8%B6%85%E6%B5%81%E6%B0%B4%E6%8A%80%E6%9C%AF"><span class="nav-text">4.2 超流水技术</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E8%B6%85%E9%95%BF%E6%8C%87%E4%BB%A4%E5%AD%97"><span class="nav-text">4.3 超长指令字</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-4-%E6%80%BB%E7%BB%93"><span class="nav-text">8.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E4%BA%94%E6%AE%B5%E5%BC%8F%E6%B5%81%E6%B0%B4%E7%BA%BF"><span class="nav-text">5. 五段式流水线</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E8%BF%90%E7%AE%97%E7%B1%BB%E6%8C%87%E4%BB%A4"><span class="nav-text">5.1 运算类指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E5%AD%98%E6%95%B0%E6%8C%87%E4%BB%A4-LOAD"><span class="nav-text">5.2 存数指令 LOAD</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E5%AD%98%E5%82%A8-STORE"><span class="nav-text">5.3 存储 STORE</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-4-%E6%9D%A1%E4%BB%B6%E8%BD%AC%E7%A7%BB%E6%8C%87%E4%BB%A4"><span class="nav-text">5.4 条件转移指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-5-%E6%97%A0%E6%9D%A1%E4%BB%B6%E8%B7%B3%E8%BD%AC%E6%8C%87%E4%BB%A4"><span class="nav-text">5.5 无条件跳转指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-6-%E4%BE%8B%E9%A2%98"><span class="nav-text">5.6 例题</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

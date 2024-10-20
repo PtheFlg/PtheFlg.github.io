@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="这章就是具体的各种字节码指令，深入的说一下每个指令都是干嘛的。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="字节码指令">
+<meta property="og:url" content="http://example.com/2022/06/13/bytecode-command/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="这章就是具体的各种字节码指令，深入的说一下每个指令都是干嘛的。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-06-13T02:08:14.000Z">
+<meta property="article:modified_time" content="2022-06-13T02:16:25.116Z">
+<meta property="article:author" content="PtheF">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="底层">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2022/06/13/bytecode-command/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>字节码指令 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/06/13/bytecode-command/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          字节码指令
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-06-13 10:08:14 / 修改时间：10:16:25" itemprop="dateCreated datePublished" datetime="2022-06-13T10:08:14+08:00">2022-06-13</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这章就是具体的各种字节码指令，深入的说一下每个指令都是干嘛的。</p>
+<span id="more"></span>
+
+<h1 id="1-加载与存储指令"><a href="#1-加载与存储指令" class="headerlink" title="1. 加载与存储指令"></a>1. 加载与存储指令</h1><p>因为我们之前说过了，数据的来源可以是局部变量表，常量池，方法调用，所以这里还得区分。</p>
+<h2 id="1-1-局部变量压栈指令"><a href="#1-1-局部变量压栈指令" class="headerlink" title="1.1 局部变量压栈指令"></a>1.1 局部变量压栈指令</h2><p>从局部变量表中的取得相应的数据，压入操作数栈，大体可以分为两类：</p>
+<ul>
+<li><p>xload (x 可以是 i l f d a)</p>
+</li>
+<li><p>xload&lt;_n&gt; (n 从 0 - 3)</p>
+</li>
+</ul>
+<p>为啥要分出两个，_n 有啥用？很简单，根据概率来说，xload 0 1 2 3 用的最多，所以封装成了 xload_0 1 2 3.在字节码文件中，一个指令只有一个字节，而操作数2个字节，用 xload_n可以省地方。</p>
+<p>然后这里面涉及到了局部变量表，这里复习一下：局部变量表里面有槽位，一个槽slot是4个字节，然后如果我们把long放进去，那long就是占两个slot，比如 0 位是this，1位是long，那3位就是int，没有2了，1 2 都被long占用了。</p>
+<p>然后具体说说后面的操作数，现在有一个指令: xload 5，那他就是把局部变量表中index&#x3D;5的东西，压入栈。注意，是index&#x3D;5，索引为5的局表数据，看好了，可不是局表里面第一列那个数字，那是个数。</p>
+<h2 id="1-2-常量入栈指令"><a href="#1-2-常量入栈指令" class="headerlink" title="1.2 常量入栈指令"></a>1.2 常量入栈指令</h2><p>指令const系列：这个命令用于特定常量压操作数栈，注意是特定常量，这个常量直接写在指令中，且后面没有操作数，注意这个很重要，const指令没有操作数，而且这个常量得注意，不是说非得是 final 修饰的常量，字面量也算是这里的常量，我们定义一个字面量 int i &#x3D; 10 那这里也会用这些指令进行压栈操作。具体指令如下：</p>
+<ul>
+<li><p>iconst_i (i -&gt; -1(m1) 到 5)</p>
+</li>
+<li><p>lconst_l (l -&gt; 0到1)</p>
+</li>
+<li><p>fconst_f (f -&gt; 0 到 2)</p>
+</li>
+<li><p>dconst_d (d -&gt; 0 到 1)</p>
+</li>
+<li><p>aconst_null (压null)</p>
+</li>
+</ul>
+<p>是的，这些数据范围没有任何规律，别问为啥，反正就是这样。</p>
+<p>比如，将常量 2 压入栈，那就是 iconst_2，那压6呢？iconst 6么，我们之前说了，const系列指令没有操作数，所以显然不行。这里得用另外一个系列指令：push系列指令。</p>
+<p>指令 push 系列：主要就是 bipush 和 sipush，主要就是接收数据类型不同，bipush接收8位整数压栈，sipush接收16位整数压栈。(128就已经是16位了)，具体范围就是 bipush：-128 - 127. sipush：-32768 - 32767</p>
+<p>如果还是不行，那就可以使用 ldc 指令，这个指令是干嘛的呢，他接受一个8位参数，这个参数指向常量池中 int float String 索引，然后将常量池中的指定内容压入栈。如果索引比较大，可以使用 ldc_w指令，接受两个8位参数，仅仅是索引范围变大了而已。如果压入 long double，那就是用 ldc2_w，怎么理解呢，粗略的理解成double 和 long 占两个槽位吧。</p>
+<p>三个的区别就是 const -&gt; push -&gt; ldc 范围依次增大。</p>
+<h2 id="1-3-出栈装入局部变量表指令"><a href="#1-3-出栈装入局部变量表指令" class="headerlink" title="1.3 出栈装入局部变量表指令"></a>1.3 出栈装入局部变量表指令</h2><p>首先我先猜测一下，一般来说数据不会直接装入局表，除非是方法的形参已经实例方法的this。一般来说局部变量都是先进入操作数栈，再从栈出来进入局表，大致应该是啊。</p>
+<p>装入局表指令 store 系列：</p>
+<ul>
+<li><p>xstore&lt;_n&gt; 同理x可以是 i l f d a. n可以是 0 - 3</p>
+</li>
+<li><p>xstore</p>
+</li>
+</ul>
+<p>这个命令的意思是，把操作数栈 栈顶的元素，弹出，然后放入局部变量表index 为 n 的地方。注意，始终弹得是栈顶元素。</p>
+<p>当然了，有特殊的东西，比如存入数组这种的，去看尚硅谷的手册，我这里不提供了。</p>
+<h1 id="2-算数指令"><a href="#2-算数指令" class="headerlink" title="2. 算数指令"></a>2. 算数指令</h1><p>加法指令：iadd，ladd，fadd，dadd</p>
+<p>减法指令：isub，lsub，fsub，dsub</p>
+<p>乘法指令：imul，lmul，fmul，dmul</p>
+<p>除法指令：idiv，ldiv，fdiv，ddiv</p>
+<p>取余指令：irem，lrem，frem，drem # remainder</p>
+<p>取反指令：ineg，lneg，fneg，dneg # negation</p>
+<p>自增指令：iinc xx(局表index) by xx(增加的具体数值)</p>
+<p>需要注意的是，前面的很多指令，比如 add，div这种，其实是把操作数栈中的栈顶两个数，弹出，运算，再压栈，所以没有操作数。但是比较特殊的就是 iinc，比如我们 <code>int i = 0; int j = i + 10;</code> 这里就会用到自增，int j &#x3D; i + 10的指令就是 <code>iinc i在局表的位置 by 10</code>.</p>
+<h1 id="3-数据类型转化"><a href="#3-数据类型转化" class="headerlink" title="3. 数据类型转化"></a>3. 数据类型转化</h1><p>基本格式很简单，就是 x2y，x y 分别代表俩类型呗，然后 to 呗，很简单，然后我们细分一下。</p>
+<p>首先，根据转化的类型，分为两种：宽化数据类型转换，窄化数据类型转换，其实很简单，就是 小范围到大范围 和 大范围到小范围，我们先说宽化：</p>
+<h2 id="3-1-宽化数据类型转换"><a href="#3-1-宽化数据类型转换" class="headerlink" title="3.1 宽化数据类型转换"></a>3.1 宽化数据类型转换</h2><ul>
+<li><p>int 到大范围：i2l, i2f, i2d</p>
+</li>
+<li><p>long 到大范围：l2f, l2d</p>
+</li>
+<li><p>float 到大范围：f2d</p>
+</li>
+</ul>
+<p>说白了就是： int –&gt; long –&gt; float –&gt; double，这个也就是自动类型转换，虽然你的代码没有体现任何的类型转换，但是字节码会给你加上这部分的。</p>
+<h2 id="3-2-精度问题"><a href="#3-2-精度问题" class="headerlink" title="3.2 精度问题"></a>3.2 精度问题</h2><p>既然这里宽数据类型转换，那就肯定要涉及到精度问题：</p>
+<ul>
+<li><p>首先 int 转换为 long，double 不会发生精度丢失。</p>
+</li>
+<li><p>int 或者 long 转换为 float，或者 long 转化成 double，都有可能造成精度丢失，可能会丢失最低有效位上的某些值，转化后的浮点数值是根据 IEEE754最接近舍入模式所得到的正确整数值。</p>
+</li>
+</ul>
+<p>这里举个例子，有如下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">123123123</span>;</span><br><span class="line"><span class="type">float</span> <span class="variable">j</span> <span class="operator">=</span> i;</span><br><span class="line">System.out.println(j);</span><br></pre></td></tr></table></figure>
+
+<p>这里的 j 就是 1.2312312E8，也就是 123123120。</p>
+<h2 id="3-3-关于-byte-short-char-的问题"><a href="#3-3-关于-byte-short-char-的问题" class="headerlink" title="3.3 关于 byte short char 的问题"></a>3.3 关于 byte short char 的问题</h2><p>是的，你没有看到任何关于 byte short char 的转换指令，为啥？因为压根就没有，比如 byte -&gt; long，其实jvm底层是用的 i2l 来实现的，JVM 肯定会把 byte short long 当做int处理。</p>
+<p>至于为什么这么设计，因为在局部变量表中一个slot就是4个字节的，或者说32bit，那你这个 byte short long 存进去，那不还是用int的slot来存么，那在底层就完全没有必要区分byte short char了，而且，如果再设计这些指令，指令集可就不够了，毕竟一个指令就是一个字节，所以最多只有256 个指令。</p>
+<h2 id="3-4-窄化类型转换"><a href="#3-4-窄化类型转换" class="headerlink" title="3.4 窄化类型转换"></a>3.4 窄化类型转换</h2><p>说的好高级啊，其实就是强制类型转化，把大范围数据类型强制转化为小范围</p>
+<ul>
+<li><p>int 转化为 byte short char：i2b, i2s, i2c</p>
+</li>
+<li><p>long转化为 int：l2i</p>
+</li>
+<li><p>float 转化为 int 或者 long：f2i, f2l</p>
+</li>
+<li><p>double 转化为 int, long, float：d2i, d2l, d2f</p>
+</li>
+<li><p>如果是 float 或者 long 转化为 byte 这种，没有直接的指令支持，那就只好两步走：f2i + i2b</p>
+</li>
+<li><p>如果是 double -&gt; byte，肯定不会 d2f, f2i, i2b, 直接就是 d2i, i2b。一般来说转化最多就是两步</p>
+</li>
+</ul>
+<p>这个也会有精度损失问题，而且很有可能出现精度损失，但是不管精度损失成啥样，都不会抛出异常，特殊的，如果是 byte 转化为 short，直接就是 i2s，没有b2i这一说啊记着。</p>
+<h2 id="3-5-窄化的特殊情况："><a href="#3-5-窄化的特殊情况：" class="headerlink" title="3.5 窄化的特殊情况："></a>3.5 窄化的特殊情况：</h2><p>当一个浮点数转化为整数时，遵循以下规则：</p>
+<ul>
+<li><p>浮点数是 NaN，转化结果就是 int 或者 long 的0</p>
+</li>
+<li><p>如果浮点数不是无穷大，那没啥好说的，直接取舍就行了</p>
+</li>
+</ul>
+<p>当一个double转化为 float的时候：</p>
+<ul>
+<li><p>double如果特别接近0，接近到float都没法表示了，转化结果就为正负0</p>
+</li>
+<li><p>如果double是无穷大，float没法表示，结果就是 float的正负无穷大 Infinity</p>
+</li>
+<li><p>如果double是NaN，那float转化完也是NaN</p>
+</li>
+</ul>
+<p>那当double转化为 long 或者 int 呢，如果double大到int long 没法表示，那int 和long 就会被转化为他们所能表示的最大值。</p>
+<h1 id="4-对象创建与访问指令"><a href="#4-对象创建与访问指令" class="headerlink" title="4. 对象创建与访问指令"></a>4. 对象创建与访问指令</h1><p>因为 Java是面向对象的语言，所以在字节码层面就对对象做了非常好的支持，有很多指令都是用于对象的。同时对象又分出两类，一类就是类的实例，另一类就是数组，各种各样的数组。</p>
+<h2 id="4-1-对象创建指令"><a href="#4-1-对象创建指令" class="headerlink" title="4.1 对象创建指令"></a>4.1 对象创建指令</h2><p>分为两种，创建类实例和创建数组。</p>
+<ul>
+<li><p>创建类实例：new，操作码就是new，操作数是一个指向常量池的索引，这个索引就是具体的类全限定名</p>
+</li>
+<li><p>创建数组：newarray 创建基本数据类型数组，anewarray 创建引用数据类型数组，multianewarray 创建多维数组，如果是基本数据类型数组，后面的操作数就是数组长度，如果是引用数据类型，操作数就是指向常量池的索引，具体就是你引用的类型的全限定命名。</p>
+</li>
+</ul>
+<p>创建完成后，自动把创建好的对象压入操作数栈。</p>
+<p>关于数组的创建这里，有点坑，就是 关于 multianewarray这个指令，什么时候会用这个指令呢？就是你多维数组的维数完全确定，才会用这个指令，比如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">String[][] s1 = <span class="keyword">new</span> <span class="title class_">String</span>[<span class="number">10</span>][<span class="number">5</span>];</span><br><span class="line"><span class="comment">// 这里的指令是 multianewarray</span></span><br><span class="line"></span><br><span class="line">String[][] s2 = <span class="keyword">new</span> <span class="title class_">String</span>[<span class="number">10</span>][];</span><br><span class="line"><span class="comment">// 这里的指令是 anewarray</span></span><br></pre></td></tr></table></figure>
+
+<p>至于为啥，如果你的维数不确定，那JVM只能知道你创建了一个一维数组，但是一维数组里面的数组长度是多少JVM不知道，所以JVM不确定你里面的是不是数组，只有维数确定的情况下，JVM才能肯定你是要创建一个多维数组，才给你用 multianewarray 这个指令</p>
+<h2 id="4-2-类成员-字段-的访问指令"><a href="#4-2-类成员-字段-的访问指令" class="headerlink" title="4.2 类成员(字段)的访问指令"></a>4.2 类成员(字段)的访问指令</h2><p>这里只针对类里面的字段，对于数组的还有专门的指令。</p>
+<ul>
+<li><p>访问类字段：getstatic，putstatic。分别代表 把类字段压入操作数栈，和 给类字段赋值。</p>
+</li>
+<li><p>访问类实例字段：getfield，putfield。代表的东西和上面一样。</p>
+</li>
+</ul>
+<p>get 这个指令没啥好说的其实，就是后面跟这个常量池索引，把响应的内容（也就是字段信息，fieldref）压入操作数栈。</p>
+<p>put 这个还真得说说，看下面的例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Order</span>&#123; id = <span class="number">10</span>; &#125;</span><br><span class="line"></span><br><span class="line"><span class="type">Order</span> <span class="variable">order</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Order</span>();</span><br><span class="line">order.id = <span class="number">20</span>;</span><br><span class="line"><span class="comment">// new #x &lt;....Order&gt;</span></span><br><span class="line"><span class="comment">// dup</span></span><br><span class="line"><span class="comment">// invokespecial #x &lt;....Order.&lt;init&gt;</span></span><br><span class="line"><span class="comment">// astore_1</span></span><br><span class="line"><span class="comment">// aload_1</span></span><br><span class="line"><span class="comment">// bipush 20</span></span><br><span class="line"><span class="comment">// putfield #x &lt;...Order.id&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>最后就是 putfield #x，所以这个putfield到底是怎么运作的？</p>
+<p>我们在给 id 赋值的之前，操作数栈栈顶就是order对象的地址（为了省事，以后直接说对象），然后赋值的时候又压入操作数栈 20，然后putfield，putfield这个时候就会把栈里面的前两个东西弹出来，根据后面的操作数（一个fieldref_info）确定要给对象的哪个字段赋值，然后就会给弹出来的第二个对象的相应字段赋上第一个弹出来的值。</p>
+<p>说人话，就是现在操作数栈里有一个对象和一个待赋的值，然后putfield给他俩弹出来，根据接收的操作数，就给对象的响应字段赋上那个值。</p>
+<p>注意，这两种指令：getstatic 和 putstatic 指令，他们的操作数都是一个 fieldref_info，表示要给哪个字段赋值或者取出，但是具体执行这个操作的对象，以及要被赋的值，都是从操作数栈中弹出来的。</p>
+<h2 id="4-3-数组元素操作指令"><a href="#4-3-数组元素操作指令" class="headerlink" title="4.3 数组元素操作指令"></a>4.3 数组元素操作指令</h2><ul>
+<li>把数组元素压入操作数栈指令：baload, saload, caload, iaload, laload, faload, daload, aaload，首先 aload 代表 arrayLoad，然后这些首字母分别代表：byte short char int long float double 引用。</li>
+</ul>
+<p>xaload系列的指令需要从操作数栈中弹出2个值，分别是：数组元素索引（int），数组引用，然后他就会把指定数组里面的指定索引的元素对应的值重新压回操作数栈。</p>
+<ul>
+<li>把操作数栈的值赋值给数组元素：bastore, castore, sastore, iastore, lastore, fastore, dastore, aastore，和上面差不多，不多解释。</li>
+</ul>
+<p>这个xastore系列指令需要从操作数栈弹出3个值，分别是（按顺序）：待赋的值，数组元素的引用（int），数组引用。astore指令就会给对应的数组的指定索引的元素赋上对应的值。</p>
+<ul>
+<li>获取数组长度：arraylength，也没有操作数，从操作数栈栈顶弹出数组引用，获取长度，然后把长度（int）重新压回操作数栈。</li>
+</ul>
+<p>这两类指令可都没有操作数，只有一个操作码，操作数全都是从操作数里弹出来的。</p>
+<p>还有就是上面的那些数据类型没有boolean，很简单，boolean数组用的指令也是 baload和bastore。</p>
+<h2 id="4-4-类型检查指令"><a href="#4-4-类型检查指令" class="headerlink" title="4.4 类型检查指令"></a>4.4 类型检查指令</h2><p>Java语法层面有instanceof 关键字，就是判断一个对象是不是一个类的实例，如果是，那就可以强制类型转换，那么强制转换在JVM层面怎么执行的？</p>
+<ul>
+<li><p>instanceof 指令：跟着一个操作数，这个操作数是一个常量索引，一个类名，他会从操作数栈中弹出栈顶的实例引用，然后把弹出的引用和操作数的类型作对比。如果满足，把true压入操作数栈，如果不满足，压入false。（其实我也不知道他到底最后压回栈的是啥，姑且说是true&#x2F;false）。</p>
+</li>
+<li><p>checkcast 指令：类型进行强制转换的时候会有，他会判断能否进行转换，和 instanceof 差不多，他有一个操作数也是指向常量池的，一个类，然后也会从操作数栈弹出栈顶的实例引用，如果可以强制转换，那就转换就行了，如果不行，抛出 ClassCastException。</p>
+</li>
+</ul>
+<h1 id="5-方法指令"><a href="#5-方法指令" class="headerlink" title="5. 方法指令"></a>5. 方法指令</h1><h2 id="5-1-方法调用"><a href="#5-1-方法调用" class="headerlink" title="5.1 方法调用"></a>5.1 方法调用</h2><p>方法调用总共就几个指令，分别是：</p>
+<ul>
+<li><p>invokevirtual：用于调用对象的实例方法，根据对象的实际类型进行分派（虚方法分派），支持多态，是Java中最常见的调用指令。这个具体说说，就是说JVM在执行你的方法的时候，并不知道你这个方法是谁的，还真不一定是当前类型的，因为很可能你这里用到了类的上转型（可不是接口的啊，接口引用调用方法可就是invokeinterface了），比如 <code>Thread t = new XXXThread(); t.run(); </code>，你这个run，已经被你XXXThread重写了，所以JVM搞不清楚了，这个得具体情况具体分析，得运行以后根据你具体的实现类，去调用方法，这就叫虚方法分派。</p>
+</li>
+<li><p>invokeinterface：这个就是调用接口回调的方法，比如 <code>XXXInterface xx = new XXXInterfaceImpl(); xx.func();</code>，这个情况下就是 invokeinterface指令。</p>
+</li>
+<li><p>invokespecial：调用 构造器，私有方法，父类方法的时候的指令，这三种方法比较特殊，因为都不能重写，构造器和私有方法那是废话，子类是铁定不能重写的，那调用父类方法？这个调用父类方法就是 super.xxx() 这种形式，这个就算你子类重写了，你super也是调用的父类的方法，和你当前子类没半毛钱关系。</p>
+</li>
+<li><p>invokestatic：调用静态方法，这个好理解。</p>
+</li>
+<li><p>invokedynamic：这个比较复杂，不说了。</p>
+</li>
+</ul>
+<p>特别的，如果一个方法是 private static 的，那优先考虑 static，指令那就是 invokestatic。</p>
+<p>如果是接口中的已经实现的方法呢？众所周知（我还真不知道JDK8的接口可以有静态方法），jdk8的接口可以有default 方法和 static 方法（都可以实现），那么我们调用这两种方法，指令是啥？看例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">AA</span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="title function_">method1</span><span class="params">()</span>&#123; &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">default</span> <span class="title function_">method2</span><span class="params">()</span>&#123; &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">BB</span> <span class="keyword">implements</span> <span class="title class_">AA</span>&#123; &#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span>&#123;</span><br><span class="line">    <span class="type">AA</span> <span class="variable">aa</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BB</span>();</span><br><span class="line">    aa.method2(); <span class="comment">// invokeinterface</span></span><br><span class="line">    AA.method1(); <span class="comment">// invokestatic</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，即便是方法在接口中已经实现了，指令仍旧是 invokeinterface，但是接口中的静态方法可不是invokeinterface，即便他是在接口中定义的，调用接口中的静态方法指令是 invokestatic，可以看得出来static的优先级比interface高。</p>
+<h2 id="5-2-方法返回："><a href="#5-2-方法返回：" class="headerlink" title="5.2 方法返回："></a>5.2 方法返回：</h2><p>这个倒是很简单，分为有返回值和无返回值：</p>
+<ul>
+<li><p>有返回值：ireturn（返回 boolean byte char short int），lreturn，freturn，dreturn，areturn。这个返回值类型啊，主要看的是你定义方法的时候写的方法返回值，就算你是 <code>public float f()&#123;int i = 10; return i;&#125;</code> 最后返回也是freturn，和你具体返回的啥没太大关系。</p>
+</li>
+<li><p>无返回值：return</p>
+</li>
+</ul>
+<p>如果有返回值，那他具体会干啥？他会把当前栈帧的操作数栈的栈顶元素弹出，然后结束方法，方法一结束栈帧出栈，操作数栈也没了，然后把这个栈顶元素，压入调用这个方法的方法的操作数栈。</p>
+<h1 id="6-操作数栈管理指令："><a href="#6-操作数栈管理指令：" class="headerlink" title="6. 操作数栈管理指令："></a>6. 操作数栈管理指令：</h1><p>这里的管理，指的是不需要借助任何的东西，操作数栈自己进行操作。</p>
+<ul>
+<li><p>直接废弃栈顶元素，直接弹出：pop，pop2。区别就是 pop 弹出一个slot的元素，pop2弹出两个slot的元素。</p>
+</li>
+<li><p>复制操作：dup，dup2，dup_x1，dup2_x1，dup_x2，dup2_x2。</p>
+</li>
+<li><p>交换：swap，交换栈顶的两个 1slot元素，注意，只能是两个 1slot的元素交换，JVM没有提供两个 2slot的元素的交换指令。</p>
+</li>
+<li><p>nop：啥也不干，对应的16进制是0x00，就是用来站位。</p>
+</li>
+</ul>
+<p>dup需要特别说一下，这个复制是复制栈顶的一个或者两个元素，注意，可以一次复制两个的。然后 dup 和 dup2的区别就是 dup复制1slot的元素，dup2复制占2slot的对应元素，注意我说的可以占2slot的东西，还真不一定是仅仅复制一个2slot的单个元素。比如dup2可以复制栈顶的long，double，也可以复制栈顶的两个元素，一个是int，另一个是float。</p>
+<p>然后，dup指令如果后面带有_x，那就不是单纯的复制，而是复制完了以后把复制品插入到另外的位置。那么具体插入到哪呢？有个技巧：</p>
+<p>dup[n]_xm，对吧，n 如果没有那就是 1，有了那就是2。这条指令的具体意思是，先复制，然后把复制结果往下挪 n + m 个slot。</p>
+<p>首先举例子：什么情况下会pop，看下面的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">test</span><span class="params">()</span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">Object</span> <span class="variable">obj1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>();</span><br><span class="line">    <span class="type">Object</span> <span class="variable">obj2</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 上面的指令省略，不用想，肯定是 new dup invokespecial astore，着重看下面两行：</span></span><br><span class="line">    <span class="type">String</span> <span class="variable">hash</span> <span class="operator">=</span> obj1.toString();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// invokevirtual &lt;...Object.toString&gt;</span></span><br><span class="line">    <span class="comment">// astore_2</span></span><br><span class="line">    <span class="comment">// 这里因为我们把他赋值给了局部变量，所以存入局部变量表，那么说明这个 toString 的返回值有用</span></span><br><span class="line">    obj2.toString();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// invokevirtual &lt;...Object.toString&gt;</span></span><br><span class="line">    <span class="comment">// pop</span></span><br><span class="line">    <span class="comment">// return</span></span><br><span class="line">    <span class="comment">// 这里为啥就pop了？因为我们就是调用了一下 toString 方法，返回值并没有保存，所以没用，没用操作数栈就把结果直接弹出</span></span><br><span class="line">    <span class="comment">// 又因为是个 String，引用类型，所以弹出一个slot的值就行了</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="type">long</span> <span class="title function_">bar</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">test2</span><span class="params">()</span>&#123;</span><br><span class="line">    bar();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// invokespecial &lt;...bar&gt;</span></span><br><span class="line">    <span class="comment">// pop2</span></span><br><span class="line">    <span class="comment">// return</span></span><br><span class="line">    <span class="comment">// 这里为啥就是 pop2？因为返回值没用，所以需要弹栈，然后因为返回值是long，占用了操作数栈两个slot，索引pop2</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="7-比较指令："><a href="#7-比较指令：" class="headerlink" title="7. 比较指令："></a>7. 比较指令：</h1><p>比较指令，说白了就是比较大小的呗，从栈中弹出俩数比较大小。</p>
+<p>这里我先规定：现在操作数栈中有俩数，按顺序是 v2 和 v1，注意是按顺序，也就是v2 压在 v1上面，是栈顶（其实也很好理解，v1 &gt; v2，肯定是先压入v1，再压入 v2，所以v2 在 v1上面）。然后有下面指令：</p>
+<ul>
+<li><p>fcmpl, fcmpg</p>
+</li>
+<li><p>dcmpl, dcmpg</p>
+</li>
+<li><p>lcmp</p>
+</li>
+</ul>
+<p>第一个字母代表类型（float，double，long），cmp不说，最后一个字母 l 和 g 代表 lower 和 greater。其实没啥区分，正常情况下，这些指令都是弹出v2 和 v1 进行比较，如果 v1 &gt; v2，操作数栈压入1，如果 v1 &#x3D;&#x3D; v2，操作数栈压入0，如果 v1 &lt; v2，压-1。唯一的区别就是：如果v1 或者 v2有一个出现NaN，那么 lower 压入 -1，greater 压入 1.仅此而已。</p>
+<p>所以为啥 lcmp 没有lg，因为long没有 NaN。</p>
+<h1 id="8-控制转移指令："><a href="#8-控制转移指令：" class="headerlink" title="8. 控制转移指令："></a>8. 控制转移指令：</h1><h2 id="8-1-条件跳转指令："><a href="#8-1-条件跳转指令：" class="headerlink" title="8.1 条件跳转指令："></a>8.1 条件跳转指令：</h2><p>条件跳转指令一般是用栈顶元素和0或者null去进行跳转，和比较指令关联很大，一般情况下都是比较指令先把比较结果压入栈顶，然后判断指令从栈顶获取结果进行跳转。</p>
+<p>必须要注意的是，这些跳转指令 后面都有一个操作数，代表如果判断位真则跳转到第几行指令。</p>
+<ul>
+<li><p>ifeq（if_equals），ifne（if_nonequals）如果栈顶元素 &#x3D;&#x3D; 0 &#x2F; !&#x3D; 0 ，则跳转。</p>
+</li>
+<li><p>iflt，ifle，ifgt，ifge。当栈顶元素 &gt; &gt;&#x3D; &lt; &lt;&#x3D; 0 时跳转。</p>
+</li>
+<li><p>ifnull，ifnonnull。如果栈顶元素是null&#x2F;不是null 时跳转。</p>
+</li>
+</ul>
+<p>特别需要注意一个地方，看下面代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">test</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">a</span> <span class="operator">=</span> <span class="number">0</span>; <span class="comment">// iconst_0, istore_1</span></span><br><span class="line">    <span class="keyword">if</span>(a == <span class="number">0</span>) <span class="comment">// iload_1, ifne xx &lt;a = 20&gt;</span></span><br><span class="line">        a = <span class="number">10</span>; <span class="comment">// bipush 10, istore_1, goto xx &lt;return&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        a = <span class="number">20</span>; <span class="comment">// bipush 20, istore_1</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> a; <span class="comment">// iload_1, ireturn</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>是的，我知道很简单，我们仔细看一看，如果if判断的结果为真，那他会接着if后面的按顺序执行，也就是走if路线的话根本没有跳转，只有在 if 判断不通过的情况下，走到else，这个时候才发生了指令跳转。但是这些判断指令后面又必须跟一个跳转地址，所以说这里我们判断得是 a&#x3D;&#x3D;0，如果等于则干啥，但是指令其实是反过来的，指令中判断 如果 a !&#x3D; 0，则跳转到else的地方。</p>
+<p>总结一下，就是条件跳转指令会给我们写的if判断的条件取反，我们让他判断 a 是否等于0，指令则会判断 a 是否不等于0，如果是，则直接跳转到 else，如果不是，则不跳转，接着按顺序执行if后面的指令。</p>
+<p>还有啊，这个条件跳转指令，针对的是 一个 int 和 一个常数比较，比如你直接 a &#x3D;&#x3D; 0，就会用条件跳转，如果是连个float，那就是两个float先 cmp，往操作数栈中压入比较结果，然后再条件跳转。</p>
+<h2 id="8-2-比较条件跳转指令"><a href="#8-2-比较条件跳转指令" class="headerlink" title="8.2 比较条件跳转指令"></a>8.2 比较条件跳转指令</h2><p>这个东西就是把条件跳转和比较 结合在一起了，仅此而已。主要针对两个int（或者说JVM给你转换以后是int，害，其实就是 byte short）或者两个引用的比较，当然这里的比较引用肯定是比较的hashcode。</p>
+<ul>
+<li><p>if_icmpeq，if_icmpne，if_icmplt，if_icmple，if_icmpgt，if_icmpge：从栈顶弹出v2 和 v1 两个int，如果 &#x3D;&#x3D; !&#x3D; &lt; &lt;&#x3D; &gt; &gt;&#x3D; 的话，就跳转</p>
+</li>
+<li><p>if_acmpeq，ifacmpne：从栈顶弹出两个引用，判断 &#x3D;&#x3D; !&#x3D;</p>
+</li>
+</ul>
+<h2 id="8-3-多条件跳转指令"><a href="#8-3-多条件跳转指令" class="headerlink" title="8.3 多条件跳转指令"></a>8.3 多条件跳转指令</h2><p>这个多条件不是else if 啊，指的是 switch case 结构。</p>
+<p>具体分为两个：tableswitch 和 lookupswitch，这两个都是规定了如何跳转。区别就是 如果case 的后面的东西连续，那就是tableswitch，可以直接定位。如果不连续，那就需要用到 lookupswitch。</p>
+<p>lookupswitch 优化为题：</p>
+<p>因为lookupswitch不连续，所以他的效率可能慢一点，但是这个指令自己会优化，他会把你所有的case 条件，按顺序排序，比如你是 case 100, 500, 200，那他最后优化就会变成：100, 200, 500.但是这是不是说明，如果你不break，那他就不按从上到下的顺序一溜往下走了？不是的，具体为啥，你可以去看字节码。</p>
+<p>还有jdk7支持的 case 字符串。这个东西更玄学，不细说了，挺多的，可以看：cn.chl.SwitchCase.java 这个文件。</p>
+<h2 id="8-4-无条件跳转指令"><a href="#8-4-无条件跳转指令" class="headerlink" title="8.4 无条件跳转指令"></a>8.4 无条件跳转指令</h2><p>goto 指令，后面跟着一个2字节的操作数，代表往哪里跳转，如果两个字节（65535，无符号的2字节数）不够，那就是用 goto_w 这个指令，和goto一样，区别就是goto_w 接受一个4字节的操作数。</p>
+<p>这里还可以涉及到循环，JVM中可没有任何的循环指令，其实循环都是 条件跳转指令 + 无条件跳转指令实现的。</p>
+<h1 id="9-异常与异常处理"><a href="#9-异常与异常处理" class="headerlink" title="9. 异常与异常处理"></a>9. 异常与异常处理</h1><p>很好，我们都很讨厌异常</p>
+<h2 id="9-1-异常的生成"><a href="#9-1-异常的生成" class="headerlink" title="9.1 异常的生成"></a>9.1 异常的生成</h2><p>众所周知，Java中的异常，其实就是 Exception对象，说的再准确点，就是 Throwable 实现类，所以异常，首先也要创建，然后使用关键字throw出来。</p>
+<p>JVM层面，throw 的指令：athrow。但是这个指令仅限于我们手动抛出异常，如果是自动抛出的异常，比如除以0的异常，会在执行指令idiv和ldiv时自动抛出，那么这里自动抛出的异常就不会涉及athrow指令。</p>
+<p>一旦抛出异常，直接清空方法的操作数栈（不光是清空操作数栈，整个栈帧都会直接弹出），然后把异常对象，压入方法调用者的操作数栈上。</p>
+<h2 id="9-2-异常的捕获"><a href="#9-2-异常的捕获" class="headerlink" title="9.2 异常的捕获"></a>9.2 异常的捕获</h2><p>早期的JVM采用了 jsr ret 等指令来对异常进行处理，但是是早期，现在JVM已经把这些指令废弃了，取而代之的是异常表。</p>
+<p>异常表其实很简单，就是一张表，规定了如果发生哪类异常，则跳转到哪条指令。一般来说只要你存在try catch 或者 try finally 则会出现这个东西。当</p>
+<p>异常表有有你catch的所有异常，如果发生异常，就会去和你异常表匹配，匹配到哪个异常，跳转到哪个异常的处理位置，如果没有匹配，则弹出当前栈帧。</p>
+<p>异常表结构如下：</p>
+<table>
+<thead>
+<tr>
+<th>Nr.</th>
+<th>Start PC</th>
+<th>End Pc</th>
+<th>Handler PC</th>
+<th>Catch Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第几个，毛用没有</td>
+<td>try的起始位置</td>
+<td>try的结束位置</td>
+<td>抛出异常后的处理位置</td>
+<td>处理的异常类型</td>
+</tr>
+</tbody></table>
+<p>这个举个例子，看 cn.chl.ExceptionByteCode，里面的test5 方法，他的异常表如下：</p>
+<table>
+<thead>
+<tr>
+<th>Nr.</th>
+<th>Start PC</th>
+<th>End PC</th>
+<th>Handler PC</th>
+<th>Catch Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>0</td>
+<td>6</td>
+<td>9</td>
+<td>java.lang.ClassNotFoundException</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>6</td>
+<td>21</td>
+<td>java.lang.RuntimeException</td>
+</tr>
+</tbody></table>
+<p>所以具体什么意思呢？很简单，第一个，如果在 0 - 6 行字节码出现ClassNotFoundException，则跳转到 9 行进行处理，第二个，如果在 0 - 6 行出现RuntimeException，则跳转到 21行进行处理。就是这么简单。</p>
+<h1 id="10-同步控制指令"><a href="#10-同步控制指令" class="headerlink" title="10. 同步控制指令"></a>10. 同步控制指令</h1><p>说白了，就是同步代码块。</p>
+<p>首先，同步，有两种办法：</p>
+<ul>
+<li><p>直接给方法加上 synchronized 关键字，然后这个方法就是一个同步方法，一次只允许一个线程调用。这种办法在字节码指令角度看不到任何东西，是的，任何，一个方法你加不加同步，字节码都是那样。唯一的区别就是，方法的访问标识符会变。加上的话，方法的访问标识就会变成 public synchronzied。</p>
+</li>
+<li><p>使用同步代码块：synchronized(临界资源)。这个比较牛逼了，下面主要说这个东西。</p>
+</li>
+</ul>
+<p>如果方法内想要进入同步代码块，使用 monitorenter指令，这个指令从操作数栈中弹出这个临界资源（一般是一个对象），我们之前讲对象头结构的时候说过，对象头中存储着线程的信息，比如当前对象是否有锁，这个锁是谁拿着的。那么现在 monitorenter指令得到这个临界资源后，会去对象头中找这俩属性：</p>
+<ul>
+<li><p>看当前对象有没有被加锁，如果没有，ok，我给加上，然后我进入同步代码块</p>
+</li>
+<li><p>如果有锁，看看这个锁是谁拿着的，如果是我拿着的，行，我也可以进入这个代码块</p>
+</li>
+<li><p>如果这个锁不是我拿着，那很遗憾，我就得等着了。</p>
+</li>
+</ul>
+<p>所以我进入了同步代码块，怎么出来？monitorexit指令，这个指令也会从操作数栈得到临界资源，然后修改他的对象头，释放锁。</p>
+<p>需要注意的是，即便我们在同步代码块中没有使用try catch，JVM也会给我们生成异常表，为啥？如果出现异常，难道说当前线程就不释放锁了？不能吧。只要出现异常，则马上跳出同步代码块来释放锁。</p>
+<p>细说一下：上面我们提到，对象头中有一个东西记录这个对象是否有锁，这个东西叫 “监视器计数器”，如果计数器&#x3D;0，说明没有锁，线程可以进入，如果为1，那说明有锁，你得等着了。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+              <a href="/tags/%E5%BA%95%E5%B1%82/" rel="tag"># 底层</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/06/13/bytecode/" rel="prev" title="JVM-字节码">
+      <i class="fa fa-chevron-left"></i> JVM-字节码
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/06/13/classload/" rel="next" title="JVM-类加载">
+      JVM-类加载 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E5%8A%A0%E8%BD%BD%E4%B8%8E%E5%AD%98%E5%82%A8%E6%8C%87%E4%BB%A4"><span class="nav-text">1. 加载与存储指令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F%E5%8E%8B%E6%A0%88%E6%8C%87%E4%BB%A4"><span class="nav-text">1.1 局部变量压栈指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E5%B8%B8%E9%87%8F%E5%85%A5%E6%A0%88%E6%8C%87%E4%BB%A4"><span class="nav-text">1.2 常量入栈指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E5%87%BA%E6%A0%88%E8%A3%85%E5%85%A5%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F%E8%A1%A8%E6%8C%87%E4%BB%A4"><span class="nav-text">1.3 出栈装入局部变量表指令</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E7%AE%97%E6%95%B0%E6%8C%87%E4%BB%A4"><span class="nav-text">2. 算数指令</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E8%BD%AC%E5%8C%96"><span class="nav-text">3. 数据类型转化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E5%AE%BD%E5%8C%96%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2"><span class="nav-text">3.1 宽化数据类型转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E7%B2%BE%E5%BA%A6%E9%97%AE%E9%A2%98"><span class="nav-text">3.2 精度问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E5%85%B3%E4%BA%8E-byte-short-char-%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-text">3.3 关于 byte short char 的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-%E7%AA%84%E5%8C%96%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2"><span class="nav-text">3.4 窄化类型转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-%E7%AA%84%E5%8C%96%E7%9A%84%E7%89%B9%E6%AE%8A%E6%83%85%E5%86%B5%EF%BC%9A"><span class="nav-text">3.5 窄化的特殊情况：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E5%AF%B9%E8%B1%A1%E5%88%9B%E5%BB%BA%E4%B8%8E%E8%AE%BF%E9%97%AE%E6%8C%87%E4%BB%A4"><span class="nav-text">4. 对象创建与访问指令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E5%AF%B9%E8%B1%A1%E5%88%9B%E5%BB%BA%E6%8C%87%E4%BB%A4"><span class="nav-text">4.1 对象创建指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E7%B1%BB%E6%88%90%E5%91%98-%E5%AD%97%E6%AE%B5-%E7%9A%84%E8%AE%BF%E9%97%AE%E6%8C%87%E4%BB%A4"><span class="nav-text">4.2 类成员(字段)的访问指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E6%95%B0%E7%BB%84%E5%85%83%E7%B4%A0%E6%93%8D%E4%BD%9C%E6%8C%87%E4%BB%A4"><span class="nav-text">4.3 数组元素操作指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E7%B1%BB%E5%9E%8B%E6%A3%80%E6%9F%A5%E6%8C%87%E4%BB%A4"><span class="nav-text">4.4 类型检查指令</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E6%96%B9%E6%B3%95%E6%8C%87%E4%BB%A4"><span class="nav-text">5. 方法指令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8"><span class="nav-text">5.1 方法调用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E6%96%B9%E6%B3%95%E8%BF%94%E5%9B%9E%EF%BC%9A"><span class="nav-text">5.2 方法返回：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E6%93%8D%E4%BD%9C%E6%95%B0%E6%A0%88%E7%AE%A1%E7%90%86%E6%8C%87%E4%BB%A4%EF%BC%9A"><span class="nav-text">6. 操作数栈管理指令：</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-%E6%AF%94%E8%BE%83%E6%8C%87%E4%BB%A4%EF%BC%9A"><span class="nav-text">7. 比较指令：</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#8-%E6%8E%A7%E5%88%B6%E8%BD%AC%E7%A7%BB%E6%8C%87%E4%BB%A4%EF%BC%9A"><span class="nav-text">8. 控制转移指令：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#8-1-%E6%9D%A1%E4%BB%B6%E8%B7%B3%E8%BD%AC%E6%8C%87%E4%BB%A4%EF%BC%9A"><span class="nav-text">8.1 条件跳转指令：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-2-%E6%AF%94%E8%BE%83%E6%9D%A1%E4%BB%B6%E8%B7%B3%E8%BD%AC%E6%8C%87%E4%BB%A4"><span class="nav-text">8.2 比较条件跳转指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-3-%E5%A4%9A%E6%9D%A1%E4%BB%B6%E8%B7%B3%E8%BD%AC%E6%8C%87%E4%BB%A4"><span class="nav-text">8.3 多条件跳转指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-4-%E6%97%A0%E6%9D%A1%E4%BB%B6%E8%B7%B3%E8%BD%AC%E6%8C%87%E4%BB%A4"><span class="nav-text">8.4 无条件跳转指令</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#9-%E5%BC%82%E5%B8%B8%E4%B8%8E%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86"><span class="nav-text">9. 异常与异常处理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#9-1-%E5%BC%82%E5%B8%B8%E7%9A%84%E7%94%9F%E6%88%90"><span class="nav-text">9.1 异常的生成</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-2-%E5%BC%82%E5%B8%B8%E7%9A%84%E6%8D%95%E8%8E%B7"><span class="nav-text">9.2 异常的捕获</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#10-%E5%90%8C%E6%AD%A5%E6%8E%A7%E5%88%B6%E6%8C%87%E4%BB%A4"><span class="nav-text">10. 同步控制指令</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

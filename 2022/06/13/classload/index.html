@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="类加载，说一说类加载的时候各种成员的初始化如何进行。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM-类加载">
+<meta property="og:url" content="http://example.com/2022/06/13/classload/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="类加载，说一说类加载的时候各种成员的初始化如何进行。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/Class.png">
+<meta property="article:published_time" content="2022-06-13T02:19:51.000Z">
+<meta property="article:modified_time" content="2022-06-13T02:25:23.059Z">
+<meta property="article:author" content="PtheF">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="底层">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/Class.png">
+
+<link rel="canonical" href="http://example.com/2022/06/13/classload/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>JVM-类加载 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/06/13/classload/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JVM-类加载
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-06-13 10:19:51 / 修改时间：10:25:23" itemprop="dateCreated datePublished" datetime="2022-06-13T10:19:51+08:00">2022-06-13</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>类加载，说一说类加载的时候各种成员的初始化如何进行。</p>
+<span id="more"></span>
+
+<h1 id="1-类加载"><a href="#1-类加载" class="headerlink" title="1. 类加载"></a>1. 类加载</h1><p>是的，字节码说完了，然后就是下面的一大块东西：类加载。</p>
+<p>之前学Java反射的时候了解过，类加载分为5个阶段，如下：</p>
+<ul>
+<li>加载：通过类加载器加载一个二进制流数据</li>
+<li>链接：又分为 验证 准备 解析 三个阶段</li>
+<li>初始化</li>
+<li>使用：比如调用方法，创建对象等</li>
+<li>卸载</li>
+</ul>
+<p>后面我们就开始着重看这5个阶段。</p>
+<h1 id="2-类加载-Loading-阶段"><a href="#2-类加载-Loading-阶段" class="headerlink" title="2. 类加载 Loading 阶段"></a>2. 类加载 Loading 阶段</h1><h2 id="2-1-加载的理解"><a href="#2-1-加载的理解" class="headerlink" title="2.1 加载的理解"></a>2.1 加载的理解</h2><p>什么是加载，或者说loading阶段到底干了啥？很简单，类加载器读取一大堆二进制流，然后转化成一个类模版对象，然后把这个类模版对象存储到方法区。这样在运行时，我们就可以通过反射来获取类的属性，比如这个类的属性，方法等。</p>
+<p>但是需要注意的是，这个类模版，并不是我们获取的 Class对象，不是的，两回事，有关系，但不是一个。</p>
+<h2 id="2-2-加载完成的操作"><a href="#2-2-加载完成的操作" class="headerlink" title="2.2 加载完成的操作"></a>2.2 加载完成的操作</h2><p>就是一件事，读取class文件，生成类模版。具体说 JVM 需要完成下面三件事：</p>
+<ul>
+<li>获取类的全限定命名，从而得到这个类的class文件，进而获取二进制流（当然这个流可以从数据库中获得，获取其他的方式，总之，要的就是二进制流）；</li>
+<li>解析这个二进制流，生成对应的Java类模版，存储在方法区</li>
+<li>创建 Class对象，这个对象作为方法区类模版的访问入口，也就是说，Class对象其实是指向了方法区中的模版。</li>
+</ul>
+<h2 id="2-3-类模版和Class的位置"><a href="#2-3-类模版和Class的位置" class="headerlink" title="2.3 类模版和Class的位置"></a>2.3 类模版和Class的位置</h2><p>在完成类加载后，会在方法区（jdk8的话就是元空间）生成一个类模版对象，然后又会在堆中，没错，就是堆中，生成这个类的Class对象，然后这个Class指向了方法区中的类模版，然后我们就可以通过Class得到类的属性。</p>
+<p>只是作为了解，不展开说，挺复杂的东西。</p>
+<h2 id="2-4-数组类的创建"><a href="#2-4-数组类的创建" class="headerlink" title="2.4 数组类的创建"></a>2.4 数组类的创建</h2><p>数组比较特殊，数组并不是类加载器创建的，而是JVM根据你数组类型和数组维度动态创建的，过程如下：</p>
+<ul>
+<li>如果数组是引用数据类型，那么JVM则会根据需要 递归的去加载数据类型</li>
+<li>根据数组所需要的数据类型和数组维度，JVM动态的声明数组</li>
+</ul>
+<h1 id="3-链接阶段"><a href="#3-链接阶段" class="headerlink" title="3. 链接阶段"></a>3. 链接阶段</h1><p>众所周知，链接阶段分为三个步骤：验证，准备，解析。ok，我们一个一个说：</p>
+<h2 id="3-1-验证阶段"><a href="#3-1-验证阶段" class="headerlink" title="3.1 验证阶段"></a>3.1 验证阶段</h2><p>所谓验证阶段，那肯定就是验证文件是否合法这种的。所以在这一步，它主要验证一下内容：</p>
+<ul>
+<li>格式检查：检查字节码的魔数，版本以及指令长度等其他信息（没有在方法区中生成类模版）</li>
+<li>语义检查：检查有没有格式错误，比如继承final，是否存在父类，抽象方法有没有实现等（这个时候已经在方法区中生成了模版）</li>
+<li>字节码验证：跳转指令的跳转位置是否合法，函数调用传参类型是否正确，变量赋值的类型是否一致 等。</li>
+<li>符号引用验证：符号引用是否有直接饮用</li>
+</ul>
+<p>这个阶段有个特殊的东西：StackMapTable 栈映射帧，是干嘛的呢？用来检测操作数栈中的数据类型和局部变量表的数据类型是否匹配，然而并不能100%判断字节码没错，只是尽可能的判断。</p>
+<p>第四步的符号引用验证，简单说就是：常量池中有个ClassRefInfo信息，比如指向了一个 java.lang.String，这里就需要判断这个 String 是否存在，既视感这个的。</p>
+<p>顺带一提，验证阶段和加载阶段分的没有那么开，一般都是同时进行的。</p>
+<h2 id="3-2-准备阶段"><a href="#3-2-准备阶段" class="headerlink" title="3.2 准备阶段"></a>3.2 准备阶段</h2><p>准备阶段 Preparation，简单说，就是给这个类的静态变量（注意，是变量，是变量，不是常量，static final 可不在这里处理）分配内存空间，并给他们赋一个默认值，这个默认值应该不用说了吧，数字类型都是0，boolean是false，ref 是 null。</p>
+<p>注意：</p>
+<ul>
+<li>说过了，这里不对final进行操作，static final 的常量在编译的时候就已经被显式的赋值了，在准备阶段静态常量已经有值了。</li>
+<li>这里不对实例变量进行操作，类变量的内存被分配到了方法区，和类模版在一起，实例变量则是在堆中，和对象在一起。</li>
+<li>这个过程没有任何的代码被执行</li>
+</ul>
+<p>有个特殊情况，如果有如下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">str</span> <span class="operator">=</span> <span class="string">&quot;CONST&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>那么这个属性的赋值也是在编译阶段完成的，但是仅限于通过字面量给String赋值，如果你是 new String，那也就不行了。</p>
+<h2 id="3-3-解析阶段"><a href="#3-3-解析阶段" class="headerlink" title="3.3 解析阶段"></a>3.3 解析阶段</h2><p>解析 Resolution 阶段，简单说，把符号引用替换成直接饮引用。听不懂是吧，来，举个例子：</p>
+<p>我们都已经学过字节码了，字节码文件中有常量池没毛病吧，比如常量池中有个常量 Methodref_info 这个信息，这个信息里面有两部分：Class_name 和 Name_And_Type，然后这俩又是俩常量池索引，比如：Class_name #3， Name_and_type #8。这里非常的敷衍，就告诉你是 #3和#8，和内存完全没关系，这就是符号引用。</p>
+<p>这个阶段下，你不能在敷衍的告诉我 Class_name 是#3啦，太费劲了，咋办，比如这个Methodref_info是 System.out.println() 方法，行，这里你得具体告诉我 System.out 这个 Class_name 的真实内存地址，#3我不认可啦，那么在这个阶段下，Class_name #3 Name_and_type #8 就被替换成了：</p>
+<p>同时，JVM会给每个类提供一个方法表，那么你这个println方法在方法表中是第几个位置，这个就相当于方法的直接引用。</p>
+<h1 id="4-初始化阶段"><a href="#4-初始化阶段" class="headerlink" title="4. 初始化阶段"></a>4. 初始化阶段</h1><blockquote>
+<p>create  by  陈HL_pthef on  2021&#x2F;11&#x2F;4 下午6:58</p>
+</blockquote>
+<h2 id="4-1-概述"><a href="#4-1-概述" class="headerlink" title="4.1 概述"></a>4.1 概述</h2><p>初始化阶段，简单说就是给static进行赋值。很重要的一点，在初始化阶段，真正的涉及一些Java代码的执行。</p>
+<p>这个过程最重要的就是生成 &lt;clinit&gt; 方法，这个方法主要就是用来给static赋值的，他会按顺序收集你类中所有的static赋值语句（包括static代码块），整合到一起，然后生成 clinit方法，这个方法只能由JVM生成，并由JVM调用。</p>
+<h2 id="4-2-说明"><a href="#4-2-说明" class="headerlink" title="4.2 说明"></a>4.2 说明</h2><ul>
+<li><p>一个类调用 clinit 方法时，总会先去调用 父类的clinit方法，所以说，父类的static代码块优先级高于子类</p>
+</li>
+<li><p>什么情况下不会生成 clinit方法：</p>
+<ul>
+<li>一个类压根没有静态</li>
+<li>有静态，但是没有赋值，就是光秃秃一个 <code>public static int num;</code></li>
+<li>有静态，也有赋值，但是这个静态是常量，而且赋值的方式还是字面量赋值，也不会clinit。</li>
+</ul>
+</li>
+</ul>
+<h2 id="4-3-static-final-显式赋值到底发生在哪个阶段？"><a href="#4-3-static-final-显式赋值到底发生在哪个阶段？" class="headerlink" title="4.3 static final 显式赋值到底发生在哪个阶段？"></a>4.3 static final 显式赋值到底发生在哪个阶段？</h2><p>这玩意，越来越不会了，太恶心了。</p>
+<p>首先，看最简单的；</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">I</span> <span class="operator">=</span> <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+
+<p>这个倒是好说，i 肯定是在clinit中赋值，然后 I 是在链接阶段的准备环节赋的值，所以说，是不是final修饰的就一定不在clinit中赋值？再看下面这个：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">Integer</span> <span class="variable">int1</span> <span class="operator">=</span> Integer.valueOf(<span class="number">100</span>);</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Integer</span> <span class="variable">INT2</span> <span class="operator">=</span> Integer.valueOf(<span class="number">1000</span>);</span><br></pre></td></tr></table></figure>
+
+<p>这俩是在哪赋的值？直接说，这俩都是在 clinit 中赋值。那我们又猜，是不是说 引用数据类型不管是不是final都在clinit中赋值？再看下面：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">s</span> <span class="operator">=</span> <span class="string">&quot;hello1&quot;</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">S</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">String</span>(<span class="string">&quot;hello2&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>这俩都是引用，在哪里赋值啊？s 在准备阶段，S 在clinit赋值。</p>
+<p>所以说，总结一下，什么情况下会在链接阶段的准备过程赋值：</p>
+<ul>
+<li>大前提，static final 修饰的</li>
+<li>基本数据类型，给他赋一个确定的值，且不需要代码支持（比如 new Random().random() 这种的），在准备过程赋值</li>
+<li>字符串，且通过字面量的形式给他赋值，也发生在准备阶段。</li>
+</ul>
+<p>首先明确的是，绝对不是说 static final 就一定在准备阶段完成赋值。</p>
+<h2 id="4-4-clinit-方法的线程安全问题"><a href="#4-4-clinit-方法的线程安全问题" class="headerlink" title="4.4 clinit 方法的线程安全问题"></a>4.4 clinit 方法的线程安全问题</h2><p>首先，clinit是线程安全的，但是这个方法的访问修饰只有static，并没有synchronized，所以他这个锁是一个隐式的锁，JVM给自动加的。</p>
+<p>正是因为这玩意线程安全，所以说如果一个类的clinit过于繁琐，耗时较长，则会导致很多线程阻塞，有可能导致死锁。</p>
+<h2 id="4-5-类的主动使用和被动使用问题"><a href="#4-5-类的主动使用和被动使用问题" class="headerlink" title="4.5 类的主动使用和被动使用问题"></a>4.5 类的主动使用和被动使用问题</h2><p>首先，主被动使用会影响啥？不是说一个类被动使用就不会加载了，不是的，一个类要用，那就肯定需要加载，但是如果一个类是被动使用的，那么这个 初始化阶段是很有可能不执行的。注意，仅限于初始化阶段不执行。那么初始化阶段不执行就可能导致结果不一致。</p>
+<p>顺带一提，这里说的使用不是说的类的第四个阶段：使用。更多说的是首次使用。</p>
+<h3 id="4-5-1-类的主动使用"><a href="#4-5-1-类的主动使用" class="headerlink" title="4.5.1 类的主动使用"></a>4.5.1 类的主动使用</h3><p>类的主动使用会调用 &lt;clinit&gt;() 方法，也就是会经过初始化过程。</p>
+<ul>
+<li><p>创建一个类的实例，比如 new，通过反射，反序列化（是的，反序列化也是主动使用）</p>
+</li>
+<li><p>调用类的静态方法，对应指令就是执行 invokestatic 指令，很简单，不说了</p>
+</li>
+<li><p>操作类的静态字段（static修饰的，没有final），对应指令就是 getstatic 和 putstatic。同时还有接口的静态字段。</p>
+<p>这里得特别说明：并不是绝对的，不是说我们操作static final 就一定不触发初始化。我认为是啥呢，就是说你这个static final 是不是在&lt;clinit&gt;() 中被赋值，如果是，那么这里你操作static final也照样会触发初始化，如果不是，那这里就不触发初始化。</p>
+<p>同时，对于接口，也是差不多的道理，如果接口中的 static final 不需要代码支持，那就不会clinit，如果需要，那就也会被初始化</p>
+</li>
+<li><p>使用反射类的方法，比如 Class.forName() 这种的，触发初始化。</p>
+</li>
+<li><p>初始化子类之前，会初始化父类。</p>
+<p>特殊：JVM加载一个类，要求是所有父类都必须初始化，但是这条规则并不适用与接口。</p>
+<ul>
+<li>初始化一个类，并不会初始化他所有实现的接口</li>
+<li>初始化一个接口，并不会初始化他继承的所有的类</li>
+</ul>
+<p>只有当程序首次使用特定字段的时候才会触发接口的初始化。</p>
+</li>
+<li><p>如果你的接口存在default 方法，那么直接或间接实现这个接口的类 触发了初始化，那么这个接口也会被初始化</p>
+</li>
+<li><p>当虚拟机启动时，用户会指定一个主类，那么JVM会优先家在这个主类</p>
+</li>
+<li><p>使用 MethodHandle 类，JVM会初始化这个方法指向的方法所在的类</p>
+<p>我猜啊，这个类是用来调用方法的，他可以调用任何一个类的任何一个方法（不绝对啊，private我不知道行不行）</p>
+</li>
+</ul>
+<h3 id="4-5-2-类的被动使用"><a href="#4-5-2-类的被动使用" class="headerlink" title="4.5.2 类的被动使用"></a>4.5.2 类的被动使用</h3><p>被动使用，就是类加载不会经过初始化过程。</p>
+<ul>
+<li>访问static字段，只有真正定义了这个static字段的类才会被初始化。举个例子，父类有个static，然后我们通过子类访问这个字段，最终被初始化的只有父类，自卑不会被初始化。具体看 cn.chl.PassiveUse</li>
+<li>创建引用数据类型数组，数组数据类型对应的类不会初始化。就是说你 XXX[] a &#x3D; new XXX[10]; 这个时候 XXX 不会初始化，只有 a[0] &#x3D; new XXX() 的时候才会初始化（废话）</li>
+<li>访问类的 final static（具体得看你这个final static需不需要被clinit进行赋值，上面有说，具体问题具体分析）</li>
+<li>调用 ClassLoader 的loadClass 方法，加载一个类，不会初始化</li>
+</ul>
+<h1 id="5-类卸载"><a href="#5-类卸载" class="headerlink" title="5. 类卸载"></a>5. 类卸载</h1><p>是的，类的使用没有说，废话，有啥说的，就是用呗。没的说。这里直接开始说类的卸载。</p>
+<p>要想说明白这个类卸载，我们先要明白 类 类加载器 类实例 的关系。大致的关系就是：我们加载一个类，首先在方法区中创建这个类的模版，然后在堆区创建这个类的Class对象作为方法区模版的访问入口，同时这个类的类加载器也保存在堆区，加载器和Class互相指向，创建实例的话，实例也存在堆区，并指向Class对象。接下来我们具体说说每个部分。</p>
+<h2 id="5-1-类-类加载器-类实例的关系"><a href="#5-1-类-类加载器-类实例的关系" class="headerlink" title="5.1 类  类加载器   类实例的关系"></a>5.1 类  类加载器   类实例的关系</h2><p>我们之前说过，JVM中的类加载器主要分为三类：</p>
+<ul>
+<li>BootstrapClassLoader：启动类加载器，或者说 引导类加载器，Java核心类库使用这个</li>
+<li>ExtensionClassLoader：扩展类加载器，第三方jar包多数用这个</li>
+<li>ApplicationClassLoader：应用程序类加载器，或者叫系统类加载器，我们自己写的用这个</li>
+</ul>
+<p>Class对象和ClassLoader之间双向关联，Class里面有个方法：<code>getClassLoader()</code> 方法，可以得到这个类的类加载器。所以大体结构如下：</p>
+<p><img src="/../images/Class.png" alt="image-20211106131529171"></p>
+<p>看的非常清楚，不再多说。</p>
+<h2 id="5-2-类的生命周期"><a href="#5-2-类的生命周期" class="headerlink" title="5.2 类的生命周期"></a>5.2 类的生命周期</h2><p>简单说，什么时候一个类就被回收了？以上面这图来说，当 Sample 类的Class对象不再被引用，也就是不可触及时，Sample的生命周期结束，就会卸载方法区中的 Sample类模版。</p>
+<p>看似简单，其实不然，我们通过上面这图可以看出，什么时候Class就不会被引用？</p>
+<ul>
+<li>没有任何的实例引用。没有实例，那么 Sample实例到Class的引用就相当于断开了</li>
+<li>没有 Class对象的引用。这是废话</li>
+<li>没有 Sample 类加载器的引用，这样 MyClassLoader的引用断开，就相当于Loader到Class的引用断开</li>
+</ul>
+<p>只有达到这三个条件，才说明类不再使用。</p>
+<p>所以总结一下，卸载一个类，其实对应的就是方法区中的GC。方法区GC主要针对不再使用的常量和不再使用的类，常量好说，不用了呗，但是类，必须满足下面三个条件：</p>
+<ul>
+<li>这个类的所有实例，也包括派生子类的实例，全部被回收</li>
+<li>类的ClassLoader被回收（这个条件极其难以达成，除非是被精心设计的一些类的类加载器）</li>
+<li>没有引用指向 Class对象</li>
+</ul>
+<h2 id="5-3-类的卸载"><a href="#5-3-类的卸载" class="headerlink" title="5.3 类的卸载"></a>5.3 类的卸载</h2><ul>
+<li>引导类加载器不可能被卸载，也就是说被引导类加载器加载的类，运行期间你是别想卸载了</li>
+<li>系统类加载器和扩展类加载器被收集的可能性极小，因为在运行期间他们的类总是能被直接或者间接的指向</li>
+<li>我们自己写的类加载器有可能被回收，但是仅限与在简单的上下文环境中，复杂环境下依旧是直接间接引用满天飞。而且就算是回收了加载器，我们也得强制调用GC方法</li>
+</ul>
+<p>方法区回收垃圾，时间是不确定的，而且效果也不好，因为没几个类是不用的。所以，千万不要在类卸载的前提下考虑业务。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+              <a href="/tags/%E5%BA%95%E5%B1%82/" rel="tag"># 底层</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/06/13/bytecode-command/" rel="prev" title="字节码指令">
+      <i class="fa fa-chevron-left"></i> 字节码指令
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/08/12/OPTIONS%E8%AF%B7%E6%B1%82BUG/" rel="next" title="OPTIONS请求BUG">
+      OPTIONS请求BUG <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E7%B1%BB%E5%8A%A0%E8%BD%BD"><span class="nav-text">1. 类加载</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E7%B1%BB%E5%8A%A0%E8%BD%BD-Loading-%E9%98%B6%E6%AE%B5"><span class="nav-text">2. 类加载 Loading 阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E5%8A%A0%E8%BD%BD%E7%9A%84%E7%90%86%E8%A7%A3"><span class="nav-text">2.1 加载的理解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E5%8A%A0%E8%BD%BD%E5%AE%8C%E6%88%90%E7%9A%84%E6%93%8D%E4%BD%9C"><span class="nav-text">2.2 加载完成的操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E7%B1%BB%E6%A8%A1%E7%89%88%E5%92%8CClass%E7%9A%84%E4%BD%8D%E7%BD%AE"><span class="nav-text">2.3 类模版和Class的位置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%E6%95%B0%E7%BB%84%E7%B1%BB%E7%9A%84%E5%88%9B%E5%BB%BA"><span class="nav-text">2.4 数组类的创建</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E9%93%BE%E6%8E%A5%E9%98%B6%E6%AE%B5"><span class="nav-text">3. 链接阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E9%AA%8C%E8%AF%81%E9%98%B6%E6%AE%B5"><span class="nav-text">3.1 验证阶段</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E5%87%86%E5%A4%87%E9%98%B6%E6%AE%B5"><span class="nav-text">3.2 准备阶段</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E8%A7%A3%E6%9E%90%E9%98%B6%E6%AE%B5"><span class="nav-text">3.3 解析阶段</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E5%88%9D%E5%A7%8B%E5%8C%96%E9%98%B6%E6%AE%B5"><span class="nav-text">4. 初始化阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E6%A6%82%E8%BF%B0"><span class="nav-text">4.1 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E8%AF%B4%E6%98%8E"><span class="nav-text">4.2 说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-static-final-%E6%98%BE%E5%BC%8F%E8%B5%8B%E5%80%BC%E5%88%B0%E5%BA%95%E5%8F%91%E7%94%9F%E5%9C%A8%E5%93%AA%E4%B8%AA%E9%98%B6%E6%AE%B5%EF%BC%9F"><span class="nav-text">4.3 static final 显式赋值到底发生在哪个阶段？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-clinit-%E6%96%B9%E6%B3%95%E7%9A%84%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98"><span class="nav-text">4.4 clinit 方法的线程安全问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E7%B1%BB%E7%9A%84%E4%B8%BB%E5%8A%A8%E4%BD%BF%E7%94%A8%E5%92%8C%E8%A2%AB%E5%8A%A8%E4%BD%BF%E7%94%A8%E9%97%AE%E9%A2%98"><span class="nav-text">4.5 类的主动使用和被动使用问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-5-1-%E7%B1%BB%E7%9A%84%E4%B8%BB%E5%8A%A8%E4%BD%BF%E7%94%A8"><span class="nav-text">4.5.1 类的主动使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-5-2-%E7%B1%BB%E7%9A%84%E8%A2%AB%E5%8A%A8%E4%BD%BF%E7%94%A8"><span class="nav-text">4.5.2 类的被动使用</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E7%B1%BB%E5%8D%B8%E8%BD%BD"><span class="nav-text">5. 类卸载</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E7%B1%BB-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8-%E7%B1%BB%E5%AE%9E%E4%BE%8B%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="nav-text">5.1 类  类加载器   类实例的关系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E7%B1%BB%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-text">5.2 类的生命周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E7%B1%BB%E7%9A%84%E5%8D%B8%E8%BD%BD"><span class="nav-text">5.3 类的卸载</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

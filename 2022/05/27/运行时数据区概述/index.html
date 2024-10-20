@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="从这里开始正式进入运行时数据区，运行时数据区是JVM非常核心的一部分，各种内存模型各种垃圾回收都将从这里展开。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="运行时数据区概述">
+<meta property="og:url" content="http://example.com/2022/05/27/%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E6%A6%82%E8%BF%B0/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="从这里开始正式进入运行时数据区，运行时数据区是JVM非常核心的一部分，各种内存模型各种垃圾回收都将从这里展开。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/runtime/Runtime_data_area.png">
+<meta property="og:image" content="http://example.com/images/runtime/pc_register.png">
+<meta property="og:image" content="http://example.com/images/runtime/jvm_structure.jpg">
+<meta property="article:published_time" content="2022-05-27T01:40:25.000Z">
+<meta property="article:modified_time" content="2022-06-02T03:39:33.652Z">
+<meta property="article:author" content="PtheF">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="底层">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/runtime/Runtime_data_area.png">
+
+<link rel="canonical" href="http://example.com/2022/05/27/%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E6%A6%82%E8%BF%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>运行时数据区概述 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/27/%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E6%A6%82%E8%BF%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          运行时数据区概述
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-05-27 09:40:25" itemprop="dateCreated datePublished" datetime="2022-05-27T09:40:25+08:00">2022-05-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-06-02 11:39:33" itemprop="dateModified" datetime="2022-06-02T11:39:33+08:00">2022-06-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>从这里开始正式进入运行时数据区，运行时数据区是JVM非常核心的一部分，各种内存模型各种垃圾回收都将从这里展开。</p>
+<span id="more"></span>
+
+<h1 id="1-运行时数据区"><a href="#1-运行时数据区" class="headerlink" title="1. 运行时数据区"></a>1. 运行时数据区</h1><p>运行时数据区，非常之核心，JVM运行时大部分数据都存在运行时数据区，所以后面大部分的展开，比如各种的字符串，常量池，GC，等等等等一系列的故事都将发生在这里。</p>
+<p>首先看一下运行时数据区的图：</p>
+<p><img src="/images/runtime/Runtime_data_area.png" alt="runtime"></p>
+<p>主要就是包含了：程序计数器、本地方法栈、虚拟机栈、堆、元空间。其中这里先介绍几个简单的，比如程序计数器和本地方法这种的，剩下的虚拟机栈和堆和元空间，都是重点中的重点。</p>
+<p>同时扩展一点东西：</p>
+<ul>
+<li><p>PC寄存器：不涉及 Error 不涉及 GC</p>
+</li>
+<li><p>虚拟机栈：涉及 Error，比如 StackOverFlowError，不涉及GC，直接弹栈即可。</p>
+</li>
+<li><p>本地方法栈：涉及 Error，不涉及 GCasd</p>
+</li>
+<li><p>堆 和 方法区：都涉及 Error 和 GC</p>
+</li>
+</ul>
+<p>这5种东西，一部分是和Java程序共存亡，随着JVM启动而启动，随着JVM销毁而销毁另外的，和线程共存亡。</p>
+<p>方法区 和 堆，线程之间公用，剩下的，每一个线程都会有自己独一份的这些东西。</p>
+<p>对应的对象就是 Runtime，每一个Java 应用，或者说，一个jvm就对应着一个Runtime对象。</p>
+<p>其中，JVM内部还有一些线程：</p>
+<ul>
+<li><p>虚拟机线程，特别复杂，不说了</p>
+</li>
+<li><p>周期任务线程，一般用于周期性操作的调度执行</p>
+</li>
+<li><p>GC线程，支持不同种类的垃圾收集行为</p>
+</li>
+<li><p>编译线程，将字节码编译成本地代码</p>
+</li>
+<li><p>信号调度线程，接收信号发给JVM处理</p>
+</li>
+</ul>
+<p>这些东西似乎就没有啥用了，应该不会用到吧。</p>
+<h1 id="2-PC寄存器"><a href="#2-PC寄存器" class="headerlink" title="2. PC寄存器"></a>2. PC寄存器</h1><p>所谓PC寄存器，全称 Program Counter Register，也叫程序计数器，主要用于存储下一条要执行的指令的地址。</p>
+<p>我们随便写一个程序，然后我们反编译他的 class文件，会看到如下文字：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">0:bipush   10  </span><br><span class="line">2:istore_1  </span><br><span class="line">3:bipush   20  </span><br><span class="line">4:istore_2</span><br></pre></td></tr></table></figure>
+
+<p>这种的，第一列的数字就是指令地址，第二列以及后面的东西就叫指令，pc寄存器会存储下一条指令的地址，也就是 比如 0 2 这种东西，然后执行引擎会读取pc寄存器里面存储的指令地址所对应的指令，去运行这个指令。</p>
+<p>具体流程下图所示：</p>
+<p><img src="/images/runtime/pc_register.png" alt="pc_process"></p>
+<h2 id="为什幺用PC寄存器"><a href="#为什幺用PC寄存器" class="headerlink" title="为什幺用PC寄存器"></a>为什幺用PC寄存器</h2><p>记录执行位置，并发(CPU轮转)状态下，每个线程都会抢时间片，那么抢到了就会接着执行，这个时候就需要记录当前状态下，该执行那条指令了，PC寄存器就是记录执行状态的。</p>
+<p>JVM字节码解释器通过改变PC寄存器的值来记录执行状态。</p>
+<h1 id="3-本地方法接口"><a href="#3-本地方法接口" class="headerlink" title="3. 本地方法接口"></a>3. 本地方法接口</h1><p>我们前面一直在说Runtime的事，我们先跳出Runtime，先来看一个东西：本地方法。</p>
+<p>首先我们来看一眼JVM的整体结构：</p>
+<p><img src="/images/runtime/jvm_structure.jpg" alt="jvm_stu"></p>
+<p>看到右下角的两个东西了么：NativeMethodInterface和 NativeMethodLibrary，这两个东西要和 运行时数据区里面的 本地方法栈进行联系，所以我们现看这两块内容。</p>
+<h2 id="本地方法"><a href="#本地方法" class="headerlink" title="本地方法"></a>本地方法</h2><h3 id="什么是本地方法"><a href="#什么是本地方法" class="headerlink" title="什么是本地方法"></a>什么是本地方法</h3><p>何为本地方法，Java 调用一个非Java 实现的方法的接口，这个接口就是本地方法，也就是 NativeMethod，(Native 是个关键字);</p>
+<p>再简单说，本地方法就是一个Java方法，但是这个方法的具体实现并不是 Java，多数情况下是 C&#x2F;C++。本地接口的作用就是融合不同语言来为Java所用，最主要还是融合 C&#x2F;C++.</p>
+<p>需要注意的是，native 方法因为它本身就是 Java 方法，所以Java 方法上有的东西他都有，比如可以进行权限控制，可以使用同步代码，可以抛出异常，可以有static 修饰等。</p>
+<h3 id="为什么要用本地方法"><a href="#为什么要用本地方法" class="headerlink" title="为什么要用本地方法"></a>为什么要用本地方法</h3><p>有时Java需要和外部环境交互，比如操作系统，创建 Thread这种的，或者说有些时候需要特别在以效率，就需要用到NativeMethod</p>
+<h3 id="和操作系统的交互"><a href="#和操作系统的交互" class="headerlink" title="和操作系统的交互"></a>和操作系统的交互</h3><p>JVM毕竟不是真是的操作系统，他是要依赖于本地环境，这就不可避免的有C代码，同时如果我们关注效率，也需要C，比如 创建线程，这个就是一个本地方法，调用了操作系统的api，去创建线程。</p>
+<p>Sun’s Java 的解释器有一部分就是C写的，JVM内部就已经植入了一部分C代码，所以不可避免的需要和C交互。</p>
+<h3 id="现状"><a href="#现状" class="headerlink" title="现状"></a>现状</h3><p>目前Java已经很少用到Native了，除非是一些底层操作，比如调用打印机这种的，还是需要用到C。</p>
+<h1 id="4-本地方法栈"><a href="#4-本地方法栈" class="headerlink" title="4. 本地方法栈"></a>4. 本地方法栈</h1><p>至于本地方法栈，这个东西 简单说，似乎不怎么用。这里涉及到了一些虚拟机栈的知识，后面会说。</p>
+<ul>
+<li><p>Java虚拟机栈使用管理Java方法的，那么很显然本地方法栈就是用来管理本地方法的。</p>
+</li>
+<li><p>和虚拟机栈同理，本地方法栈也是线程独有的。</p>
+</li>
+<li><p>同样可以扩展本地方法栈，同样会抛出 StackOverflowError 和 OutOfMemoryError。</p>
+</li>
+<li><p>当某个线程调用了一个本地方法后，这个本地方法就会进入一个权限的不受虚拟机限制的世界。他和虚拟机有同样的权限。</p>
+<ul>
+<li><p>本地方法可以调用本地方法接口来访问虚拟机内部的运行时数据区。</p>
+</li>
+<li><p>可以直接使用本机处理器中的寄存器。</p>
+</li>
+<li><p>可以直接分配本地内存</p>
+</li>
+</ul>
+</li>
+<li><p>并不是所有的 JVM 都支持本地方法，因为虚拟机规范并没有规定本地方法的实现语言等， 所以如果虚拟机不打算使用本地方法，也就无需本地方法栈</p>
+</li>
+<li><p>Hotspot JVM中，直接把本地方法栈和虚拟机栈合二为一。</p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+              <a href="/tags/%E5%BA%95%E5%B1%82/" rel="tag"># 底层</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/05/22/%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F-%E9%A1%B5%E9%9D%A2%E8%B7%B3%E8%BD%AC/" rel="prev" title="微信小程序-页面跳转">
+      <i class="fa fa-chevron-left"></i> 微信小程序-页面跳转
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/05/27/jvm-stack/" rel="next" title="虚拟机栈">
+      虚拟机栈 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA"><span class="nav-text">1. 运行时数据区</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-PC%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-text">2. PC寄存器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E5%B9%BA%E7%94%A8PC%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-text">为什幺用PC寄存器</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E6%8E%A5%E5%8F%A3"><span class="nav-text">3. 本地方法接口</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95"><span class="nav-text">本地方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95"><span class="nav-text">什么是本地方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E7%94%A8%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95"><span class="nav-text">为什么要用本地方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%92%8C%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%BA%A4%E4%BA%92"><span class="nav-text">和操作系统的交互</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%8E%B0%E7%8A%B6"><span class="nav-text">现状</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E6%A0%88"><span class="nav-text">4. 本地方法栈</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

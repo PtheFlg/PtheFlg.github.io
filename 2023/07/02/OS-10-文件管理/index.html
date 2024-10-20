@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="操作系统如何管理文件。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="10.文件管理">
+<meta property="og:url" content="http://example.com/2023/07/02/OS-10-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="操作系统如何管理文件。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630150838.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630152210.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630152515.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630152947.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630153824.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630154727.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630155204.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630155359.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630155739.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630160315.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630222347.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630222630.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630222843.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630223039.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630223805.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630224359.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630224928.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630230129.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630230339.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630230632.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630233435.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630234107.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701110507.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701111623.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701112015.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701112354.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701114018.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701114117.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701120446.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701122520.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701124650.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701154245.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701155755.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701155926.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701160451.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701160754.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701162632.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701164705.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701165734.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701212159.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701212646.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701212856.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701214305.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701214639.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701215237.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230701215441.png">
+<meta property="article:published_time" content="2023-07-01T23:47:16.000Z">
+<meta property="article:modified_time" content="2023-07-12T15:35:42.825Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230630150838.png">
+
+<link rel="canonical" href="http://example.com/2023/07/02/OS-10-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>10.文件管理 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/02/OS-10-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          10.文件管理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-07-02 07:47:16" itemprop="dateCreated datePublished" datetime="2023-07-02T07:47:16+08:00">2023-07-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-07-12 23:35:42" itemprop="dateModified" datetime="2023-07-12T23:35:42+08:00">2023-07-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>操作系统如何管理文件。</p>
+<span id="more"></span>
+
+<h1 id="1-文件管理概念"><a href="#1-文件管理概念" class="headerlink" title="1. 文件管理概念"></a>1. 文件管理概念</h1><h2 id="1-1-操作系统向上提供的功能"><a href="#1-1-操作系统向上提供的功能" class="headerlink" title="1.1 操作系统向上提供的功能"></a>1.1 操作系统向上提供的功能</h2><p>我们要创建一个文件，操作系统会给我们提供 <strong>create</strong> 系统调用，然后我们用记事本读取文件使用到了 <strong>read</strong> 系统调用。当我们修改文件后，将文件保存到磁盘中，会使用到 <strong>write</strong> 系统调用。最终我们删除文件，使用了 <strong>delete</strong> 系统调用。</p>
+<p>除此之外，我们打开文件和关闭文件还需要用到 <strong>open</strong> 和 <strong>close</strong> 系统调用，这个在上一章最后也说过一点。</p>
+<h2 id="1-2-文件如何存放在外存"><a href="#1-2-文件如何存放在外存" class="headerlink" title="1.2 文件如何存放在外存"></a>1.2 文件如何存放在外存</h2><p>磁盘和内存很像，磁盘也是由一个个存储单元组成，每个存储单元可以存储一定量的数据，比如一个字节，每个存储单元都对应一个物理地址。</p>
+<p>内存中，会将一定量的存储单元分页，磁盘中也会分为一个个“块&#x2F;磁盘块&#x2F;物理块”，每个块的大小相等，每块一般包含2的整数幂个地址。文件的地址也可以分为逻辑块号，块内地址，操作系统需要将逻辑块号转变为物理地址的形式。</p>
+<p>操作系统以“块”为单位给文件分配存储空间，即便一个文件只有1B，操作系统也会给他分配1K的块。同时外存中的数据读入内存同样是以块为单位。</p>
+<p>一个文件在磁盘中，是连续存放，还是离散存放，这个往后会说。</p>
+<h2 id="1-3-总结"><a href="#1-3-总结" class="headerlink" title="1.3 总结"></a>1.3 总结</h2><p>其实还有点别的内容，只是没啥用，很简单，就没记，直接看图就得了：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630150838.png" alt="image.png"></p>
+<h1 id="2-文件的逻辑结构"><a href="#2-文件的逻辑结构" class="headerlink" title="2. 文件的逻辑结构"></a>2. 文件的逻辑结构</h1><p>这个类似数据结构的逻辑结构和物理结构，比如一个线性表，就是一个逻辑结构，只要有前后关系就是线性表。但是如果我们使用链表来实现，则各个元素在物理上不相连，无法实现随机访问。而使用顺序表，则可以实现随机访问。</p>
+<p>文件的逻辑结构指的就是，在用户看来，文件内部的数据应该是如何组织起来的。而物理结构指的就是在操作系统看来，文件的数据应该如何存放在外存。</p>
+<p>文件的逻辑结构大致分为两类：无结构文件、有结构文件。</p>
+<h2 id="2-1-无结构文件"><a href="#2-1-无结构文件" class="headerlink" title="2.1 无结构文件"></a>2.1 无结构文件</h2><p>这个很好理解，就是文件里面的数据没有明显的结构，就是一系列二进制或者字符流组成，也叫”流式文件“，典型的就是 Windows 系统下的 txt 文件。</p>
+<h2 id="2-2-有结构文件"><a href="#2-2-有结构文件" class="headerlink" title="2.2 有结构文件"></a>2.2 有结构文件</h2><p>这个就是说文件里面的内容是由一条条记录构成的，也叫“记录式文件”，比较典型的就是数据库表，就是一种结构。一般来说，每条记录有一个数据项可以作为<strong>关键字</strong>，比如数据库的主键。</p>
+<p>再根据里面记录的数据项长度是否固定，又分为定长记录和可变长记录</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630152210.png" alt="image.png"></p>
+<p>有结构文件在逻辑上如何组织？可以分为三类：顺序文件、索引文件、索引顺序文件。</p>
+<h3 id="2-2-1-顺序文件"><a href="#2-2-1-顺序文件" class="headerlink" title="2.2.1 顺序文件"></a>2.2.1 顺序文件</h3><p>文件的记录一条一条的顺序排列（逻辑上），记录可以是定长的或者是可变长的。各个记录在物理上可以是<strong>顺序存储</strong>或者是<strong>链式存储</strong>。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630152515.png" alt="image.png"></p>
+<p>如果按照记录的排列顺序，也可以将顺序文件分为两类：</p>
+<ul>
+<li>串结构：记录之间的顺序和关键字无关，比如可以按照记录的插入时间来排序</li>
+<li>顺序结构：记录之间的顺序按照关键字的顺序排列</li>
+</ul>
+<p>然后思考两个问题：不同的存储方式是否可以实现随机存取？是否可以根据关键字快速查找到记录？</p>
+<p>直接看图：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630152947.png" alt="image.png"></p>
+<p>为啥可变长记录按照顺序存储依旧不能随机存取？因为可变长记录的开头可能会记录该记录的具体长度，比如2个字节。每一条记录的长度不固定，就不能随机存取。</p>
+<p>注意：链式存储很少用，考题中如果说到了“顺序文件”指的就是<font color='red'>物理上顺序存储的顺序文件</font>。往后我们默认也是如此。</p>
+<p>顺序文件的缺点就是修改插入文件比较困难，如果是串结构的话还好，直接追加在末尾就行了。</p>
+<h3 id="2-2-2-索引文件"><a href="#2-2-2-索引文件" class="headerlink" title="2.2.2 索引文件"></a>2.2.2 索引文件</h3><p>就是给所有的记录构建一张索引表，看图就明白了：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630153824.png" alt="image.png"></p>
+<p>索引表本身是一个定长记录的顺序文件，因此可以快速找到第i个记录对应的索引项。</p>
+<p>可以将记录的关键字作为索引号内容，如果按照关键字排列，还可以支持按照关键字折半查找，效率很高。每当要增加或删除一个记录，需要对索引表进行修改。由于索引文件有很快的检索速度，因此适用于对信息处理及时性要求比较高的场合。</p>
+<p>同时，我们可以根据不同的数据项为数据文件建立不同的索引表。</p>
+<h3 id="2-2-3-索引顺序文件"><a href="#2-2-3-索引顺序文件" class="headerlink" title="2.2.3 索引顺序文件"></a>2.2.3 索引顺序文件</h3><p>这个东西就有 B+Tree那味了。如果一条记录只有8B，而一条索引却有10B，那索引文件比数据文件还大，这就不合适了。</p>
+<p>可以将数据分组，然后索引文件中记录每组的第一条记录的关键字，然后索引指向这一组的地址。查找的话只需要进入这一组之后再找即可。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630154727.png" alt="image.png"></p>
+<p>加入一个记录文件（不是定长记录、顺序结构的顺序文件）有10000条记录，按照这种100-100 分组，首先在索引文件中顺序查找，平均50次得到分组，然后进入分组后，平均查找50次得到记录。要比直接10000记录顺序查找快得多。</p>
+<h3 id="2-2-4-多级索引表"><a href="#2-2-4-多级索引表" class="headerlink" title="2.2.4 多级索引表"></a>2.2.4 多级索引表</h3><p>如果数据特别多，就算是分组索引表里面的数据也多的离谱，我们就可以给索引表在分组，然后给索引表建立一个顶级索引表：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630155204.png" alt="image.png"></p>
+<p>比如有10^6条记录，按照100-100-100分组，平均只需要查找150次即可得到结果。</p>
+<h2 id="2-3-总结"><a href="#2-3-总结" class="headerlink" title="2.3 总结"></a>2.3 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630155359.png" alt="image.png"></p>
+<h1 id="3-文件目录"><a href="#3-文件目录" class="headerlink" title="3. 文件目录"></a>3. 文件目录</h1><p>其实就是Windows里面的文件夹。</p>
+<h2 id="3-1-文件控制块"><a href="#3-1-文件控制块" class="headerlink" title="3.1 文件控制块"></a>3.1 文件控制块</h2><p>目录本身也是一种文件，里面记录了这个目录中所有文件的信息，比如现在D盘根目录的目录文件张这样：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630155739.png" alt="image.png"></p>
+<p>目录本身就是一种有结构文件，由一条条记录组成。每条记录对应一个目录下的文件。</p>
+<p>加入我们这里双击“照片”，操作系统干的事就是：从这个目录表中找到关键字“照片”对应的目录项，从外存中将该目录的信息读入内存，然后就可以显示照片里面的内容了。然后照片的目录文件：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630160315.png" alt="image.png"></p>
+<p>FCB的有序集合成文“文件目录”（可别跟目录文件搞混了），一个FCB就是一个文件目录项。FCB中包含了文件的基本信息（文件名、物理地址、逻辑结构、物理结构等），存取控制信息（是否可读、科协，用户黑名单等），实用信息（文件的建立时间、修改时间等）。其中最重要的还是文件名、文件存放的物理地址。</p>
+<p>FCB 实现了文件名和文件之间的映射。也就是建立了文件名和物理地址之间的关系。使用户可以实现“按名存取”。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630222347.png" alt="image.png"></p>
+<h2 id="3-2-目录结构"><a href="#3-2-目录结构" class="headerlink" title="3.2 目录结构"></a>3.2 目录结构</h2><h3 id="3-2-1-单级目录结构"><a href="#3-2-1-单级目录结构" class="headerlink" title="3.2.1 单级目录结构"></a>3.2.1 单级目录结构</h3><p>早起的操作系统不支持多级目录，整个OS只会建立一张目录表，每个文件占用一个目录项。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630222630.png" alt="image.png"></p>
+<p>单级目录实现了“按名存取”，FCB中也存储了文件名，但是不允许文件重名。创建一个文件时，首先检查是否重名，然后新建文件，并将新文件对应的目录项插入目录表中。</p>
+<p>这种方式显然不适合多用户操作系统。</p>
+<h3 id="3-2-2-两级目录结构"><a href="#3-2-2-两级目录结构" class="headerlink" title="3.2.2 两级目录结构"></a>3.2.2 两级目录结构</h3><p>为了解决多用户的问题，一个OS只有两级目录，分为主文件目录（MFD）和用户文件目录（UFD）。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630222843.png" alt="image.png"></p>
+<h3 id="3-2-3-多级目录结构"><a href="#3-2-3-多级目录结构" class="headerlink" title="3.2.3 多级目录结构"></a>3.2.3 多级目录结构</h3><p>也叫树形目录结构，是目前常用的目录结构，解决了上面用户不能自己给文件分类的问题。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630223039.png" alt="image.png"></p>
+<p>用户要访问某个文件时要用文件的绝对路径，这个不多说了，比如 <code>/照片/2015-08/自拍.jpg</code>，系统根据绝对路径一层一层找到下一级目录，刚开始从外存中读入跟目录的目录表；找到“照片”目录的存放位置后，从外存读入对应的目录表；在找到 2015-08 目录的存放位置，同理读入目录表，最后找到文件。整个过程需要三次IO。</p>
+<p>如果我们已经打开了“照片”的目录文件，也就是这张目录表已经调入内存，那么可以将它设置为“当前目录”。用户想要访问一个文件时，也可以使用从当前目录出发的“相对路径”。</p>
+<p>这种文件结构很方便的对文件进行分类，层次清晰，也能很有效的进行文件的管理和保护。但是树形结构<font color='red'>不便于实现文件的共享</font>。因此提出了“无环图目录结构”。</p>
+<h3 id="3-2-4-无环图目录结构"><a href="#3-2-4-无环图目录结构" class="headerlink" title="3.2.4 无环图目录结构"></a>3.2.4 无环图目录结构</h3><p>其实很简单，就是在多级目录的基础上，多个用户中的文件可以指向一个同一个文件甚至目录，这就实现了共享。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630223805.png" alt="image.png"></p>
+<p>这样的话删除文件就不能像之前那么简单了，需要给每个共享节点设置一个<font color='red'>共享计数器</font>，用于记录此时有多少个地方在共享节点。用户提出删除文件请求时，只是会删除该用户的FCB，并使共享计数器-1，并不会直接删除。</p>
+<p>这种不同于数据复制，一个用户修改了共享节点，其他用户也可以看到变化。</p>
+<h2 id="3-3-索引结点"><a href="#3-3-索引结点" class="headerlink" title="3.3 索引结点"></a>3.3 索引结点</h2><p>这是一种对 FCB 的改进，我们查找一个文件的过程中实际上只需要用到“文件名”这一个属性，只有这个属性命中以后我们才需要关心这个文件的其他信息，比如权限信息等等。</p>
+<p>可以将除文件名以外的所有信息打包成一个索引结点，然后目录文件中只存储文件名和索引结点的指针，每个文件&#x2F;目录都只对应一个索引结点。当文件名命中后，才会去索引结点中检查其他信息。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630224359.png" alt="image.png"></p>
+<p>这样的好处就是减少了目录文件的开销，一个磁盘块可以存储更多的目录项，查找文件时加载的磁盘块更少。</p>
+<p>当找到文件名对应的目录项时，才需要将索引结点调入内存，然后根据结点的其他具体信息找到文件。存放在外存中的索引结点称为<font color='red'>“磁盘索引结点”</font>，当索引放入内存后称为<font color='red'>“内存索引结点”</font>，相比之下内存索引结点需要增加一些信息，比如文件是否被修改，此时有多少进程正在访问。</p>
+<h2 id="3-4-总结"><a href="#3-4-总结" class="headerlink" title="3.4 总结"></a>3.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630224928.png" alt="image.png"></p>
+<h1 id="4-文件的物理结构"><a href="#4-文件的物理结构" class="headerlink" title="4. 文件的物理结构"></a>4. 文件的物理结构</h1><p>操作系统需要对磁盘块进行哪些管理：</p>
+<ul>
+<li>对非空闲磁盘块的管理（文件的物理结构&#x2F;文件分配方式）</li>
+<li>对空闲磁盘块的管理（文件存储空间管理）</li>
+</ul>
+<p>这一大章说的就是第一个问题：文件的物理结构&#x2F;文件分配方式，也就是文件数据应该咋放到外存中。文件分配方式主要是三种：连续分配、链接分配（又分为隐式链接、显式链接）、索引分配。</p>
+<h2 id="4-1-文件块、磁盘块"><a href="#4-1-文件块、磁盘块" class="headerlink" title="4.1 文件块、磁盘块"></a>4.1 文件块、磁盘块</h2><p>再说一下这个，我们之前说过，磁盘里面也会分为一个个大小相等的磁盘块，很多操作系统中把磁盘块的大小和内存块的大小设计成一样的，因为将磁盘数据调入内存是以块为单位，这么做会很方便。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630230129.png" alt="image.png"></p>
+<h2 id="4-2-连续分配"><a href="#4-2-连续分配" class="headerlink" title="4.2 连续分配"></a>4.2 连续分配</h2><p>这种分配方式要求每个文件在磁盘上占有一组连续的块，也就是逻辑上相邻的块在物理上也相邻。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630230339.png" alt="image.png"></p>
+<p>这种分配方式下如何实现地址转换，实现（逻辑块号，块内地址）-&gt; （物理块号，块内地址）？其实很简单，既然各个磁盘块相邻，我们只需要知道逻辑块0对应的物理块号即可，然后我们访问 起始块号+逻辑块号 即可访问。比如我们要访问逻辑块号2，只需要起始地址4+逻辑块号2，即可得到物理块号6，然后去6号磁盘块访问块内地址即可。</p>
+<p>这样的话文件FCB如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630230632.png" alt="image.png"></p>
+<p>操作系统还是会检查一下用户提供的逻辑块号是否合法（逻辑块号&gt;&#x3D;长度则不合法）。所以说顺序分配支持顺序访问（想要访问逻辑块2，必须要从0号块开始访问）和直接访问（随机访问，就是说我们想要访问逻辑块2，不需要从0号块开始）。</p>
+<h3 id="4-2-1-优点"><a href="#4-2-1-优点" class="headerlink" title="4.2.1 优点"></a>4.2.1 优点</h3><p>优点就是顺序分配读取文件的速度最快，因为磁盘是有磁头的，想要读取某些块必须让磁头扫描，连续的块距离最近，所以扫描速度最快。</p>
+<p>同时顺序分配支持顺序访问和直接访问。</p>
+<h3 id="4-2-2-缺点"><a href="#4-2-2-缺点" class="headerlink" title="4.2.2 缺点"></a>4.2.2 缺点</h3><p><strong>文件拓展开销更大</strong></p>
+<p>一个文件本来占用三个磁盘块，然后文件变大了，需要四个磁盘块，就需要将原本的三个磁盘块复制到另一片连续的四个磁盘块上，这个开销比较大。</p>
+<p><strong>产生难以分配的磁盘碎片</strong></p>
+<p>这个和之前的内存差不多，一些零散的磁盘碎片很难被利用，造成空间浪费。可以通过紧凑的方式来处理，但是这个会有很大的代价。</p>
+<h2 id="4-3-链接分配"><a href="#4-3-链接分配" class="headerlink" title="4.3 链接分配"></a>4.3 链接分配</h2><p>这种方式就和链表一样，每个磁盘块都相连，这种分配方式又分出两种：隐式链接、显式链接。如果题目中说到了链接分配，<font color='red'>默认指的是隐式链接的分配方式</font>。</p>
+<h3 id="4-3-1-隐式链接"><a href="#4-3-1-隐式链接" class="headerlink" title="4.3.1 隐式链接"></a>4.3.1 隐式链接</h3><p>文件的每个块内部有一个指针指向下一个块，不需要我们显式的指定。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630233435.png" alt="image.png"></p>
+<p>用户要访问23号块，系统就会读入文件的 FCB，找到起始块号9，将9号块读入内存，然后顺着指针找到2号块，然后将其读入内存，以此类推，最终找到23号磁盘块。</p>
+<p>因此，要访问 i号块，就需要i+1次磁盘IO操作，这种方式只支持顺序访问，不支持随机访问，所以查找效率低，另外指向下一块的指针也需要耗费少量的存储空间。</p>
+<p>如果要对文件进行拓展就很方便了，随便在磁盘中找一个空闲块，然后连到文件的结束块后面，并修改文件的 FCB。所有的空闲磁盘块都可以利用起来，外存利用率高。</p>
+<h3 id="4-3-2-显式链接"><a href="#4-3-2-显式链接" class="headerlink" title="4.3.2 显式链接"></a>4.3.2 显式链接</h3><p>系统会使用一张表，将指向下一块的指针显示的记录在<font color='red'>文件分配表</font>中，也就是 FAT。假如有个新文件 aaa，一次存放的磁盘块 <code>2 -&gt; 5 -&gt; 0 -&gt; 1</code>，则FAT如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230630234107.png" alt="image.png"></p>
+<p>一个磁盘设置一张 FAT 即可，开机时，将 FAT 读入内存，并常驻内存。FAT 的各个表项在物理上连续存储，且每个表项长度相同，因此“物理块号”字段可以省略。</p>
+<p><strong>如何地址转换</strong></p>
+<p>我们想要访问i号块，其实和之前差不多，OS找到该文件的 FCB，得到了文件的起始块号，然后拿着块号去 FAT 中找，然后顺着链表顺序一直找到 i 号块。因为 FAT 常驻内存，所以这个过程不需要读磁盘。</p>
+<p>所以这种方式支持顺序访问，也支持随机访问，可以直接通过 FAT 找到第i号块，由于块号转换过程中不需要访问磁盘，所以速度要比隐式链接快很多。</p>
+<p>这种方式的缺点就是 FAT 也需要占用一定的存储空间。</p>
+<h2 id="4-4-索引分配"><a href="#4-4-索引分配" class="headerlink" title="4.4 索引分配"></a>4.4 索引分配</h2><p>这种方式类似之前的页表，操作系统为每个文件都建立了一个逻辑块号到物理块号的索引表，索引表也会存储在外存中，索引表存放的磁盘块称为索引块，文件数据存放的磁盘块称为数据块。</p>
+<p>假设某个文件 aaa 的数据依次存放在 <code>2 -&gt; 5 -&gt; 13 -&gt; 9</code> 四个磁盘块中，7号磁盘块作为aaa文件的索引块，索引块中保存了索引表的内存。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701110507.png" alt="image.png"></p>
+<p>注意：对比显示链接分配，显示链接分配的 FAT 是真个磁盘只有一个，而这种一个文件就对应一个索引表。</p>
+<p>同理，索引表的逻辑块号一列可以省略，假设一个磁盘 1TB，也就是 2^40 B，磁盘块大小为 1KB，则总共有 2^30 个磁盘块，则可以用 2^32 也就是 4B 来表示磁盘块号，故索引表的一个表项是 4B。</p>
+<h3 id="4-4-1-如何地址转换"><a href="#4-4-1-如何地址转换" class="headerlink" title="4.4.1 如何地址转换"></a>4.4.1 如何地址转换</h3><p>操作系统根据文件的 FCB 找到文件的索引块，然后根据索引块找到第i号逻辑块对应的磁盘块，然后将磁盘块调入内存即可。</p>
+<p>这种分配方式支持随机访问，文件扩展也很容易实现，只需要给文件分配一个空闲块，并增加一个索引表表项即可。只不过索引表自己也要占用点空间。</p>
+<h3 id="4-4-2-索引分配-链接方案"><a href="#4-4-2-索引分配-链接方案" class="headerlink" title="4.4.2 索引分配-链接方案"></a>4.4.2 索引分配-链接方案</h3><p>假设根据之前说的一个索引表的表项占用4B，一个磁盘块1KB，则一个磁盘块只能存储256个索引项，如果索引表的大小超过了256，一个块存不下索引表了，咋办？</p>
+<p>链接方案指的就是，将多个索引块链接起来存放，索引块内会存储指向下一个索引块的指针，FCB 中只需要记录第一个索引块即可。类似之前的隐式链接分配。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701111623.png" alt="image.png"></p>
+<p>文件查找的话就需要从第一个索引块开始依次往后找，显然很低效。</p>
+<h3 id="4-4-3-索引分配-多集索引"><a href="#4-4-3-索引分配-多集索引" class="headerlink" title="4.4.3 索引分配-多集索引"></a>4.4.3 索引分配-多集索引</h3><p>和多级页表十分的相似，第一层索引块指向第二层索引块，还可以根据文件的大小要求再建立第三层甚至第四层。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701112015.png" alt="image.png"></p>
+<p>采用 K层索引结构，且顶级索引表未调入内存，则访问一个数据块只需要 K+1 次读磁盘操作。</p>
+<p>注：这里计算文件的最大长度得会算。</p>
+<h3 id="4-4-4-索引分配-混合索引"><a href="#4-4-4-索引分配-混合索引" class="headerlink" title="4.4.4 索引分配-混合索引"></a>4.4.4 索引分配-混合索引</h3><p>顶级索引表中，即包含直接地址索引（直接指向数据块），又包含一级间接索引（指向单层索引表）、还包含了两级间接索引（指向两层索引表）。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701112354.png" alt="image.png"></p>
+<h3 id="4-4-5-总结"><a href="#4-4-5-总结" class="headerlink" title="4.4.5 总结"></a>4.4.5 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701114018.png" alt="image.png"></p>
+<h2 id="4-5-总结"><a href="#4-5-总结" class="headerlink" title="4.5 总结"></a>4.5 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701114117.png" alt="image.png"></p>
+<h1 id="5-逻辑结构-VS-物理结构"><a href="#5-逻辑结构-VS-物理结构" class="headerlink" title="5. 逻辑结构 VS 物理结构"></a>5. 逻辑结构 VS 物理结构</h1><p>用 C 语言的例子来解释下啥是逻辑结构，啥是物理结构。</p>
+<h2 id="5-1-流式文件"><a href="#5-1-流式文件" class="headerlink" title="5.1 流式文件"></a>5.1 流式文件</h2><p>我们现在用 C 语言写一个程序，创建一个 test.txt 文件，往里面写入 10000个 helloworld，代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">FILE *fp = fopen(<span class="string">&quot;test.txt&quot;</span>, <span class="string">&quot;w&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++)&#123;</span><br><span class="line">	<span class="built_in">fputs</span>(<span class="string">&quot;hello world!&quot;</span>, fp);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fclose(fp);</span><br></pre></td></tr></table></figure>
+
+<p>这段代码就会往文件里面写入10000个helloworld，在我们看来，这些helloworld顺序存放，我们可以按照顺序访问到某个字节，代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">FILE *fp = fopen(<span class="string">&quot;test.txt&quot;</span>, <span class="string">&quot;r&quot;</span>);</span><br><span class="line"></span><br><span class="line">fseek(fp, <span class="number">16</span>, SEEK_SET); <span class="comment">// 将文件指针移动到第16个字节的位置</span></span><br><span class="line"><span class="type">char</span> c = fgetc(fp);      <span class="comment">// 获取当前文件指针的字节</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;%c&quot;</span>, c);</span><br><span class="line">fclose(fp);</span><br></pre></td></tr></table></figure>
+
+<p>也就是说，按照逻辑结构，我们认为第16个位置就是那个字符，每个字符顺序存放。</p>
+<p>然而操作系统视角如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701120446.png" alt="image.png"></p>
+<p>也就是说我们指定的 16 这个位置起始就是文件的逻辑地址，读取这个位置时使用系统调用 Read，操作系统会根据逻辑地址访问相应的物理地址，然后读取到具体的数据。这个文件的物理结构可能是顺序的，也有可能是索引结构的。</p>
+<h2 id="5-2-顺序文件"><a href="#5-2-顺序文件" class="headerlink" title="5.2 顺序文件"></a>5.2 顺序文件</h2><p>我们创建一个 Student 结构体，然后将结构体数组存储到文件中，也就生成了一个顺序文件：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">typeof <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">	<span class="type">int</span> number;</span><br><span class="line">	<span class="type">char</span> name[<span class="number">30</span>];</span><br><span class="line">	<span class="type">char</span> major[<span class="number">30</span>];</span><br><span class="line">&#125; Student_info;   <span class="comment">// sizeof(Student_info) = 64B</span></span><br><span class="line"></span><br><span class="line">FILE *fp = fopen(<span class="string">&quot;students.info&quot;</span>, <span class="string">&quot;w&quot;</span>);</span><br><span class="line"></span><br><span class="line">Student_info student[N];</span><br><span class="line"></span><br><span class="line"><span class="comment">// ... 省略填充数组过程</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 写入，具体数据是这个数组，每一项 sizeof 长度，总共 N 项，往 fp 里面写</span></span><br><span class="line">fwrite(student, <span class="keyword">sizeof</span>(Student_info), N, fp);</span><br><span class="line">fclose(fp);</span><br></pre></td></tr></table></figure>
+
+<p>然后我们想要读取第6个学生的数据：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">FILE *fp = fopen(<span class="string">&quot;students.info&quot;</span>, <span class="string">&quot;r&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 将文件指针移到第六个学生开头，也就是前面有 5 * sizeof(Student_info) 长度</span></span><br><span class="line">fseek(fp, <span class="number">5</span> * <span class="keyword">sizeof</span>(Student_info), SEEK_SET);</span><br><span class="line"></span><br><span class="line">Student_info stu;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 从文件指针开始，往后读取 1 项 sizeof(Student_info) 长度数据，填充到 stu 中</span></span><br><span class="line">fread(&amp;stu, <span class="keyword">sizeof</span>(Student_info), <span class="number">1</span>, fp);</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;stu number: %d&quot;</span>, stu.number);</span><br><span class="line">fclose(fp);</span><br></pre></td></tr></table></figure>
+
+<p>这个逻辑结构很清晰，存的时候顺序存，取得时候跳过前面的数据取一定长度，起码在我们用户的角度，我们认为这个文件是连续的。</p>
+<p>同理在物理上文件不一定是连续存储的，我们给出了逻辑地址，操作系统会去对应的物理地址上访问数据。</p>
+<p>如果在此基础上，我们让 Student_info 数组变为链表，也就是之前说的顺序存储中的链式存储，给 Student_info 里面添加一个数组下标代表下一个指向的信息，物理上不会变的。</p>
+<p>区分：</p>
+<ul>
+<li>链式存储：逻辑上的概念，各个数据项之间有前后关系，但是具体到物理上可不一定是链式的</li>
+<li>链接分配：物理上的概念，操作系统负责将各个磁盘块链接起来，不代表数据本来是链表，文件仍然有可能是流式文件。</li>
+</ul>
+<h2 id="5-3-总结"><a href="#5-3-总结" class="headerlink" title="5.3 总结"></a>5.3 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701122520.png" alt="image.png"></p>
+<h1 id="6-文件存储空间管理"><a href="#6-文件存储空间管理" class="headerlink" title="6. 文件存储空间管理"></a>6. 文件存储空间管理</h1><p>第四章主要说的是操作系统对非空闲磁盘块的管理，这一章就是操作系统对空闲磁盘块的管理。</p>
+<h2 id="6-1-存储空间的划分与初始化"><a href="#6-1-存储空间的划分与初始化" class="headerlink" title="6.1 存储空间的划分与初始化"></a>6.1 存储空间的划分与初始化</h2><p>拿到一块磁盘后，我们首先要给磁盘分区，比如 C盘 D盘这种，这种就是将一个物理磁盘划分为一个个<font color='red'>文件卷</font>（逻辑卷、逻辑盘）。存储空间会进行初始化，将各个文件卷划分为目录区、文件区。</p>
+<p>目录区主要存放文件目录信息（FCB）、用于磁盘存储空间管理的信息。文件区自然就是用户存放文件。</p>
+<p>有的系统支持超大型文件，可以支持由多个物理磁盘组成一个文件卷。</p>
+<h2 id="6-2-管理方法"><a href="#6-2-管理方法" class="headerlink" title="6.2 管理方法"></a>6.2 管理方法</h2><p>主要就是理解三个问题：</p>
+<ul>
+<li>用什么方式记录、组织空闲块</li>
+<li>如何分配磁盘块</li>
+<li>如何回收磁盘块</li>
+</ul>
+<h3 id="6-2-1-空闲表法"><a href="#6-2-1-空闲表法" class="headerlink" title="6.2.1 空闲表法"></a>6.2.1 空闲表法</h3><p>这种适用于“连续分配”方式。给磁盘建立一张空闲表，里面记录第一个空闲块号和与之相连的空闲块的个数（包括第一个）。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701124650.png" alt="image.png"></p>
+<p>这里的首次适应、最佳适应、最坏适应都在之前遇到过，这里再提一句：</p>
+<ul>
+<li>首次适应：根据空闲表，找到第一个合适的空闲区直接分配</li>
+<li>最佳适应：从小到大排序，分配最小的空闲空间</li>
+<li>最坏适应：从大到小排序，分配最大的空闲空间</li>
+</ul>
+<p>回收的话和之前的页表也是一样的，要考虑回收后空闲表是新增还是扩充某一项。很简单，不说了。</p>
+<h3 id="6-2-2-空闲链表法"><a href="#6-2-2-空闲链表法" class="headerlink" title="6.2.2 空闲链表法"></a>6.2.2 空闲链表法</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701154245.png" alt="image.png"></p>
+<p>分配与回收：</p>
+<p>空闲盘块链：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701155755.png" alt="image.png"></p>
+<p>空闲盘区链：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701155926.png" alt="image.png"></p>
+<h3 id="6-2-3-位示意图"><a href="#6-2-3-位示意图" class="headerlink" title="6.2.3 位示意图"></a>6.2.3 位示意图</h3><p>最常考的一种方法，就是用一张二进制位表来表示磁盘块是否空闲。这个表的行叫字号，列叫位号，就可以通过（字号，位号）推出具体的磁盘块号。这个事需要重点掌握的。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701160451.png" alt="image.png"></p>
+<p>如果字号和位号都是从0开始，那么 （i，j）对应的磁盘块号&#x3D; ni + j（n是位长度）。b号盘块对应的字号 i &#x3D; b &#x2F; n，位号 j &#x3D; b % n。</p>
+<p>字号位号从1开始的话得改一下了，不多说了。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701160754.png" alt="image.png"></p>
+<p>这种方式连续分配和离散分配都适用。</p>
+<h3 id="6-2-4-成组链接法"><a href="#6-2-4-成组链接法" class="headerlink" title="6.2.4 成组链接法"></a>6.2.4 成组链接法</h3><p>空闲表法、空闲链表法不适用于大型文件系统，因为空闲表和空闲链表可能过大。UNIX 系统采用了成组链接法对磁盘空闲块进行管理。</p>
+<p><strong>文件卷的目录区</strong>中专门用一个磁盘块作为<font color='red'>超级块</font>，当系统启动时需要将超级块读入内存，并保证内存中的和外存中的数据一致。</p>
+<h2 id="6-3-总结"><a href="#6-3-总结" class="headerlink" title="6.3 总结"></a>6.3 总结</h2><p> <img src="https://gitee.com/pthef/imgrepo/raw/master/20230701162632.png" alt="image.png"></p>
+<h1 id="7-文件的基本操作"><a href="#7-文件的基本操作" class="headerlink" title="7. 文件的基本操作"></a>7. 文件的基本操作</h1><p>操作系统向上提供的几种基本功能（系统调用）：</p>
+<ul>
+<li>创建文件 create 系统调用</li>
+<li>删除文件 delete 系统调用</li>
+<li>读文件 read 系统调用</li>
+<li>写文件 write 系统调用</li>
+<li>打开文件 open 系统调用</li>
+<li>关闭文件 close 系统调用</li>
+</ul>
+<h2 id="7-1-创建文件"><a href="#7-1-创建文件" class="headerlink" title="7.1 创建文件"></a>7.1 创建文件</h2><p>在电脑中新建一个文件，背后就调用了 “create系统调用”。进行 create 系统调用时，需要提供的几个主要参数：</p>
+<ul>
+<li>所需要分配的外存空间大小，比如分配一个盘块 1KB。</li>
+<li>文件存放路径，比如 D:&#x2F;demo</li>
+<li>文件名</li>
+</ul>
+<p>操作系统进行 create 时，主要做了两件事：</p>
+<ul>
+<li>外存中找到文件所需的空间，使用上面说到的各个方法找到空闲空间</li>
+<li>根据文件存放路径的信息找到该目录对应的目录文件，在目录中创建该文件对应的目录项。</li>
+</ul>
+<h2 id="7-2-删除文件"><a href="#7-2-删除文件" class="headerlink" title="7.2 删除文件"></a>7.2 删除文件</h2><p>我们在系统中删除文件，背后就调用了 “delete系统调用”。调用delete需要两个参数：</p>
+<ul>
+<li>文件存放路径</li>
+<li>文件名</li>
+</ul>
+<p>操作系统在 Delete 时，主要做了两件事：</p>
+<ul>
+<li>根据文件存放路径找到对应的目录文件，从目录文件中找到该文件名对应的目录项也就是 FCB。</li>
+<li>根据目录项纪录的文件信息，比如在外存中的存放位置、文件大小等，回收文件占用的磁盘块，根据前面分配的方式进行回收。</li>
+<li>删除目录文件中的目录项</li>
+</ul>
+<h2 id="7-3-打开文件"><a href="#7-3-打开文件" class="headerlink" title="7.3 打开文件"></a>7.3 打开文件</h2><p>在很多操作系统中，对文件操作之前要求用户先使用 open 系统调用“打开文件”，需要提供三个参数；</p>
+<ul>
+<li>文件存放路径</li>
+<li>文件名</li>
+<li>要对文件的操作类型，比如 r-只读，rw-读写</li>
+</ul>
+<p>操作系统处理 open 系统调用时，主要做了几件事：</p>
+<ul>
+<li>根据文件存放路径找到相应的目录文件，从目录中找到文件名对应的目录项，并检查该用户是否有指定的操作权限。</li>
+<li>内存中会有一个<font color='red'>打开文件表</font>，这个表用于记录OS中所有被打开的文件状态，检查完了以后会将该文件对应的 FCB 复制到打开文件表，并将对应表目的编号返回给用户。之后用户使用打开文件表的编号来指明要操作的文件。这样后面操作文件就不需要重新查目录了，加快访问速度。</li>
+</ul>
+<h3 id="7-3-1-打开文件表"><a href="#7-3-1-打开文件表" class="headerlink" title="7.3.1 打开文件表"></a>7.3.1 打开文件表</h3><p>每个用户进程都会有自己的一个打开文件表，OS自己还有一个打开文件表，整个系统只有一个。如果两个用户都打开了一个文件，两个用户的打开文件表都会指向系统打开文件表的同一项。所以系统的打开文件表里面还有一个字段：打开计数器，记录当前有多少个用户进程打开了文件。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701164705.png" alt="image.png"></p>
+<p>用户进程的打开文件表里面还有两个比较特殊的字段：</p>
+<ul>
+<li>读写指针：记录当前用户进程的文件指针在哪个位置</li>
+<li>访问权限：每个用户进程打开文件时的权限不一定一样，所以这个字段就放在了用户的打开文件表中。</li>
+</ul>
+<h2 id="7-4-关闭文件"><a href="#7-4-关闭文件" class="headerlink" title="7.4 关闭文件"></a>7.4 关闭文件</h2><p>进程使用完文件以后要关闭文件，OS处理 Close 系统调用时做了如下事情：</p>
+<ul>
+<li>将进程的打开文件表相应表项删除</li>
+<li>回收分配给该文件的内存空间等资源</li>
+<li>系统打开文件表的打开计数器 - 1，如果减到0，则删除表项。</li>
+</ul>
+<h2 id="7-5-读文件"><a href="#7-5-读文件" class="headerlink" title="7.5 读文件"></a>7.5 读文件</h2><p>因为读文件之前已经 open 了这个文件，用户进程的打开文件表里面有了这个文件的FCB，且用户持有了打开文件表编号。只需要给出打开文件表编号即可定位要操作的文件。</p>
+<p>读文件也就是将文件读入内存，调用OS的“read系统调用”，需要指定：哪个文件、读入多少数据、读入的数据放到内存的什么位置。</p>
+<p>操作系统处理 read 系统调用时，从读指针指向的外存中，将用户指定大小的数据读入用户指定的内存区域。</p>
+<h2 id="7-6-写文件"><a href="#7-6-写文件" class="headerlink" title="7.6 写文件"></a>7.6 写文件</h2><p>和读文件同理，如果已经 open，只需要指定打开文件表编号即可。</p>
+<p>保存文件内存，就是将修改过的内存回写到外存，调用了OS的“write系统调用”，需要指明：哪个文件、写入多少数据、写回的数据放在内存的什么位置。</p>
+<p>OS处理时，会从用户指定的内存区域中将制定大小的数据写回写指针指向的外存。</p>
+<h2 id="7-7-总结"><a href="#7-7-总结" class="headerlink" title="7.7 总结"></a>7.7 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701165734.png" alt="image.png"></p>
+<h1 id="8-文件共享"><a href="#8-文件共享" class="headerlink" title="8. 文件共享"></a>8. 文件共享</h1><p>多个用户共享一个文件，意味着系统中只有“一份”文件数据。并且只要某个用户修改了该文件的数据，其他用户也可以看见文件数据的变化。这种效果“复制”达不到。</p>
+<h2 id="8-1-基于索引结点的共享方式"><a href="#8-1-基于索引结点的共享方式" class="headerlink" title="8.1 基于索引结点的共享方式"></a>8.1 基于索引结点的共享方式</h2><p>回忆一下索引结点：我们在查找文件的时候一般只需要通过文件名查找，所以可以将除了文件名以外的文件信息封装到一个索引结点中，目录文件中的目录项只需要包含文件名和指向索引结点的指针即可。</p>
+<p>索引结点中可以添加一个链接计数器count，用于表示链接到本索引结点上的用户目录项个数。如果 count &#x3D; 2，说明现在有两个用户目录项链接到该结点上，可以说两个用户在共享此文件。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701212159.png" alt="image.png"></p>
+<p>某个用户决定删除文件，只需要删除该用户的目录项，然后索引结点的 count - 1，等 count 真正减到0，再删除文件，否则说明还有其他用户要使用该文件。</p>
+<p>这种方式也叫 <font color='red'>硬链接</font>。</p>
+<h2 id="8-2-基于符号链的共享方式"><a href="#8-2-基于符号链的共享方式" class="headerlink" title="8.2 基于符号链的共享方式"></a>8.2 基于符号链的共享方式</h2><p>这个和 Windows 的快捷方式很像，还是上面的例子，User1和User2共享了文件1，然后现在来了一个User3，创建了一个文件 ccc，这个ccc也想共享文件1，咋办？可以通过软连接的方式，创建一个 Link 型的文件，记录文件1的存放路径。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701212646.png" alt="image.png"></p>
+<p>当 User3 访问 ccc 时，OS判断 ccc 属于 Link 型文件，于是会根据其中纪录的路径去找到 User1 目录表中的 aaa 表项，于是找到了文件1的索引结点。</p>
+<p>注意：他不是直接链接到物理文件，而是链接到其他用户的逻辑文件上，也就是其他用户的目录表项。</p>
+<h2 id="8-3-总结"><a href="#8-3-总结" class="headerlink" title="8.3 总结"></a>8.3 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701212856.png" alt="image.png"></p>
+<h1 id="9-文件保护"><a href="#9-文件保护" class="headerlink" title="9. 文件保护"></a>9. 文件保护</h1><h2 id="9-1-口令保护"><a href="#9-1-口令保护" class="headerlink" title="9.1 口令保护"></a>9.1 口令保护</h2><p>为文件设置一个“口令”，用户请求访问该文件时必须提供口令。一般这个口令会存放在 FCB 或者索引结点中，操作系统会拿到你的口令去对比。</p>
+<p>保存口令的空间开销不多，验证口令的时间开销也很小。但是正确的“口令”存放在系统内部，不够安全。</p>
+<h2 id="9-2-加密保护"><a href="#9-2-加密保护" class="headerlink" title="9.2 加密保护"></a>9.2 加密保护</h2><p>使用某个“密码”对文件进行加密，访问文件时需要提供正确的密码才能对文件进行正确的解密。最简单的就是<strong>异或加密</strong>。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701214305.png" alt="image.png"></p>
+<p>很简单，只需要用密码依次的对数据进行异或运算即可加密，解密同理也是异或运算，只要加密解密提供的密码一样，就可以得到正确的结果。</p>
+<p>这种方式的好处就是保密性强，不需要在系统中存储“密码”。去诶单就是编码&#x2F;译码要花费一定的时间。</p>
+<h2 id="9-3-访问控制"><a href="#9-3-访问控制" class="headerlink" title="9.3 访问控制"></a>9.3 访问控制</h2><p>每个文件的 FCB 或者索引结点中都增加一个<font color='red'>访问控制表 ACL</font>，该表中记录了各个用户可以对该文件执行哪些操作。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701214639.png" alt="image.png"></p>
+<p>精简的访问列表：直接把各个用户分成好多组，每一组赋予一定的权限，当用户要访问文件时，OS会检查该用户所数组是否有相应的权限。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701215237.png" alt="image.png"></p>
+<h2 id="9-4-总结"><a href="#9-4-总结" class="headerlink" title="9.4 总结"></a>9.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230701215441.png" alt="image.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-09-%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98/" rel="prev" title="09.虚拟内存">
+      <i class="fa fa-chevron-left"></i> 09.虚拟内存
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/12/OS-11-%E6%96%87%E4%BB%B6%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84/" rel="next" title="11.文件层次结构">
+      11.文件层次结构 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86%E6%A6%82%E5%BF%B5"><span class="nav-text">1. 文件管理概念</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%90%91%E4%B8%8A%E6%8F%90%E4%BE%9B%E7%9A%84%E5%8A%9F%E8%83%BD"><span class="nav-text">1.1 操作系统向上提供的功能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E6%96%87%E4%BB%B6%E5%A6%82%E4%BD%95%E5%AD%98%E6%94%BE%E5%9C%A8%E5%A4%96%E5%AD%98"><span class="nav-text">1.2 文件如何存放在外存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E6%80%BB%E7%BB%93"><span class="nav-text">1.3 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E6%96%87%E4%BB%B6%E7%9A%84%E9%80%BB%E8%BE%91%E7%BB%93%E6%9E%84"><span class="nav-text">2. 文件的逻辑结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E6%97%A0%E7%BB%93%E6%9E%84%E6%96%87%E4%BB%B6"><span class="nav-text">2.1 无结构文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E6%9C%89%E7%BB%93%E6%9E%84%E6%96%87%E4%BB%B6"><span class="nav-text">2.2 有结构文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-1-%E9%A1%BA%E5%BA%8F%E6%96%87%E4%BB%B6"><span class="nav-text">2.2.1 顺序文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-2-%E7%B4%A2%E5%BC%95%E6%96%87%E4%BB%B6"><span class="nav-text">2.2.2 索引文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-3-%E7%B4%A2%E5%BC%95%E9%A1%BA%E5%BA%8F%E6%96%87%E4%BB%B6"><span class="nav-text">2.2.3 索引顺序文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-4-%E5%A4%9A%E7%BA%A7%E7%B4%A2%E5%BC%95%E8%A1%A8"><span class="nav-text">2.2.4 多级索引表</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E6%80%BB%E7%BB%93"><span class="nav-text">2.3 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E6%96%87%E4%BB%B6%E7%9B%AE%E5%BD%95"><span class="nav-text">3. 文件目录</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E6%96%87%E4%BB%B6%E6%8E%A7%E5%88%B6%E5%9D%97"><span class="nav-text">3.1 文件控制块</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-text">3.2 目录结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-1-%E5%8D%95%E7%BA%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-text">3.2.1 单级目录结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-2-%E4%B8%A4%E7%BA%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-text">3.2.2 两级目录结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-3-%E5%A4%9A%E7%BA%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-text">3.2.3 多级目录结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-4-%E6%97%A0%E7%8E%AF%E5%9B%BE%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-text">3.2.4 无环图目录结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E7%B4%A2%E5%BC%95%E7%BB%93%E7%82%B9"><span class="nav-text">3.3 索引结点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-%E6%80%BB%E7%BB%93"><span class="nav-text">3.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E6%96%87%E4%BB%B6%E7%9A%84%E7%89%A9%E7%90%86%E7%BB%93%E6%9E%84"><span class="nav-text">4. 文件的物理结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E6%96%87%E4%BB%B6%E5%9D%97%E3%80%81%E7%A3%81%E7%9B%98%E5%9D%97"><span class="nav-text">4.1 文件块、磁盘块</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E8%BF%9E%E7%BB%AD%E5%88%86%E9%85%8D"><span class="nav-text">4.2 连续分配</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-1-%E4%BC%98%E7%82%B9"><span class="nav-text">4.2.1 优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-2-%E7%BC%BA%E7%82%B9"><span class="nav-text">4.2.2 缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E9%93%BE%E6%8E%A5%E5%88%86%E9%85%8D"><span class="nav-text">4.3 链接分配</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-1-%E9%9A%90%E5%BC%8F%E9%93%BE%E6%8E%A5"><span class="nav-text">4.3.1 隐式链接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-2-%E6%98%BE%E5%BC%8F%E9%93%BE%E6%8E%A5"><span class="nav-text">4.3.2 显式链接</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E7%B4%A2%E5%BC%95%E5%88%86%E9%85%8D"><span class="nav-text">4.4 索引分配</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-1-%E5%A6%82%E4%BD%95%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2"><span class="nav-text">4.4.1 如何地址转换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-2-%E7%B4%A2%E5%BC%95%E5%88%86%E9%85%8D-%E9%93%BE%E6%8E%A5%E6%96%B9%E6%A1%88"><span class="nav-text">4.4.2 索引分配-链接方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-3-%E7%B4%A2%E5%BC%95%E5%88%86%E9%85%8D-%E5%A4%9A%E9%9B%86%E7%B4%A2%E5%BC%95"><span class="nav-text">4.4.3 索引分配-多集索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-4-%E7%B4%A2%E5%BC%95%E5%88%86%E9%85%8D-%E6%B7%B7%E5%90%88%E7%B4%A2%E5%BC%95"><span class="nav-text">4.4.4 索引分配-混合索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-5-%E6%80%BB%E7%BB%93"><span class="nav-text">4.4.5 总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E6%80%BB%E7%BB%93"><span class="nav-text">4.5 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E9%80%BB%E8%BE%91%E7%BB%93%E6%9E%84-VS-%E7%89%A9%E7%90%86%E7%BB%93%E6%9E%84"><span class="nav-text">5. 逻辑结构 VS 物理结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E6%B5%81%E5%BC%8F%E6%96%87%E4%BB%B6"><span class="nav-text">5.1 流式文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E9%A1%BA%E5%BA%8F%E6%96%87%E4%BB%B6"><span class="nav-text">5.2 顺序文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E6%80%BB%E7%BB%93"><span class="nav-text">5.3 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E6%96%87%E4%BB%B6%E5%AD%98%E5%82%A8%E7%A9%BA%E9%97%B4%E7%AE%A1%E7%90%86"><span class="nav-text">6. 文件存储空间管理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E5%AD%98%E5%82%A8%E7%A9%BA%E9%97%B4%E7%9A%84%E5%88%92%E5%88%86%E4%B8%8E%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-text">6.1 存储空间的划分与初始化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-%E7%AE%A1%E7%90%86%E6%96%B9%E6%B3%95"><span class="nav-text">6.2 管理方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-1-%E7%A9%BA%E9%97%B2%E8%A1%A8%E6%B3%95"><span class="nav-text">6.2.1 空闲表法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-2-%E7%A9%BA%E9%97%B2%E9%93%BE%E8%A1%A8%E6%B3%95"><span class="nav-text">6.2.2 空闲链表法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-3-%E4%BD%8D%E7%A4%BA%E6%84%8F%E5%9B%BE"><span class="nav-text">6.2.3 位示意图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-4-%E6%88%90%E7%BB%84%E9%93%BE%E6%8E%A5%E6%B3%95"><span class="nav-text">6.2.4 成组链接法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-3-%E6%80%BB%E7%BB%93"><span class="nav-text">6.3 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-%E6%96%87%E4%BB%B6%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%93%8D%E4%BD%9C"><span class="nav-text">7. 文件的基本操作</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#7-1-%E5%88%9B%E5%BB%BA%E6%96%87%E4%BB%B6"><span class="nav-text">7.1 创建文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-2-%E5%88%A0%E9%99%A4%E6%96%87%E4%BB%B6"><span class="nav-text">7.2 删除文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-3-%E6%89%93%E5%BC%80%E6%96%87%E4%BB%B6"><span class="nav-text">7.3 打开文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-3-1-%E6%89%93%E5%BC%80%E6%96%87%E4%BB%B6%E8%A1%A8"><span class="nav-text">7.3.1 打开文件表</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-4-%E5%85%B3%E9%97%AD%E6%96%87%E4%BB%B6"><span class="nav-text">7.4 关闭文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-5-%E8%AF%BB%E6%96%87%E4%BB%B6"><span class="nav-text">7.5 读文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-6-%E5%86%99%E6%96%87%E4%BB%B6"><span class="nav-text">7.6 写文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-7-%E6%80%BB%E7%BB%93"><span class="nav-text">7.7 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#8-%E6%96%87%E4%BB%B6%E5%85%B1%E4%BA%AB"><span class="nav-text">8. 文件共享</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#8-1-%E5%9F%BA%E4%BA%8E%E7%B4%A2%E5%BC%95%E7%BB%93%E7%82%B9%E7%9A%84%E5%85%B1%E4%BA%AB%E6%96%B9%E5%BC%8F"><span class="nav-text">8.1 基于索引结点的共享方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-2-%E5%9F%BA%E4%BA%8E%E7%AC%A6%E5%8F%B7%E9%93%BE%E7%9A%84%E5%85%B1%E4%BA%AB%E6%96%B9%E5%BC%8F"><span class="nav-text">8.2 基于符号链的共享方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-3-%E6%80%BB%E7%BB%93"><span class="nav-text">8.3 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#9-%E6%96%87%E4%BB%B6%E4%BF%9D%E6%8A%A4"><span class="nav-text">9. 文件保护</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#9-1-%E5%8F%A3%E4%BB%A4%E4%BF%9D%E6%8A%A4"><span class="nav-text">9.1 口令保护</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-2-%E5%8A%A0%E5%AF%86%E4%BF%9D%E6%8A%A4"><span class="nav-text">9.2 加密保护</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-3-%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6"><span class="nav-text">9.3 访问控制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-4-%E6%80%BB%E7%BB%93"><span class="nav-text">9.4 总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

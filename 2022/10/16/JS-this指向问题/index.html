@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="之前的JS一直就学了个皮毛，this问题倒是也不咋碰到所以不咋重视，结果这次做项目发现this我是一点也不懂，所以就百度了好久，总结了一下 JS 里面的this到底是个啥。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JS-this指向问题">
+<meta property="og:url" content="http://example.com/2022/10/16/JS-this%E6%8C%87%E5%90%91%E9%97%AE%E9%A2%98/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="之前的JS一直就学了个皮毛，this问题倒是也不咋碰到所以不咋重视，结果这次做项目发现this我是一点也不懂，所以就百度了好久，总结了一下 JS 里面的this到底是个啥。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-10-16T08:19:05.000Z">
+<meta property="article:modified_time" content="2022-10-17T05:42:20.507Z">
+<meta property="article:author" content="PtheF">
+<meta property="article:tag" content="js">
+<meta property="article:tag" content="前端">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2022/10/16/JS-this%E6%8C%87%E5%90%91%E9%97%AE%E9%A2%98/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>JS-this指向问题 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/16/JS-this%E6%8C%87%E5%90%91%E9%97%AE%E9%A2%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JS-this指向问题
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-10-16 16:19:05" itemprop="dateCreated datePublished" datetime="2022-10-16T16:19:05+08:00">2022-10-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-10-17 13:42:20" itemprop="dateModified" datetime="2022-10-17T13:42:20+08:00">2022-10-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JS/" itemprop="url" rel="index"><span itemprop="name">JS</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>之前的JS一直就学了个皮毛，this问题倒是也不咋碰到所以不咋重视，结果这次做项目发现this我是一点也不懂，所以就百度了好久，总结了一下 JS 里面的this到底是个啥。</p>
+<span id="more"></span>
+
+<blockquote>
+<p>create by P-F on 2022&#x2F;10&#x2F;16</p>
+</blockquote>
+<h1 id="1-function-作为对象"><a href="#1-function-作为对象" class="headerlink" title="1. function 作为对象"></a>1. function 作为对象</h1><p>JS 里面的 function 与其说是函数，不如说是我们理解的方法，Java 里面的方法中的 this 就是指向的当前类的实例化对象，JS 的 function 也一样，在 function 作为普通方法调用的时候，function 内的 this 指向的就是当前 function 所在的对象。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> user = &#123;</span><br><span class="line">    <span class="attr">name</span>: <span class="string">&quot;jack&quot;</span>,</span><br><span class="line">    <span class="attr">age</span>: <span class="number">20</span>,</span><br><span class="line">    <span class="attr">hello</span>: <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">        <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`hello, i&#x27;m <span class="subst">$&#123;<span class="variable language_">this</span>.name&#125;</span>, i&#x27;m <span class="subst">$&#123;<span class="variable language_">this</span>.age&#125;</span> years old`</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面这个例子中，this 就指向的是当前 hello 方法的所属对象 user，所以就可以使用 <code>this.name</code> 这种的来访问对象的成员。</p>
+<h1 id="2-function-作为函数"><a href="#2-function-作为函数" class="headerlink" title="2. function 作为函数"></a>2. function 作为函数</h1><p>如果说 function 没有在对象内，而是直接放在了上下文中，比如直接放在了 script 标签内，那么 function 的 this 其实也同理指向了 function 的所属对象，但是这个时候 function 的所属对象就变成了 function 的上下文。</p>
+<p>举个例子：如果 function 直接放在了 script 标签内，那么就可以理解成这个对象是当前页面 window 对象的方法，所以 function 的 this 就会指向 window，那如果在 nodejs 环境中，function 直接写在文件内，那么 this 就指向了 nodejs 中的上下文对象 <code>global</code>。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;</span><br><span class="line">    <span class="keyword">function</span> <span class="title function_">a</span>(<span class="params"></span>) &#123;<span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>)&#125;</span><br><span class="line">    <span class="title function_">a</span>()</span><br><span class="line"></span><br><span class="line">    &lt;!-- <span class="variable language_">window</span>&#123;...&#125; --&gt;</span><br><span class="line">&lt;/script&gt;</span><br><span class="line"></span><br><span class="line"><span class="comment">// nodejs:</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">a</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">a</span>()</span><br><span class="line"></span><br><span class="line"><span class="comment">// Object [global]...</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="3-this-不可继承"><a href="#3-this-不可继承" class="headerlink" title="3. this 不可继承"></a>3. this 不可继承</h1><p>如果出现了嵌套函数，那内层函数的 this 又变成谁了？</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> obj = &#123;</span><br><span class="line">    <span class="attr">a</span>: <span class="number">10</span>,</span><br><span class="line">    <span class="attr">b</span>: <span class="number">20</span>,</span><br><span class="line"></span><br><span class="line">    <span class="attr">foo</span>: <span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">        <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> c = <span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">            <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="title function_">c</span>()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">obj.<span class="title function_">foo</span>()</span><br></pre></td></tr></table></figure>
+
+<p>这里分析一下：外层的 foo 方法是 obj 对象的方法，所以 foo 方法内的 this 肯定是指向了 obj，这个没毛病，但是里面的 c 函数也是指向了 obj 么？结果显示并非，内层函数的 this 仍然是 window，似乎也好理解，因为 c 函数虽然在obj 对象的方法内部，但是本身并不属于某个对象，所以 this 还是 window。</p>
+<p>那怎么改才能让内层的函数可以访问 obj？</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> obj = &#123;</span><br><span class="line">    <span class="attr">self</span>: <span class="variable language_">this</span>,</span><br><span class="line"></span><br><span class="line">    <span class="attr">foo</span>: <span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">        (<span class="keyword">function</span>(<span class="params"></span>)&#123;</span><br><span class="line">            <span class="variable language_">console</span>.<span class="title function_">log</span>(self)</span><br><span class="line">        &#125;)()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">obj.<span class="title function_">foo</span>()</span><br></pre></td></tr></table></figure>
+
+<p>这样就可以了。</p>
+<h1 id="4-function-作为构造函数"><a href="#4-function-作为构造函数" class="headerlink" title="4. function 作为构造函数"></a>4. function 作为构造函数</h1><p>这里就涉及到了 JS 面向对象的内容了，面向对象还涉及到 JS 的原型和原型链，以后会详细看的，目前还不会。只是大致说一下：function 可以作为构造函数，使用 new 关键字可以创建对象，看下面的例子：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Person</span>(<span class="params">name, age</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> &#123;<span class="attr">name</span>: name, <span class="attr">age</span>: age&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> p = <span class="title class_">Person</span>(<span class="string">&#x27;jack&#x27;</span>, <span class="number">20</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">User</span>(<span class="params">name, age</span>) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 这里的 this 不代表 window 了，而是代表当前要构造的对象 &#123;  &#125;</span></span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">name</span> = name</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">age</span> = age</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">hello</span> = <span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">        <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`hello, i&#x27;m <span class="subst">$&#123;<span class="variable language_">this</span>.name&#125;</span>, i&#x27;m <span class="subst">$&#123;<span class="variable language_">this</span>.age&#125;</span> years old`</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> u = <span class="keyword">new</span> <span class="title class_">User</span>(<span class="string">&#x27;jack&#x27;</span>, <span class="number">20</span>)</span><br><span class="line">u.<span class="title function_">hello</span>()</span><br></pre></td></tr></table></figure>
+
+<p>上面的例子里面，第一个 Person 方法，也可以创建一个对象，但是略有点麻烦，那么就可以使用下面这种办法：使用 new 关键字来创建对象。</p>
+<p>new 后面跟一个函数，然后函数会被当做构造函数执行，作为构造函数时，函数内的 this 就代表我要构造出来的这个对象。</p>
+<h1 id="5-箭头函数的this"><a href="#5-箭头函数的this" class="headerlink" title="5. 箭头函数的this"></a>5. 箭头函数的this</h1><p>而箭头函数中，this 又是另一番镜像。箭头函数中的 this 只是一个普通的变量，没错，就是一个普通的变量。根据函数作用域，当函数内访问变量时，会在函数声明的地方找这个变量，如果找不到，就会从声明位置往上找，比如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> a = <span class="number">10</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">a</span>(<span class="params"></span>)&#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(a)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">b</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">let</span> a = <span class="number">20</span></span><br><span class="line">    <span class="title function_">a</span>()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">b</span>()</span><br></pre></td></tr></table></figure>
+
+<p>这里会打印 10，为啥？因为 b 函数内调用 a 函数，a 函数要找 a 变量，从 a 的声明位置开始找，a 函数内没有，则往外找，也就找到了全局里面的 <code>let a = 10</code>。</p>
+<p>同理，调用一个箭头函数，对于箭头函数来说 this 就是一个普通变量，他会根据上面的原则去找这个 this 到底是个啥，比如：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="language-javascript"></span></span><br><span class="line"><span class="language-javascript">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>)</span></span><br><span class="line"><span class="language-javascript"></span></span><br><span class="line"><span class="language-javascript">    <span class="keyword">let</span> a = <span class="keyword">function</span>(<span class="params"></span>) &#123; <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>) &#125;</span></span><br><span class="line"><span class="language-javascript">    <span class="keyword">let</span> <span class="title function_">b</span> = (<span class="params"></span>) =&gt; &#123; <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>) &#125;</span></span><br><span class="line"><span class="language-javascript"></span></span><br><span class="line"><span class="language-javascript">    <span class="title function_">a</span>()</span></span><br><span class="line"><span class="language-javascript">    <span class="title function_">b</span>()</span></span><br><span class="line"><span class="language-javascript"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这俩输出的 this 全是 window，为啥？因为在 script 标签内，this 就是 window，a 函数看作是 window 的方法，所以 a 的 this 是 window，但是 b 不一样，b 函数里面找 this，没找到，就去 b 的上层作用域里面找，也就是 script 标签内，结果发现了 script 标签内有 this，还是 window，所以 b 打印 this 也是 window。</p>
+<p>这里虽然俩 this 都是 window，但意义是不一样的，在 nodejs 环境：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> a = <span class="keyword">function</span>(<span class="params"></span>) &#123; <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>) &#125;</span><br><span class="line"><span class="keyword">let</span> <span class="title function_">b</span> = (<span class="params"></span>) =&gt; &#123; <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>) &#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">a</span>()</span><br><span class="line"><span class="title function_">b</span>()</span><br></pre></td></tr></table></figure>
+
+<p>这回就不一样了，a 出来的 this 是 global，而 b 的 this 就是 { }，因为 nodejs 中，函数的看做是 global 的方法，但是这个 global 可不是这个 js 文件的作用域，一个 js 文件里面默认就有一个对象 this &#x3D; {}，所以调用 b 函数找 this 就找到了 { }。</p>
+<p>一句这个特性，我们就可以优化上面提到的 this 继承问题：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> obj = &#123;</span><br><span class="line">    <span class="attr">a</span>: <span class="number">10</span>,</span><br><span class="line">    <span class="title function_">foo</span>(<span class="params"></span>) &#123;</span><br><span class="line">        <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> <span class="title function_">c</span> = (<span class="params"></span>) =&gt; &#123;</span><br><span class="line">            <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>.<span class="property">a</span>)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="title function_">c</span>()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">obj.<span class="title function_">foo</span>()</span><br></pre></td></tr></table></figure>
+
+<p>这次就可以正常让内层函数正确的访问到外层方法的 this 对象，原因也很简单，c 函数调用时，碰到了 this，但是不知道这个 this 是啥声明里面也没有，就跑到 c 的上层作用域也就是 foo 方法内去找 this，结果在 foo 里面找到了 this 也就是 obj 对象，所以就可以正确访问 obj 了。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/js/" rel="tag"># js</a>
+              <a href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag"># 前端</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/08/12/OPTIONS%E8%AF%B7%E6%B1%82BUG/" rel="prev" title="OPTIONS请求BUG">
+      <i class="fa fa-chevron-left"></i> OPTIONS请求BUG
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/10/17/%E9%A1%B5%E9%9D%A2%E9%98%B2%E6%8A%96-md/" rel="next" title="页面防抖">
+      页面防抖 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-function-%E4%BD%9C%E4%B8%BA%E5%AF%B9%E8%B1%A1"><span class="nav-text">1. function 作为对象</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-function-%E4%BD%9C%E4%B8%BA%E5%87%BD%E6%95%B0"><span class="nav-text">2. function 作为函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-this-%E4%B8%8D%E5%8F%AF%E7%BB%A7%E6%89%BF"><span class="nav-text">3. this 不可继承</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-function-%E4%BD%9C%E4%B8%BA%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0"><span class="nav-text">4. function 作为构造函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E7%AE%AD%E5%A4%B4%E5%87%BD%E6%95%B0%E7%9A%84this"><span class="nav-text">5. 箭头函数的this</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

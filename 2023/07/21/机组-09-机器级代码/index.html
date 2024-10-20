@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="这一章优点恶心了，主要就是学习汇编语言的一些基础知识，着重关注 x86 汇编语言。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="09-机器级代码">
+<meta property="og:url" content="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-09-%E6%9C%BA%E5%99%A8%E7%BA%A7%E4%BB%A3%E7%A0%81/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="这一章优点恶心了，主要就是学习汇编语言的一些基础知识，着重关注 x86 汇编语言。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715120616.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715121726.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715121847.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715121916.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715122324.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715125629.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715130017.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715152825.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715153425.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715154547.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715154923.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715155307.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715155732.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715160535.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715163723.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715164204.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715165826.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715233251.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715233958.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715234922.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715235516.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715235921.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715232657.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715233043.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230716154622.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230716155420.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230716160647.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230716162006.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230716162514.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230716163827.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230716163910.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230716165731.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230716165659.png">
+<meta property="article:published_time" content="2023-07-21T10:01:18.000Z">
+<meta property="article:modified_time" content="2023-07-21T10:08:45.032Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230715120616.png">
+
+<link rel="canonical" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-09-%E6%9C%BA%E5%99%A8%E7%BA%A7%E4%BB%A3%E7%A0%81/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>09-机器级代码 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-09-%E6%9C%BA%E5%99%A8%E7%BA%A7%E4%BB%A3%E7%A0%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          09-机器级代码
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-07-21 18:01:18 / 修改时间：18:08:45" itemprop="dateCreated datePublished" datetime="2023-07-21T18:01:18+08:00">2023-07-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">计算机组成原理</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这一章优点恶心了，主要就是学习汇编语言的一些基础知识，着重关注 x86 汇编语言。</p>
+<span id="more"></span>
+
+<p>先说一下啥叫机器级代码，一段C语言程序会被编译器编译成汇编，然后汇编器将其再转为机器语言。其中机器语言和汇编语言，都叫机器级代码。</p>
+<p>考试要求：</p>
+<ul>
+<li>只关注 x86 汇编语言；除非特别说明</li>
+<li>给出简单程序的C语言、汇编语言、机器语言表示。能结合 C 语言看懂汇编语言的关键语句，主要是常见指令、选择结构、循环结构、函数调用</li>
+<li>汇编语言、机器语言一一对应，能结合汇编语言分析机器语言的指令格式、寻址方式</li>
+<li>肯定不会让你写汇编。</li>
+</ul>
+<h1 id="1-x86-指令基础"><a href="#1-x86-指令基础" class="headerlink" title="1. x86 指令基础"></a>1. x86 指令基础</h1><h2 id="1-1-啥是-x86"><a href="#1-1-啥是-x86" class="headerlink" title="1.1 啥是 x86"></a>1.1 啥是 x86</h2><p>Intel 很早之前出了一款 CPU 叫 8086，这个 CPU 有一系列指令，往后的大部分 CPU 都兼容这个 8086 CPU 的指令，比如什么 80286，80386 这种玩意，都是 86 结尾。所以 8086 CPU 的指令集就是 x86 指令。</p>
+<h2 id="1-2-指令格式"><a href="#1-2-指令格式" class="headerlink" title="1.2 指令格式"></a>1.2 指令格式</h2><p>这个之前说过很久了，指令分为操作码和地址码，操作码指明如何处理，地址码指明数据在哪。而数据存放的位置就是三个地方：寄存器、主存、指令立即数。</p>
+<p>数据寻址这个东西，就是三个问题：</p>
+<ul>
+<li>如果数据在寄存器中，指令需要给出寄存器的名字，x86 CPU 里面有哪些寄存器？</li>
+<li>如果数据在主存中，如何在指令中指明读写长度</li>
+<li>如果数据是一个立即数，如何区分？</li>
+</ul>
+<p>我们以 mov 指令来举例：<code>mov 目的操作数d, 源操作数s</code>，指的就是将s复制到d所指的位置，可以有如下表达：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715120616.png" alt="image.png"></p>
+<p>总结：</p>
+<ul>
+<li>指令中如果出现 e 开头的东西，就是寄存器</li>
+<li>指令中出现一个数字，十进制或者十六进制，那就是立即数</li>
+<li>指令中出现中括号，里面是一个十六进制，指的就是主存地址，而前面的 dword ptr 这类标识指的是要从这个主存里面读多少字节，这里就是读双字32bit长度。如果没有写数据长度，默认就是双字。</li>
+</ul>
+<p>这里的中括号和之前的小括号一个意思，就是根据中括号里面的值去访存取值。</p>
+<h2 id="1-3-x86-寄存器"><a href="#1-3-x86-寄存器" class="headerlink" title="1.3 x86 寄存器"></a>1.3 x86 寄存器</h2><p>记住就好：x86 架构中，寄存器都是以 E 开头，指的是 Extend，大小都是 <font color='red'>32bit（两个字）</font>。总共有 8 个寄存器，分为三组：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715121726.png" alt="image.png"></p>
+<p>其中 ESI 和 EDI 俩不是很重要，知道是寄存器就行了，EBP 和 ESP 俩就很重要了。EBP 指向的是栈底。</p>
+<p>对于上面的四个通用寄存器，大小32bit，但是我们可以灵活的使用，可以只使用低16位，但是寄存器名字得变，去掉字母 E 即可，比如 <code>EAX -&gt; AX, EBX -&gt; BX</code>：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715121847.png" alt="image.png"></p>
+<p>甚至，我们可以将通用寄存器的低16位划分为两片，一片8位，高8位的空间叫 AH，低8位的空间叫 AL。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715121916.png" alt="image.png"></p>
+<p>考试的话最主要的还是 EAX - EDX，后面俩不常见。</p>
+<h2 id="1-4-例子"><a href="#1-4-例子" class="headerlink" title="1.4 例子"></a>1.4 例子</h2><p>指令里面的操作数地址可以配合中括号玩很多花活，可以实现寄存器间接寻址，寄存器间接完了还偏移寻址 这种操作：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715122324.png" alt="image.png"></p>
+<h1 id="2-常见-x86-汇编指令"><a href="#2-常见-x86-汇编指令" class="headerlink" title="2. 常见 x86 汇编指令"></a>2. 常见 x86 汇编指令</h1><h2 id="2-1-常见运算指令"><a href="#2-1-常见运算指令" class="headerlink" title="2.1 常见运算指令"></a>2.1 常见运算指令</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715125629.png" alt="image.png"></p>
+<p>需要着重说的是除法指令：<code>div s 和 idiv s</code>，这俩指令都是一个隐含寻址，s 是除数，在除法之前被除数会提前被安排到 edx 和 eax 两个寄存器中，因为这里需要进行一个位拓展，将 32位 的被除数扩展为 64位，然后 64位 除以 32位，64位 的除数就会放在 edx 和 eax 中。</p>
+<p>如果看到了这种指令：<code>add &lt;reg&gt;, &lt;mem&gt;; add &lt;mem&gt;, &lt;con&gt;</code>，mem 指的就是主存，reg 指的是寄存器，con 指的是常量。</p>
+<p>x86 规定，一条指令的两个操作数不能同时来自于主存，因为这样两次访存会很慢。同时靠左的操作数不能是常量，因为大部分时候计算结果要存回这里。</p>
+<h2 id="2-2-逻辑运算指令"><a href="#2-2-逻辑运算指令" class="headerlink" title="2.2 逻辑运算指令"></a>2.2 逻辑运算指令</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715130017.png" alt="image.png"></p>
+<h1 id="3-AT-amp-T-和-Intel-格式"><a href="#3-AT-amp-T-和-Intel-格式" class="headerlink" title="3. AT&amp;T 和 Intel 格式"></a>3. AT&amp;T 和 Intel 格式</h1><p>AT&amp;T 和 Intel 都是 x86 格式，AT&amp;T 是 Unix 和 Linux 常用的，Intel 是 Windows 常用格式。这里来看下两种指令格式的区别：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715152825.png" alt="image.png"></p>
+<p>其他的都好理解，最后面这个数据寻址方式：<code>基址 + 变址 x 比例因子 + 偏移量</code> 是干啥的？</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715153425.png" alt="image.png"></p>
+<p>比如土里创建了一个 Student 结构体，然后有一个结构体数组，每个元素 32B，我们要访问第四个学生信息的变量1，就可以在数组起始地址上往后偏移3 x 32B，找到了数据元素3，然后往里偏移 4B，就找到了变量1.</p>
+<h1 id="4-选择语句"><a href="#4-选择语句" class="headerlink" title="4. 选择语句"></a>4. 选择语句</h1><p>这里肯定就涉及到了指令跳转，计算机中指令跳转肯定是要涉及到 PC，在 x86 中，程序计数器 PC 通常叫 IP（Instruction Pointer）。</p>
+<h2 id="4-1-无条件跳转指令"><a href="#4-1-无条件跳转指令" class="headerlink" title="4.1 无条件跳转指令"></a>4.1 无条件跳转指令</h2><p>指令：<code>jmp &lt;地址&gt;</code>，指的就是无条件跳转到 &lt;地址&gt;，这个地址可以用常数 <code>jmp 128</code>，代表跳转到 128 地址的指令，也可以用寄存器来指定地址：<code>jmp eax</code>，或者来自主存：<code>jmp [999]</code> 。</p>
+<p>众所周知，如果把 JMP 后面的值写死，就会非常不灵活，所以编写汇编时，可以使用锚点：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715154547.png" alt="image.png"></p>
+<p>NEXT后面有个冒号就代表他是个锚点，锚点的名字可以自己起。</p>
+<p>无条件跳转指令没法直接进行条件判断。</p>
+<h2 id="4-2-条件跳转指令"><a href="#4-2-条件跳转指令" class="headerlink" title="4.2 条件跳转指令"></a>4.2 条件跳转指令</h2><p>需要先判断，再跳转：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715154923.png" alt="image.png"></p>
+<p>比如我们要实现一个 if，可以这么写：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cmp eax, ebx</span><br><span class="line">jg next</span><br></pre></td></tr></table></figure>
+
+<p>说的就是，比较 eax 和 ebx 寄存器里面的值，如果 eax &gt; ebx，则跳转到 next: 锚点。</p>
+<h2 id="4-3-举例"><a href="#4-3-举例" class="headerlink" title="4.3 举例"></a>4.3 举例</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715155307.png" alt="image.png"></p>
+<p>这里的跳转条件取了 a&gt;b 的否命题，来实现 if 部分和 else 部分和程序一致。也可以用 jg 来判断，只是if部分就需要放在后面，jg 后面如果不跳转需要紧跟着 else 部分。</p>
+<p>来看道题分析分析：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715155732.png" alt="image.png"></p>
+<p>着重看看 12 条指令：<code>jle f1+35h</code>，这里的 f1 可不是一个立即数，注意这是一个函数，函数名叫 f1，通常会将 f1 作为一个标号代表这个函数的起始地址，所以 <code>f1 + 35h</code> 意思是以这个函数的起始地址为基址，往后偏移 35h 。</p>
+<p>然后看看图里面，函数的基址是 <code>00401000</code>，往后偏移就是 <code>00401035</code>，往后找，就是第 21 条指令。</p>
+<h1 id="5-循环语句"><a href="#5-循环语句" class="headerlink" title="5. 循环语句"></a>5. 循环语句</h1><h2 id="5-1-条件跳转实现循环"><a href="#5-1-条件跳转实现循环" class="headerlink" title="5.1 条件跳转实现循环"></a>5.1 条件跳转实现循环</h2><p>就是用上面的条件跳转指令来实现：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715160535.png" alt="image.png"></p>
+<p>这里的 while 循环 和 for 循环是等价的，用 while 可能更好理解一些。需要注意的是：在循环之前（L1: 之前），需要首先进行一次判断（当然得反判断），如果发现条件成立，直接跳过循环到 L2: 即可。</p>
+<p>大致需要四个部分组成循环：</p>
+<ul>
+<li>循环前的初始化，也就是指令的前两句，初始化 result 为 0，初始化 i 为 1</li>
+<li>判断是否直接跳过循环，也就是第三四句，切记这里的判断要取否命题</li>
+<li>循环主题</li>
+<li>是否继续循环，就是 L2: 前面的判断+跳转，如果满足条件，返回循环入口</li>
+</ul>
+<h2 id="5-2-用loop指令实现循环"><a href="#5-2-用loop指令实现循环" class="headerlink" title="5.2 用loop指令实现循环"></a>5.2 用loop指令实现循环</h2><p>x86 中提供了一种 loop 指令：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715163723.png" alt="image.png"></p>
+<p>如果看到了 loopx 这种指令，可以从 C 语言代码倒推。</p>
+<h1 id="6-函数调用"><a href="#6-函数调用" class="headerlink" title="6. 函数调用"></a>6. 函数调用</h1><h2 id="6-1-函数调用栈"><a href="#6-1-函数调用栈" class="headerlink" title="6.1 函数调用栈"></a>6.1 函数调用栈</h2><p>这个和 JVM 几乎一个道理，函数调用的时候，会在主存中弄一个函数调用栈，首先执行 main 函数，就会向栈中压入 main 函数的栈桢，然后往后执行 P 函数，同样是压入 P 的栈桢，这时 P 的栈桢就在 main 栈桢上面，如果 P 函数执行完了，就会将 P 的栈桢弹出。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715164204.png" alt="image.png"></p>
+<p>栈桢里面保存着函数的局部变量、保存函数调用相关信息。</p>
+<h2 id="6-2-Call-amp-Ret-指令"><a href="#6-2-Call-amp-Ret-指令" class="headerlink" title="6.2 Call &amp; Ret 指令"></a>6.2 Call &amp; Ret 指令</h2><p>函数调用指令：<code>call &lt;函数名&gt;</code>，返回指令return: <code>ret</code>。给出以下代码，翻译成汇编指令为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">add</span><span class="params">(<span class="type">int</span> x, <span class="type">int</span> y)</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> x + y;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">caller</span><span class="params">()</span> &#123;</span><br><span class="line">	<span class="type">int</span> temp1 = <span class="number">125</span>;</span><br><span class="line">	<span class="type">int</span> temp2 = <span class="number">80</span>;</span><br><span class="line">	<span class="type">int</span> sum = add(temp1, temp2);</span><br><span class="line">	<span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715165826.png" alt="image.png"></p>
+<p>这个图还解释了调用函数的时候如何让 IP 寄存器（PC）指向被调用函数的位置，以及调用完函数咋回来：</p>
+<ul>
+<li>在 caller 调用期间调用 add 函数，首先把 IP 旧址放到栈里面，就是栈里面蓝色的那个，放在 caller 栈桢的上面，然后将 IP 设置为函数的起始地址，无条件跳转到add函数，压入栈桢</li>
+<li>add 函数执行完弹栈以后，从栈顶找到 IP 旧址，弹栈，恢复 IP 寄存器</li>
+</ul>
+<p>这里有一个地方前面说过了已经，函数一上来会用函数名设置一个标号，代表的就是这个函数的起始地址，对应的就是add函数里面的 <code>push ebp</code>，后面的 <code>mov eax, [ebp + 12]</code> 代表的就是在add函数内部，偏移 12 个地址。</p>
+<h2 id="6-3-如何访问栈桢数据"><a href="#6-3-如何访问栈桢数据" class="headerlink" title="6.3 如何访问栈桢数据"></a>6.3 如何访问栈桢数据</h2><h3 id="6-3-1-函数调用栈在内存中的位置"><a href="#6-3-1-函数调用栈在内存中的位置" class="headerlink" title="6.3.1 函数调用栈在内存中的位置"></a>6.3.1 函数调用栈在内存中的位置</h3><p>32位系统，进程虚拟空间是4GB：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715233251.png" alt="image.png"></p>
+<p>这个图的核心意思就是，栈顶处在低地址，栈底处在高地址，所以很多时候栈会倒过来画，符合主存，别不认识。</p>
+<p>这个可千万别看反了，我这还是改过来的，注意这里的主存可是上面是高地址，下面是低地址。</p>
+<h3 id="6-3-2-EBP-和-ESP"><a href="#6-3-2-EBP-和-ESP" class="headerlink" title="6.3.2 EBP 和 ESP"></a>6.3.2 EBP 和 ESP</h3><p>这俩寄存器之前说的是：</p>
+<ul>
+<li>EBP：堆栈基地址</li>
+<li>ESP：堆栈顶地址</li>
+</ul>
+<p>这里规范一下，EBP 会指向当前栈桢的底部，ESP 会指向栈桢的顶部，用这俩寄存器来给一个栈桢画范围：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715233958.png" alt="image.png"></p>
+<p>注：x86 系统中，默认以 4 字节为栈的操作单位。顺带一提，栈桢大小可不一样。</p>
+<p>往后对栈桢内数据的访问，都是基于 EBP 和 ESP 进行的。</p>
+<h3 id="6-3-3-Push-amp-Pop-指令"><a href="#6-3-3-Push-amp-Pop-指令" class="headerlink" title="6.3.3 Push &amp; Pop 指令"></a>6.3.3 Push &amp; Pop 指令</h3><p>push 和 pop 指令实现入栈、出栈操作，x86 默认以 4 字节为单位，指令格式如下：</p>
+<ul>
+<li><code>push &lt;&gt;</code>：先让 esp 减四，也就是往下挪一位（千万注意，栈顶是低地址，所以 esp 往栈顶走可是要做减法的），再将数据压入</li>
+<li><code>pop &lt;&gt;</code>：栈顶元素弹栈，将元素写入 &lt;&gt;，再让 esp 加四，就是往上挪一位</li>
+</ul>
+<p>下面举例：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715234922.png" alt="image.png"></p>
+<p>这个画个图看看就行了，这里看看第三个：<code>push [ebp + 8]</code>，就是说，将 ebp 往上两个位置的4字节元素，压入栈，相当于复制了一份，这个 ebp 往上俩位置，很显然就跑到别人栈桢上了。</p>
+<p>第五个：<code>pop [ebp + 8]</code> 就是说，弹出栈顶元素，然后 esp + 4，把弹出的元素放入 ebp 网上的两个位置，很好理解吧。</p>
+<p>但是这种方式还是有点复杂，这里说一种更简单的：</p>
+<h3 id="6-3-4-MOV-指令"><a href="#6-3-4-MOV-指令" class="headerlink" title="6.3.4 MOV 指令"></a>6.3.4 MOV 指令</h3><p>这个指令很简单：<code>mov &lt;a&gt;, &lt;b&gt;</code> 就是将 b 移动到 a，实际上就是一个复制操作，看看例子：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715235516.png" alt="image.png"></p>
+<p>第一个：<code>sub esp, 12</code>，给 esp - 12，相当于 esp 往下挪了三格，扩充了当前栈桢，后面 mov 就是疯狂复制，把寄存器里面的数写到栈桢里面，最后一步 <code>add esp, 8</code> 就是 esp + 8 往上挪了两格。</p>
+<h3 id="6-3-5-总结"><a href="#6-3-5-总结" class="headerlink" title="6.3.5 总结"></a>6.3.5 总结</h3><p>反正就是让 esp 或者 ebp 来回偏移来找到栈桢里面的元素，然后通过 mov 或者 pop 将元素存到一个位置。</p>
+<p>如果用 pop 的话，比如我们想把栈桢里面 ebp - 4 位置的元素存储 eax 寄存器，我们就需要先将 ebp - 4 的元素 push 到栈里，然后 pop 到 eax 中。相比较而言 mov 就简单很多：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715235921.png" alt="image.png"></p>
+<h2 id="6-4-如何切换栈桢"><a href="#6-4-如何切换栈桢" class="headerlink" title="6.4 如何切换栈桢"></a>6.4 如何切换栈桢</h2><p>当一个函数 caller 被调用的时候，ebp 和 esp 分别指向栈桢的栈底和栈顶：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715232657.png" alt="image.png"></p>
+<p>注：x86 系统中，默认以4字节为栈的操作单位。</p>
+<p>然后，caller 内部调用了 add 函数，就会把 add 的栈桢压到栈里面，这个时候 ebp 和 esp 就要移动，指向新栈桢的两端：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230715233043.png" alt="image.png"></p>
+<h3 id="6-4-1-调用函数时栈桢切换"><a href="#6-4-1-调用函数时栈桢切换" class="headerlink" title="6.4.1 调用函数时栈桢切换"></a>6.4.1 调用函数时栈桢切换</h3><p>首先调用函数时，需要把执行 call 指令：<code>call add</code>，这里 call 的作用是，将 IP 旧值压入到栈中，相当于 push IP，这时 esp 肯定就会 - 4。然后 PC 寄存器指向add函数的起始地址。</p>
+<p>执行add函数，函数汇编如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">add:</span><br><span class="line">push ebp</span><br><span class="line">move ebp, esp</span><br><span class="line">mov eax, [ebp + 12]</span><br><span class="line">mov edx, [ebp + 8]</span><br><span class="line">add eax, edx</span><br><span class="line">leave</span><br><span class="line">ret</span><br></pre></td></tr></table></figure>
+
+<p>这段啥意思？首先，将 ebp 的值压入栈，ebp 就是上一个函数的基地址，push 的同时 esp 肯定也会下移，然后 将 esp 复制到 ebp 上，也就是让 ebp 指向当前 esp 指向的位置，最终效果是这样的：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230716154622.png" alt="image.png"></p>
+<p>可以看到，蓝色的 IP 旧值是 call 执行的时候压入的，然后绿色的caller函数基地址是 push ebp 压入的。这样的话，每个函数栈桢的底部，都会存储着上一层函数的基地址，所以 <code>push ebp; mov ebp, esp</code> 这两句指令在函数开始的时候肯定会有（这两个指令也可以精简为 enter，不需要操作数）。</p>
+<p>然后我们就可以在执行 add 函数的时候压入一些数据。</p>
+<h3 id="6-4-2-调用结束如何返回"><a href="#6-4-2-调用结束如何返回" class="headerlink" title="6.4.2 调用结束如何返回"></a>6.4.2 调用结束如何返回</h3><p>这个很简单，只需要两条指令：<code>mov esp, ebp</code> 和 <code>pop ebp</code> ，即可让栈桢返回caller函数，为啥？</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230716155420.png" alt="image.png"></p>
+<p>看图，第一步 <code>mov esp, ebp</code> 就会实现这个效果，将 ebp 寄存器内的值复制一份给 esp 寄存器，即可实现 esp 和 ebp 都指向 ebp 的位置，显然 ebp 指向的就是 caller 函数的基址。</p>
+<p>然后第二步：<code>pop ebp</code> 就是弹栈，将 caller 函数的基址弹出，存入 ebp，同时 esp + 4 往上挪一位，就能让 ebp 重新指回 caller 基址，esp 指回 caller 栈桢顶部。</p>
+<p>这两条指令，等价于 <code>leave</code> 指令，效果一样，<code>leave</code> 同样是一个0地址指令。</p>
+<p>最后一步，执行 <code>ret</code> 指令，他会从栈桢顶部找到 IP 旧值，将其弹栈并恢复 IP 寄存器。</p>
+<h3 id="6-4-3-总结"><a href="#6-4-3-总结" class="headerlink" title="6.4.3 总结"></a>6.4.3 总结</h3><p>记住了，只要不是 main 函数，函数结构一定是这样的，一上来 <code>push ebp</code> 和 <code>mov ebp, esp</code>，或者说直接 <code>enter</code>，然后在结尾 <code>mov esp, ebp</code> 和 <code>pop ebp</code>。最后再来一个 <code>ret</code>。</p>
+<h2 id="6-5-栈桢包含信息"><a href="#6-5-栈桢包含信息" class="headerlink" title="6.5 栈桢包含信息"></a>6.5 栈桢包含信息</h2><p>给一段 C 语言程序：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">add</span><span class="params">(<span class="type">int</span> x, <span class="type">int</span> y)</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> x + y;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">caller</span><span class="params">()</span> &#123;</span><br><span class="line">	<span class="type">int</span> temp1 = <span class="number">125</span>;</span><br><span class="line">	<span class="type">int</span> temp2 = <span class="number">80</span>;</span><br><span class="line">	<span class="type">int</span> sum = add(temp1, temp2);</span><br><span class="line">	<span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>看看 caller 栈桢里面包含哪些信息：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230716160647.png" alt="image.png"></p>
+<p>说明一下：</p>
+<ul>
+<li>栈桢的顶部肯定是上一个栈桢的基址（ebp 旧值），栈顶肯定是返回地址。</li>
+<li>函数的局部变量一般集中存在栈底的位置，且C语言里越靠前的局部变量，越靠近栈顶。所以可以通过 <code>[ebp-4]</code> 、<code>[ebp-8]</code> 这种来访问局部变量。</li>
+<li>函数靠近栈顶的位置放着函数调用的入参，同样越先出现的参数，越靠近栈顶，代码里面 temp1 先出现，对应的 x 就更靠近栈顶。这样 add 函数执行时，可以通过 <code>[ebp + 8]</code> 、<code>[ebp + 12]</code> 来拿到入参。</li>
+</ul>
+<p>然后说一下为啥栈桢里面会有空白区域，因为 gcc 编译器规定，除了当前正在执行的栈桢，栈桢大小必须是 16B 的整数倍。之前说过这个栈的一行是 4B，当前正在执行 add 函数，所以add的栈桢不受限制，可以是一行 4B 也可以是两行 8B。但是如果 add 也要调用一个函数，gcc 一定会把 add 的栈桢凑到 16B 的整数倍。这么一凑可能就有空白区域了。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230716162006.png" alt="image.png"></p>
+<h2 id="6-6-函数传参例子"><a href="#6-6-函数传参例子" class="headerlink" title="6.6 函数传参例子"></a>6.6 函数传参例子</h2><p>还是上面 caller 和 add 函数的例子，我们详细看看汇编代码是如何实现传参和返回值的：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230716162514.png" alt="image.png"></p>
+<p>看 caller 函数：</p>
+<ul>
+<li>前两步不说，常规代码</li>
+<li><code>sub esp, 24</code>，给 esp - 24，让 esp 往下移动了6行，扩展栈桢，这个时候 esp 在 <code>0018</code> 那个位置。</li>
+<li><code>mov [ebp-12], 125</code> 和 <code>mov [ebp-8], 80</code>，初始化 temp1 和 temp2，注意这个时候 <code>[ebp-4]</code> 这个位置给空下了，用来以后保存 sum</li>
+<li><code>mov eax, [ebp-8]</code> &amp; <code>mov [esp+4], eax</code> 是在拷贝传参，将temp2复制到 eax，再将 eax 复制到 esp+4的位置，也就是 <code>001C</code>。往后的两个 mov 也是一个道理，将 temp1 存到 esp 位置。为啥需要把temp1存到 eax 在放回栈里？因为栈是主存，x86 规定指令的地址码不能都是主存</li>
+<li><code>call add</code> 执行 add 函数，esp+4，压入IP旧值，IP指向add函数基址，开始执行 add 函数</li>
+</ul>
+<p>来看 add 函数：</p>
+<ul>
+<li>上来两行不说</li>
+<li><code>mov eax, [ebp + 12]</code> &amp; <code>mov ebx, [ebp + 8]</code> 将上一个函数 caller 传来的两个参数放入寄存器</li>
+<li>执行加法操作，将结果保存到 <code>eax</code> 中</li>
+<li><code>leave</code> &amp; <code>ret</code> 不解释了，返回了 caller 函数</li>
+</ul>
+<p>回到 caller 函数</p>
+<ul>
+<li><code>mov [ebp - 4], eax</code>，add 函数将返回值存到了 eax中，这里就将 eax 中的值复制到 ebp-4 的位置，相当于接受了 sum 变量</li>
+<li><code>mov eax, [ebp - 4]</code>，这个是将 sum 存回 eax，相当于 <code>return sum</code></li>
+<li><code>leave</code> &amp; <code>ret</code> 不说了</li>
+</ul>
+<p>这里使用 eax 来传递函数调用的返回值，如果 caller 函数里面已经用 eax 存放了一些中间结果，咋办？可以在 call 之前，将寄存器中的一些值，压栈保存：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230716163827.png" alt="image.png"></p>
+<h1 id="6-7-总结"><a href="#6-7-总结" class="headerlink" title="6.7 总结"></a>6.7 总结</h1><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230716163910.png" alt="image.png"></p>
+<h1 id="7-CISC-amp-RISC"><a href="#7-CISC-amp-RISC" class="headerlink" title="7. CISC &amp; RISC"></a>7. CISC &amp; RISC</h1><p>看两张图就行：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230716165731.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230716165659.png" alt="image.png"></p>
+<p>这里有些新概念：控制方式、流水线。这个下一章就会学。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-08-%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F/" rel="prev" title="08-指令系统">
+      <i class="fa fa-chevron-left"></i> 08-指令系统
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-10-%E4%B8%AD%E5%A4%AE%E5%A4%84%E7%90%86%E5%99%A8/" rel="next" title="10-中央处理器">
+      10-中央处理器 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-x86-%E6%8C%87%E4%BB%A4%E5%9F%BA%E7%A1%80"><span class="nav-text">1. x86 指令基础</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E5%95%A5%E6%98%AF-x86"><span class="nav-text">1.1 啥是 x86</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F"><span class="nav-text">1.2 指令格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-x86-%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-text">1.3 x86 寄存器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-%E4%BE%8B%E5%AD%90"><span class="nav-text">1.4 例子</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E5%B8%B8%E8%A7%81-x86-%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4"><span class="nav-text">2. 常见 x86 汇编指令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E5%B8%B8%E8%A7%81%E8%BF%90%E7%AE%97%E6%8C%87%E4%BB%A4"><span class="nav-text">2.1 常见运算指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E9%80%BB%E8%BE%91%E8%BF%90%E7%AE%97%E6%8C%87%E4%BB%A4"><span class="nav-text">2.2 逻辑运算指令</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-AT-amp-T-%E5%92%8C-Intel-%E6%A0%BC%E5%BC%8F"><span class="nav-text">3. AT&amp;T 和 Intel 格式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E9%80%89%E6%8B%A9%E8%AF%AD%E5%8F%A5"><span class="nav-text">4. 选择语句</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E6%97%A0%E6%9D%A1%E4%BB%B6%E8%B7%B3%E8%BD%AC%E6%8C%87%E4%BB%A4"><span class="nav-text">4.1 无条件跳转指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E6%9D%A1%E4%BB%B6%E8%B7%B3%E8%BD%AC%E6%8C%87%E4%BB%A4"><span class="nav-text">4.2 条件跳转指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E4%B8%BE%E4%BE%8B"><span class="nav-text">4.3 举例</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%BE%AA%E7%8E%AF%E8%AF%AD%E5%8F%A5"><span class="nav-text">5. 循环语句</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E6%9D%A1%E4%BB%B6%E8%B7%B3%E8%BD%AC%E5%AE%9E%E7%8E%B0%E5%BE%AA%E7%8E%AF"><span class="nav-text">5.1 条件跳转实现循环</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E7%94%A8loop%E6%8C%87%E4%BB%A4%E5%AE%9E%E7%8E%B0%E5%BE%AA%E7%8E%AF"><span class="nav-text">5.2 用loop指令实现循环</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8"><span class="nav-text">6. 函数调用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88"><span class="nav-text">6.1 函数调用栈</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-Call-amp-Ret-%E6%8C%87%E4%BB%A4"><span class="nav-text">6.2 Call &amp; Ret 指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-3-%E5%A6%82%E4%BD%95%E8%AE%BF%E9%97%AE%E6%A0%88%E6%A1%A2%E6%95%B0%E6%8D%AE"><span class="nav-text">6.3 如何访问栈桢数据</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-1-%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%A0%88%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD%E7%9A%84%E4%BD%8D%E7%BD%AE"><span class="nav-text">6.3.1 函数调用栈在内存中的位置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-2-EBP-%E5%92%8C-ESP"><span class="nav-text">6.3.2 EBP 和 ESP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-3-Push-amp-Pop-%E6%8C%87%E4%BB%A4"><span class="nav-text">6.3.3 Push &amp; Pop 指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-4-MOV-%E6%8C%87%E4%BB%A4"><span class="nav-text">6.3.4 MOV 指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-5-%E6%80%BB%E7%BB%93"><span class="nav-text">6.3.5 总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-4-%E5%A6%82%E4%BD%95%E5%88%87%E6%8D%A2%E6%A0%88%E6%A1%A2"><span class="nav-text">6.4 如何切换栈桢</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-4-1-%E8%B0%83%E7%94%A8%E5%87%BD%E6%95%B0%E6%97%B6%E6%A0%88%E6%A1%A2%E5%88%87%E6%8D%A2"><span class="nav-text">6.4.1 调用函数时栈桢切换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-4-2-%E8%B0%83%E7%94%A8%E7%BB%93%E6%9D%9F%E5%A6%82%E4%BD%95%E8%BF%94%E5%9B%9E"><span class="nav-text">6.4.2 调用结束如何返回</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-4-3-%E6%80%BB%E7%BB%93"><span class="nav-text">6.4.3 总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-5-%E6%A0%88%E6%A1%A2%E5%8C%85%E5%90%AB%E4%BF%A1%E6%81%AF"><span class="nav-text">6.5 栈桢包含信息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-6-%E5%87%BD%E6%95%B0%E4%BC%A0%E5%8F%82%E4%BE%8B%E5%AD%90"><span class="nav-text">6.6 函数传参例子</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-7-%E6%80%BB%E7%BB%93"><span class="nav-text">6.7 总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-CISC-amp-RISC"><span class="nav-text">7. CISC &amp; RISC</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

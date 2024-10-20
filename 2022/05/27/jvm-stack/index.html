@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="虚拟机栈，JVM用于处理方法执行的地方，东西还挺多，而且还听重要.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="虚拟机栈">
+<meta property="og:url" content="http://example.com/2022/05/27/jvm-stack/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="虚拟机栈，JVM用于处理方法执行的地方，东西还挺多，而且还听重要.">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/runtime/stackFrame.png">
+<meta property="og:image" content="http://example.com/images/runtime/line_number_table.png">
+<meta property="og:image" content="http://example.com/images/runtime/local_var_table.png">
+<meta property="og:image" content="http://example.com/images/runtime/operateStack.png">
+<meta property="article:published_time" content="2022-05-27T02:46:22.000Z">
+<meta property="article:modified_time" content="2022-05-28T03:06:21.781Z">
+<meta property="article:author" content="PtheF">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="底层">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/runtime/stackFrame.png">
+
+<link rel="canonical" href="http://example.com/2022/05/27/jvm-stack/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>虚拟机栈 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/27/jvm-stack/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          虚拟机栈
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-05-27 10:46:22" itemprop="dateCreated datePublished" datetime="2022-05-27T10:46:22+08:00">2022-05-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-05-28 11:06:21" itemprop="dateModified" datetime="2022-05-28T11:06:21+08:00">2022-05-28</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>虚拟机栈，JVM用于处理方法执行的地方，东西还挺多，而且还听重要.</p>
+<span id="more"></span>
+
+<h1 id="1-虚拟机栈概述"><a href="#1-虚拟机栈概述" class="headerlink" title="1. 虚拟机栈概述"></a>1. 虚拟机栈概述</h1><blockquote>
+<p>Java Virtual Machine Stack</p>
+</blockquote>
+<p>首先明确个概念，JVM是基于栈的存储模型(当然还有基于寄存器的)，一般来说java 中 栈里面存放运行时数据，堆 进行存储，比如创建对象，就会放到堆里面，当然这不代表栈不会存数据，一些局部变量也是存在栈里面的。</p>
+<h2 id="1-1-虚拟机栈是什么"><a href="#1-1-虚拟机栈是什么" class="headerlink" title="1.1 虚拟机栈是什么"></a>1.1 虚拟机栈是什么</h2><p>每个线程创建时都会创建一个虚拟机栈，里面存储着栈帧(Stack Frame) 对应方法调用，栈帧就是方法调用，方法开始调用栈帧入栈，方法调用结束栈帧出栈。</p>
+<p>生命周期和JVM一样。</p>
+<h2 id="1-2-作用"><a href="#1-2-作用" class="headerlink" title="1.2 作用"></a>1.2 作用</h2><p>主管程序的运行，保存方法的局部变量，部分结果，并参与方法的调用和返回</p>
+<blockquote>
+<p>局部变量包括 8 中基本数据类型和 引用数据类型的引用，仅限引用地址，不包括实际的对象，对象在堆中。</p>
+</blockquote>
+<p>大致说一下，先不说那么细，看图： </p>
+<p><img src="/images/runtime/stackFrame.png" alt="stack_frame"></p>
+<p>这里定义两个方法，A 和 B，然后两个方法进行入栈操作，绿色的就是 B 方法，那么栈顶的方法就是当前方法，然后B执行完，A就是当前方法。</p>
+<p>那么目前，我们可以粗略的将方法，理解为栈帧，当然栈帧里面还细分一堆东西，我们现在先不说了。</p>
+<h2 id="1-4-栈的优点"><a href="#1-4-栈的优点" class="headerlink" title="1.4 栈的优点"></a>1.4 栈的优点</h2><ul>
+<li><p>有效的存储方式，访问速度仅次于程序计数器</p>
+</li>
+<li><p>JVM 对栈的操作只有两个</p>
+<ul>
+<li><p>方法执行，入栈</p>
+</li>
+<li><p>执行完，出栈</p>
+</li>
+</ul>
+</li>
+<li><p>不存在垃圾回收</p>
+<blockquote>
+<p>栈不存在 GC 但是存在 OOM (out of memory 内存溢出),PC寄存器俩都没有</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="1-5-栈可能出现的问题"><a href="#1-5-栈可能出现的问题" class="headerlink" title="1.5 栈可能出现的问题"></a>1.5 栈可能出现的问题</h2><p>Java 中，栈的大小可以是动态的或者固定不变的。如果栈的大小固定不变，那么入栈操作可能会因为栈满了而报错， 抛出 StackOverFlowError</p>
+<blockquote>
+<p>最常见的就是无限递归</p>
+</blockquote>
+<p>如果栈的大小动态，那么可能进行入栈操作是跟内存要空间，结果内存没了，导致异常 抛出 OutOfMemoryError</p>
+<h1 id="2-栈帧概述"><a href="#2-栈帧概述" class="headerlink" title="2. 栈帧概述"></a>2. 栈帧概述</h1><p>何为栈帧，我们上面说，把一个方法的调用理解成栈帧，一个方法在JVM中执行，就是虚拟机栈中压入了这个方法对应的栈帧，方法执行完成后，这个栈帧就会弹栈。同时为了保证方法执行的正确性以及其他的一些什么乱七八糟的东西，栈帧内部还有很多的其他组成部分，我们下面会详细说。</p>
+<h2 id="2-1-栈帧的注意事项"><a href="#2-1-栈帧的注意事项" class="headerlink" title="2.1 栈帧的注意事项"></a>2.1 栈帧的注意事项</h2><ul>
+<li><p>不同线程之间的栈帧不能相互引用</p>
+</li>
+<li><p>如果方法调用了其他返回，在方法返回时，当前栈帧会传给前一栈帧执行结果，当前栈帧出栈，让上一个栈帧变为当前。</p>
+</li>
+<li><p>java中有两个方式返回方法，return 和 throw(没有处理)，两种办法都会弹出栈帧。</p>
+</li>
+</ul>
+<h2 id="2-2-栈帧的具体结构"><a href="#2-2-栈帧的具体结构" class="headerlink" title="2.2 栈帧的具体结构"></a>2.2 栈帧的具体结构</h2><p>分为5部分：</p>
+<ul>
+<li><p>局部变量表</p>
+</li>
+<li><p>操作数栈&#x2F;表达式栈</p>
+</li>
+<li><p>动态链接&#x2F;指向运行时常量池的方法引用</p>
+</li>
+<li><p>方法返回地址</p>
+</li>
+<li><p>附加信息</p>
+</li>
+</ul>
+<p>下面我们就会进入这5个部分，详细说说栈帧里面都是些什么鬼。</p>
+<h1 id="3-局部变量表"><a href="#3-局部变量表" class="headerlink" title="3. 局部变量表"></a>3. 局部变量表</h1><h2 id="3-1-概述"><a href="#3-1-概述" class="headerlink" title="3.1 概述"></a>3.1 概述</h2><ul>
+<li><p>也叫本地变量表：</p>
+</li>
+<li><p>定义一个数字数组，用于存储方法参数，和定义在方法内的局部变量，这些数据类型包括 8种基本数据类型，引用，和返回值类型。</p>
+</li>
+<li><p>一个线程配套一个虚拟机栈，所以不存在线程安全问题。</p>
+</li>
+<li><p>这个表的长度一开始就已经固定，且不会发生改变，因为在编译的时候编译器就已经解析出来你这个方法需要多少个临时变量了，表长存在一个 maximum local variables 属性里面。 可以反编译一个class文件找找，code 里面的 locals 也记录了。</p>
+</li>
+<li><p>只在当前方法中有效，别人想用就得传参了，方法调用结束变量表随之销毁。</p>
+</li>
+<li><p>方法嵌套次数由虚拟机栈决定，一般来说，栈越大，嵌套越多，如果一个方法的本地数据过多， 会导致栈帧过大，进而占用虚拟机栈的空间变多，导致方法嵌套次数变少。</p>
+</li>
+</ul>
+<p>我们解析一个 class文件，就能在方法里面找到 LocalVariableTable， slot 代表了第几个本地变量，然后 length不解释，signature 就是数据类型， 同时，code 里面的 locals 也记录了 变量表的最大长度。</p>
+<h2 id="3-2-解析Class中的方法"><a href="#3-2-解析Class中的方法" class="headerlink" title="3.2 解析Class中的方法"></a>3.2 解析Class中的方法</h2><p>我们解析一个 class文件以后，不说 javap 解析了，就说 jclasslib 解析以后得到的东西。首先我们解析完成后，随便进入一个方法，这里我就以main方法为例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">name: cp_info #30 &lt;main&gt;  </span><br><span class="line">descriptor: cp_info #31 &lt;([Ljava/lang/String:V)&gt;  </span><br><span class="line">Access flags: 0x0009 [public static]</span><br></pre></td></tr></table></figure>
+
+<p>name 就是方法名，告诉你是 main 方法，descriptor 描述，包括 参数类型：LJava…String,L 代表引用，V 代表void 无返回值。Access flags 访问表示，告诉你是 public static。</p>
+<p>然后，我们进入 code，byteCode 就是字节码指令, ExceptionTable 就是异常表，没有异常，空。misc 里面就是一些描述，比如 本地变量表的最大长度，还有指令长度，字节码指令0 - 最后那个号。</p>
+<p>然后code 里面还有一个 LineNumberTable,里面记录Java 代码和 字节码指令的行号映射关系，lineNumber 表示 Java 行数，startPC 代表字节码指令行数，两个上述一一对应。</p>
+<p>LineNumberTable如下：</p>
+<p><img src="/images/runtime/line_number_table.png" alt="line_number_table"></p>
+<p>然后重点看看本地变量表，局部变量表如下：</p>
+<p><img src="/images/runtime/local_var_table.png" alt="local_var_table"></p>
+<p>你方法里面有几个局部变量，他就有几行+1，几个字段+1(一般情况是，为啥？实例方法局部变量表中的第一位是 this)：</p>
+<ul>
+<li><p>name名字： 想必是局部变量的名称</p>
+</li>
+<li><p>descriptor 描述符： 就是类型，同理L是引用，</p>
+</li>
+<li><p>startPC起始PC： 是你这个局部变量的作用域的起始位置，是一个 字节码行号， 根据 lineNumber 表找到对应java 的行数，其实就是你java声明了这个局部变量的下一行。</p>
+</li>
+<li><p>index 序号： 就是索引</p>
+</li>
+<li><p>length长度： 不是说你这个变量多长，而是作用域长度，结合上面的 startPC， 比如 misc 里面记录的字节码长度是16，就代表你总共有16条指令， 然后已定义了一个变量，从 字节码的 第8行开始，然后到第15(0开始)失效， 那么你的这个 length 就是 8，从第8行开始，在往后的8行内生效。</p>
+</li>
+</ul>
+<h2 id="3-3-槽-Slot"><a href="#3-3-槽-Slot" class="headerlink" title="3.3 槽 Slot"></a>3.3 槽 Slot</h2><p>本地变量表中，会将数据存放到 槽中。</p>
+<ul>
+<li><p>JVM 会给每一个 slot 分配一个索引，根据这个索引可以访问到局部变量表中的局部变量值。</p>
+</li>
+<li><p>当一个实例方法被调用时，他的方法参数和局部变量会按顺序复制到每一个 slot 上。</p>
+</li>
+<li><p>32 bit 的数据占用一个 slot，64bit 的占用两个，64的只有 long 和 double，包括引用都是 32bit的。</p>
+</li>
+<li><p>如果要访问一个 64bit的数据，只需要访问这个数据的第一个slot的索引即可。</p>
+</li>
+<li><p>如果当前栈帧被构造方法或者实例方法创建，则 对象 this 会被存到 index 位 0 的栈帧上，其余的按顺序。</p>
+</li>
+</ul>
+<h2 id="3-4-静态变量和局部变量的对比"><a href="#3-4-静态变量和局部变量的对比" class="headerlink" title="3.4 静态变量和局部变量的对比"></a>3.4 静态变量和局部变量的对比</h2><ul>
+<li><p>局部变量表初始化完以后，才会按顺序定义局部变量的空间</p>
+</li>
+<li><p>静态变量有两次机会赋值，第一次是链接阶段的准备阶段，讲静态变量初始化位零值，第二次是 初始化阶段，赋值为我们定义的值。</p>
+</li>
+<li><p>局部变量没有初始化，他必须我们自己定义初始值，否则不能用。</p>
+</li>
+</ul>
+<h2 id="3-5-补充说明"><a href="#3-5-补充说明" class="headerlink" title="3.5 补充说明"></a>3.5 补充说明</h2><ul>
+<li><p>这部分和GC有很大联系的就是局部变量表，方法执行时，通过这东西完成参数传递。</p>
+</li>
+<li><p>局部变量表中的变量也是GC中重要的根节点，只要是被局部变量表中直接或间接引用的对象都不会被回收。</p>
+</li>
+</ul>
+<h1 id="4-操作数栈"><a href="#4-操作数栈" class="headerlink" title="4. 操作数栈"></a>4. 操作数栈</h1><h2 id="4-1-概述"><a href="#4-1-概述" class="headerlink" title="4.1 概述"></a>4.1 概述</h2><p>操作数栈，字面意思，就是用于方法内代码执行做运算的。细节如下：</p>
+<ul>
+<li><p>每一个栈帧除了局部变量表外，还有操作数栈，后进先出。</p>
+</li>
+<li><p>根据指令的不同，进行 push 和 pop 的操作，也只能进行这两个操作</p>
+<ul>
+<li><p>某些字节码指令让操作数入栈，然后其他的指令让操作数出栈求和，再重新入栈。</p>
+</li>
+<li><p>比如 赋值 求和 交换等操作。</p>
+</li>
+</ul>
+</li>
+<li><p>主要用于保存计算的中间结果，同时作为计算过程中变量临时的存储空间</p>
+</li>
+<li><p>操作数栈就是JVM执行引擎的一个工作区，随着方法执行被创建，刚创建时是空的(空 !&#x3D; 没创建)</p>
+</li>
+<li><p>每个操作数栈都有一个明确的深度来进行存储，也是在编译的时候就已经定义好的， 在code 里面的 max_stack 里面定义，或者 javap 里面 方法的stack 参数</p>
+</li>
+<li><p>栈里面的每一个元素都可以是任意java类型，32bit的数据占1个栈深度，64bit占2个站深度。</p>
+</li>
+<li><p>如果被调用的方法有返回值，那么返回值也会入栈，同时PC寄存器更新下一条指令。</p>
+</li>
+<li><p>栈里面的元素和字节码指令的数据类型必须严格匹配，编译器在编译期间会进行验证。</p>
+</li>
+<li><p>我们所说的 Java解释引擎是基于栈的，这里的栈 就是 操作数栈。</p>
+</li>
+</ul>
+<h2 id="4-2-具体流程分析"><a href="#4-2-具体流程分析" class="headerlink" title="4.2 具体流程分析"></a>4.2 具体流程分析</h2><p>我们找一段代码来具体分析分析操作数栈到底是干啥的，直接看图：</p>
+<p><img src="/images/runtime/operateStack.png" alt="ops_stack"></p>
+<p>我们逐条看指令，</p>
+<ol>
+<li><p>首先进行了 bipush 操作，push 15，将 15 存入操作数栈</p>
+</li>
+<li><p>执行 istore_1 也就是弹栈得到15后存入局部变量表的1位置(复习一下，0位置存this)</p>
+</li>
+<li><p>bipush 8，将8存入操作数栈</p>
+</li>
+<li><p>执行 istore_2 弹栈得8 存入 局部变量表的 2位置</p>
+</li>
+<li><p>iload_1 这里读取 表中1位置的数据，放入 操作数栈 进行入栈操作</p>
+</li>
+<li><p>iload_2 读取 表中2位置的数据，入栈</p>
+</li>
+<li><p>iadd 将两个操作数弹栈，相加，得到结果重新入栈</p>
+</li>
+<li><p>istore_3 将得到的数据 存储到 局部变量表 3 位置</p>
+</li>
+<li><p>返回</p>
+</li>
+</ol>
+<p>在这个过程中，这个栈只需要 2 深度，所以可以看到，code 里面的 stack &#x3D;&#x3D; 2.</p>
+<p>顺带说一句，这里我们可以看到什么 bipush，sipush，意思就是：b(yte) -&gt; i(nt) 和 s(hort) -&gt; i(nt)</p>
+<p>有一种特殊的情况，方法 A return int，然后 方法B 里面调用 A 并用i接收返回值。</p>
+<p>首先在方法A里面最后会进行 ireturn，也就是把返回值结果返回，然后在B方法里面，在 调用A方法接受参数的位置，会进行 aload_0他会得到返回值并入栈。</p>
+<h1 id="5-动态链接"><a href="#5-动态链接" class="headerlink" title="5. 动态链接"></a>5. 动态链接</h1><blockquote>
+<p>或者叫 指向运行时常量池的方法引用</p>
+</blockquote>
+<p>先说一下符号链接</p>
+<ul>
+<li>java源文件被编译到class文件里面的时候，所有的变量和方法引用都作为符号引用保存在class常量池中</li>
+</ul>
+<p>这话简直不是人话，我来给翻译一下：</p>
+<p>我们先解析一个class文件，这个原本的Java文件里面有个a方法和b方法，b方法里面调用了a，所以字节码里面方法B有这么一句：</p>
+<p><code>1: invokevirtual #6 // Method methodA:()V</code></p>
+<p>这就意思是调用了 方法#6，当然注释告诉我其实就是 methodA，然后我们去常量池 里面找 #6 是个啥，然后找半天，不停地指向别的符号，最后指向了 methodA 和 ()V，methodA 就是方法名，()V 就是无参，返回 void 磨磨唧唧不停地指向别的东西。</p>
+<p>同时，体现出，所有的东西，都存在常量池中，比如我们输出的 String，也存在 常量池中。</p>
+<p>所以：</p>
+<p>运行时，将常量池加载到方法区内形成运行时常量池，然后每个栈帧都包含一个 指向运行时常量池中 该栈帧所属方法的引用，那么这个引用，就是动态链接，可以支持该方法实现动态链接。</p>
+<p>下面解释一下啥是常量池：</p>
+<blockquote>
+<p>说的还是不是人话，我这里再解释一下：我们解析一个Class文件会发现里面有个constant pool常量池，这里面包含什么？字符串字面值，各种需要用到的类等等等等。然后下面的代码比如 String st &#x3D; “123”，这个123就会存到常量池中，并不会直接在代码中体现。</p>
+<p>JVM读取class的时候，就会去读这个常量池，也就是可以提前知道这个类里面要用到哪些其他的类，以及有用到哪些常量值，然后JVM就会把这个常量池读到运行时数据区，比如常量池中有 System.out 这个类，JVM就会提前把这个类加载到方法区中。总而言之，JVM会读取常量池从而形成运行时常量池。</p>
+<p>然后，class文件中，代码会指向常量池中的某些元素，比如 invokevirtual #6，就是指向了#6常量，但是JVM读了以后你不能还指向#6了，因为已经有了运行时常量池，常量池中的元素已经有了具体的内存体现了，那你还指向#6干啥，这时就会让代码直接指向运行时常量池。这一步，也就对应了类加载中的 链接-解析 阶段。</p>
+</blockquote>
+<p>既然知道了啥是常量池，那么我们再看看这个动态链接，其实就很好理解了，字节码文件中，方法名，方法返回值，方法入参类型，这些都是存在常量池中的东西。那么栈帧应该知道自己这个方法对应到运行时常量池中的是哪个，动态链接就是干这个的。</p>
+<h2 id="为何需要常量池"><a href="#为何需要常量池" class="headerlink" title="为何需要常量池"></a>为何需要常量池</h2><p>我们加载一个类，比如我们就写一个类里面有一个主方法，就一个输出，他加载到内存里面就需要加载 比如 父类Object，各种数据类型，System对象，PrintWriter对象，等等。</p>
+<p>如果这些东西全都存在 class里面，就很浪费，所以弄一个常量池，把常用的东西放进去，需要的时候直接引用过来就行了。</p>
+<h1 id="6-方法调用"><a href="#6-方法调用" class="headerlink" title="6. 方法调用"></a>6. 方法调用</h1><blockquote>
+<p>从 JVM 角度看java 方法如何被调用</p>
+</blockquote>
+<p>上面刚说过，在类加载的时候，会把符号引用转化为直接引用，而这个转化过程是在编译期间完成的还是在运行期间完成的，这个还是有区别的。</p>
+<h2 id="6-1-静态链接"><a href="#6-1-静态链接" class="headerlink" title="6.1 静态链接"></a>6.1 静态链接</h2><p>一个字节码文件被加载到 JVM 内部时，如果被调用的目标方法在编译期间可知，且运行期间保持不变，那么这个时候 符号 -&gt; 直接 的转化，就叫静态链接。</p>
+<blockquote>
+<p>简单说，编译期间转化，就叫静态链接</p>
+</blockquote>
+<h2 id="6-2-动态链接"><a href="#6-2-动态链接" class="headerlink" title="6.2 动态链接"></a>6.2 动态链接</h2><p>对应的，如果在编译期间无法确定，比如接口回调，需要在运行时转换，则成为动态链接。</p>
+<blockquote>
+<p>同理，运行期间绑定，动态链接</p>
+</blockquote>
+<h2 id="6-3-绑定"><a href="#6-3-绑定" class="headerlink" title="6.3 绑定"></a>6.3 绑定</h2><p>什么叫绑定？一个字段，方法，类的符号引用替换成直接引用的过程，只发生一次。同时这里还区分早期绑定和晚期绑定：</p>
+<ul>
+<li><p>早期绑定：对应静态链接，目标方法在编译期间可知且运行时不变，可以明确被调用的方法是哪一个，使用静态链接的方式进行符号到直接的转化，叫早期绑定</p>
+</li>
+<li><p>晚期绑定：不确定目标方法，使用动态链接进行转换，就叫晚期绑定</p>
+</li>
+</ul>
+<h2 id="6-4-虚方法和非虚方法"><a href="#6-4-虚方法和非虚方法" class="headerlink" title="6.4 虚方法和非虚方法"></a>6.4 虚方法和非虚方法</h2><p>非虚方法对应 静态链接和早期绑定，在编译期间就确定方法的具体版本。如下都属于非虚方法：</p>
+<ul>
+<li><p>静态方法</p>
+</li>
+<li><p>私有方法</p>
+</li>
+<li><p>final 修饰的方法</p>
+</li>
+<li><p>实例构造器</p>
+</li>
+<li><p>父类方法</p>
+</li>
+</ul>
+<p>其他的都属于虚方法。</p>
+<h2 id="6-5-虚拟机中调用方法的指令"><a href="#6-5-虚拟机中调用方法的指令" class="headerlink" title="6.5 虚拟机中调用方法的指令"></a>6.5 虚拟机中调用方法的指令</h2><h3 id="6-5-1-调用指令"><a href="#6-5-1-调用指令" class="headerlink" title="6.5.1 调用指令"></a>6.5.1 调用指令</h3><ul>
+<li><p>invokeStatic 调用非虚方法</p>
+</li>
+<li><p>invokeSpecial 调用 <init> 构造方法，私有方法，父类方法</p>
+</li>
+</ul>
+<p>前面两个都属于调用非虚方法</p>
+<ul>
+<li><p>invokeVirtual 调用虚方法</p>
+<blockquote>
+<p>但是不代表 invokeVirtual 调用的都是虚方法，特别的，调用final方法，也是 invokeVirtual</p>
+</blockquote>
+</li>
+<li><p>invokeInterface 调用接口方法</p>
+</li>
+</ul>
+<p>还有一个特殊的，调用Lambda 的指令</p>
+<ul>
+<li>invokeDynamic</li>
+</ul>
+<p>java7 开始才引入了 invokeDynamic 这个东西，为了体现 java 的 动态类型语言特性。但是 java7 没法直接生成 invokeDynamic 指令，知道 java8 出现了 lambda 表达式，java8 才能直接生成 invokeDynamic 指令。</p>
+<h3 id="6-5-2-动态类型语言-和-静态类型语言"><a href="#6-5-2-动态类型语言-和-静态类型语言" class="headerlink" title="6.5.2 动态类型语言 和 静态类型语言"></a>6.5.2 动态类型语言 和 静态类型语言</h3><p>简单说，静态类型语言在编译期间会对数据类型进行检查，动态类型语言会在运行时进行类型检查，变量本身没有类型，变量值才有类型。</p>
+<h1 id="7-方法返回值地址"><a href="#7-方法返回值地址" class="headerlink" title="7. 方法返回值地址"></a>7. 方法返回值地址</h1><p>所谓 方法返回值地址，这里我给举个例子：</p>
+<p>我们调用 方法 A，方法 A 里面我们有调用了 方法 B，在虚拟机栈的角度，A 入栈，然后B入栈，现在，方法 B 执行完成，那么就需要回到 方法 A 中 调用 B 的那个地方，继续往下执行，方法 B 的返回值，需要给到 方法 A 调用 B 的那一行代码，这就需要方法返回值地址</p>
+<p>方法返回值地址里面存储了 PC寄存器中的值，也就是记录了调用方法的位置的下一行代码，然后方法执行完成，将返回值放入操作数栈，然后根据方法返回值地址，回到方法调用的位置，继续执行。</p>
+<h2 id="7-1-方法退出的两种情况"><a href="#7-1-方法退出的两种情况" class="headerlink" title="7.1 方法退出的两种情况"></a>7.1 方法退出的两种情况</h2><ul>
+<li><p>正常退出，调用者 PC寄存器的值作为返回地址，调用该方法指令的下一条指令地址。</p>
+</li>
+<li><p>出现未处理异常，非正常退出，返回地址需要异常表来确定，栈帧不保存这部分信息</p>
+</li>
+</ul>
+<p>所以，方法返回值地址仅针对方法正常推退出的情况。</p>
+<h2 id="7-2-返回指令："><a href="#7-2-返回指令：" class="headerlink" title="7.2 返回指令："></a>7.2 返回指令：</h2><p>函数返回指令如下：</p>
+<ul>
+<li><p>ireturn -&gt; intReturn 返回 byte short int boolean char</p>
+</li>
+<li><p>lreturn -&gt; longReturn 返回 long</p>
+</li>
+<li><p>freturn -&gt; floatReturn 返回 float</p>
+</li>
+<li><p>dreturn -&gt; doubleReturn 返回 double</p>
+</li>
+<li><p>areturn -&gt; 不知道 返回 引用</p>
+</li>
+<li><p>return -&gt; void 方法无返回值</p>
+</li>
+</ul>
+<h2 id="7-3-异常表"><a href="#7-3-异常表" class="headerlink" title="7.3 异常表"></a>7.3 异常表</h2><p>如果方法存在异常，则会有一个异常表进行处理，在方法里面，需要 javap</p>
+<p>结构如下：</p>
+<table>
+<thead>
+<tr>
+<th>from</th>
+<th>to</th>
+<th>target</th>
+<th>type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>6</td>
+<td>8</td>
+<td>11</td>
+<td>java&#x2F;io&#x2F;IOException</td>
+</tr>
+</tbody></table>
+<p>意思如下：</p>
+<p>从 6 到 8 行 如果出现异常IOException，交给 11 处理，其实也就是 try catch 代码块里面的东西。</p>
+<h1 id="8-总结"><a href="#8-总结" class="headerlink" title="8. 总结"></a>8. 总结</h1><p>很好，栈总算是说完了。下面就是牛逼的堆了。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+              <a href="/tags/%E5%BA%95%E5%B1%82/" rel="tag"># 底层</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/05/27/%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA%E6%A6%82%E8%BF%B0/" rel="prev" title="运行时数据区概述">
+      <i class="fa fa-chevron-left"></i> 运行时数据区概述
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/05/28/jvm-heap/" rel="next" title="JVM-堆">
+      JVM-堆 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%88%E6%A6%82%E8%BF%B0"><span class="nav-text">1. 虚拟机栈概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%88%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-text">1.1 虚拟机栈是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E4%BD%9C%E7%94%A8"><span class="nav-text">1.2 作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-%E6%A0%88%E7%9A%84%E4%BC%98%E7%82%B9"><span class="nav-text">1.4 栈的优点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-5-%E6%A0%88%E5%8F%AF%E8%83%BD%E5%87%BA%E7%8E%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-text">1.5 栈可能出现的问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E6%A0%88%E5%B8%A7%E6%A6%82%E8%BF%B0"><span class="nav-text">2. 栈帧概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E6%A0%88%E5%B8%A7%E7%9A%84%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="nav-text">2.1 栈帧的注意事项</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E6%A0%88%E5%B8%A7%E7%9A%84%E5%85%B7%E4%BD%93%E7%BB%93%E6%9E%84"><span class="nav-text">2.2 栈帧的具体结构</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F%E8%A1%A8"><span class="nav-text">3. 局部变量表</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E6%A6%82%E8%BF%B0"><span class="nav-text">3.1 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E8%A7%A3%E6%9E%90Class%E4%B8%AD%E7%9A%84%E6%96%B9%E6%B3%95"><span class="nav-text">3.2 解析Class中的方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E6%A7%BD-Slot"><span class="nav-text">3.3 槽 Slot</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-%E9%9D%99%E6%80%81%E5%8F%98%E9%87%8F%E5%92%8C%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F%E7%9A%84%E5%AF%B9%E6%AF%94"><span class="nav-text">3.4 静态变量和局部变量的对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-%E8%A1%A5%E5%85%85%E8%AF%B4%E6%98%8E"><span class="nav-text">3.5 补充说明</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E6%93%8D%E4%BD%9C%E6%95%B0%E6%A0%88"><span class="nav-text">4. 操作数栈</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E6%A6%82%E8%BF%B0"><span class="nav-text">4.1 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E5%85%B7%E4%BD%93%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90"><span class="nav-text">4.2 具体流程分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5"><span class="nav-text">5. 动态链接</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BD%95%E9%9C%80%E8%A6%81%E5%B8%B8%E9%87%8F%E6%B1%A0"><span class="nav-text">为何需要常量池</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8"><span class="nav-text">6. 方法调用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5"><span class="nav-text">6.1 静态链接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5"><span class="nav-text">6.2 动态链接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-3-%E7%BB%91%E5%AE%9A"><span class="nav-text">6.3 绑定</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-4-%E8%99%9A%E6%96%B9%E6%B3%95%E5%92%8C%E9%9D%9E%E8%99%9A%E6%96%B9%E6%B3%95"><span class="nav-text">6.4 虚方法和非虚方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-5-%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%B8%AD%E8%B0%83%E7%94%A8%E6%96%B9%E6%B3%95%E7%9A%84%E6%8C%87%E4%BB%A4"><span class="nav-text">6.5 虚拟机中调用方法的指令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-5-1-%E8%B0%83%E7%94%A8%E6%8C%87%E4%BB%A4"><span class="nav-text">6.5.1 调用指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-5-2-%E5%8A%A8%E6%80%81%E7%B1%BB%E5%9E%8B%E8%AF%AD%E8%A8%80-%E5%92%8C-%E9%9D%99%E6%80%81%E7%B1%BB%E5%9E%8B%E8%AF%AD%E8%A8%80"><span class="nav-text">6.5.2 动态类型语言 和 静态类型语言</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-%E6%96%B9%E6%B3%95%E8%BF%94%E5%9B%9E%E5%80%BC%E5%9C%B0%E5%9D%80"><span class="nav-text">7. 方法返回值地址</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#7-1-%E6%96%B9%E6%B3%95%E9%80%80%E5%87%BA%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%83%85%E5%86%B5"><span class="nav-text">7.1 方法退出的两种情况</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-2-%E8%BF%94%E5%9B%9E%E6%8C%87%E4%BB%A4%EF%BC%9A"><span class="nav-text">7.2 返回指令：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-3-%E5%BC%82%E5%B8%B8%E8%A1%A8"><span class="nav-text">7.3 异常表</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#8-%E6%80%BB%E7%BB%93"><span class="nav-text">8. 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

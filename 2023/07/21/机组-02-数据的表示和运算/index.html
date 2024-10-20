@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="数据的表示与运算。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="02-数据的表示和运算">
+<meta property="og:url" content="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-02-%E6%95%B0%E6%8D%AE%E7%9A%84%E8%A1%A8%E7%A4%BA%E5%92%8C%E8%BF%90%E7%AE%97/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="数据的表示与运算。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703105308.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703105633.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703105846.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703110206.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703110744.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703111812.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703112000.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703121515.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703122316.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703122826.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703124907.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703125106.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703125453.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703125834.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703125948.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703144600.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703144809.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703145002.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703145052.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703145515.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703145916.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703150454.png">
+<meta property="article:published_time" content="2023-07-21T10:00:07.000Z">
+<meta property="article:modified_time" content="2023-07-21T10:09:24.767Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230703105308.png">
+
+<link rel="canonical" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-02-%E6%95%B0%E6%8D%AE%E7%9A%84%E8%A1%A8%E7%A4%BA%E5%92%8C%E8%BF%90%E7%AE%97/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>02-数据的表示和运算 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/21/%E6%9C%BA%E7%BB%84-02-%E6%95%B0%E6%8D%AE%E7%9A%84%E8%A1%A8%E7%A4%BA%E5%92%8C%E8%BF%90%E7%AE%97/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          02-数据的表示和运算
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-07-21 18:00:07 / 修改时间：18:09:24" itemprop="dateCreated datePublished" datetime="2023-07-21T18:00:07+08:00">2023-07-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">计算机组成原理</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>数据的表示与运算。</p>
+<span id="more"></span>
+
+<h1 id="1-数据表示"><a href="#1-数据表示" class="headerlink" title="1. 数据表示"></a>1. 数据表示</h1><h2 id="1-1-进制转换"><a href="#1-1-进制转换" class="headerlink" title="1.1 进制转换"></a>1.1 进制转换</h2><p>首先说一个概念：<strong>基数</strong>。每个数码位所用到的不同的符号的个数，比如 10 进制可以用到 0-9 十个不同的符号，基数就是10。8进制用到 0-7 八个不同的符号，基数就是8。</p>
+<p>一个 R 进制数：abc.d 换算成10进制就是 a x R^2 + b x R^1 + c x R^0 + d x R^-1。</p>
+<p>R 进制加法的话只需要 逢 R 进 1 即可。</p>
+<h2 id="1-2-二进制转八、十六进制"><a href="#1-2-二进制转八、十六进制" class="headerlink" title="1.2 二进制转八、十六进制"></a>1.2 二进制转八、十六进制</h2><p>二进制到八进制：把二进制三个分一组，然后每组直接转10进制数即可：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1111000010.01101 -&gt;</span><br><span class="line">00+1 111 000 010 . 011 01+0</span><br><span class="line">  1   7   0   2  .  3   2 </span><br></pre></td></tr></table></figure>
+
+<p>二进制到16进制：二进制数四个分一组，然后每组转10进制然后16进制表示即可：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1111000010.01101 -&gt;</span><br><span class="line">00+11 1100 0010 . 0110 10+00</span><br><span class="line">  3     C    2  .   6   8   </span><br></pre></td></tr></table></figure>
+
+<p>反过来 八进制、十六进制 转 二进制就是反过来，将每个数分为 3个一组、4个一组的二进制数即可。</p>
+<p>符号记一下：</p>
+<p>二进制：111010101<font color='red'>B</font></p>
+<p>八进制：（1625）8</p>
+<p>十六进制：（1625）16; 1625<font color='red'>H</font>; <font color='red'>0x</font>1625;</p>
+<p>十进制：（1625）10；1625<font color='red'>D</font></p>
+<h2 id="1-3-十进制转R进制"><a href="#1-3-十进制转R进制" class="headerlink" title="1.3 十进制转R进制"></a>1.3 十进制转R进制</h2><p>整数部分10进制转R进制：短除到0，然后从下往上顺即可。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703105308.png" alt="image.png"></p>
+<p>小数部分10进制转R进制：一直乘R，直到乘到1或者开始循环为止，每次乘积大于1，提出来1然后小数部分继续乘。然后从上往下取，上面是小数部分的高位。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703105633.png" alt="image.png"></p>
+<p>或者拼凑一下，根据二进制表去尝试凑10进制数：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703105846.png" alt="image.png"></p>
+<p>比如 260.75，就是 256 + 4 . 0.5 + 0.25，也就是100000100.11。</p>
+<h2 id="1-4-真值和机器数"><a href="#1-4-真值和机器数" class="headerlink" title="1.4 真值和机器数"></a>1.4 真值和机器数</h2><p>真值：我们能识别的数字，符合我们习惯的。</p>
+<p>机器数：这个数字存储到计算机中啥样的，比如正负号怎么表示，就是机器数。</p>
+<h2 id="1-5-总结"><a href="#1-5-总结" class="headerlink" title="1.5 总结"></a>1.5 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703110206.png" alt="image.png"></p>
+<p>注意有的时候十进制数不能准确转化为二进制数，比如0.3.</p>
+<h1 id="2-BCD-码"><a href="#2-BCD-码" class="headerlink" title="2. BCD 码"></a>2. BCD 码</h1><p>二进制数符合计算机习惯，十进制数符合我们的习惯，如果按照我们之前说的转换方法实际非常麻烦，BCD 码就是为了解决进制转换麻烦的问题。</p>
+<p>解决办法其实就是二进制到八进制和十六进制的方法，让每一位十进制数都对应一组bit位，这样的话可能造成冗余，但是转换起来比较简单。</p>
+<h2 id="2-1-8421-码"><a href="#2-1-8421-码" class="headerlink" title="2.1 8421 码"></a>2.1 8421 码</h2><p>用 4个 bit 来表示一个10进制数，4bit就有16种状态，也就是会有6种状态冗余。映射关系：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703110744.png" alt="image.png"></p>
+<p>比如我们要表示 985，那就是 1001 1000 0101。就是简单的按位转换。</p>
+<p><strong>加法操作</strong></p>
+<p>比如我们要计算 1 + 3，那就是简单的 0001 + 0011 &#x3D; 0100. 结果没问题。如果是 5 + 8，那就问题大了，5 + 8 &#x3D; 0101 + 1000 &#x3D; 1101，这个数字不在映射区间内，咋办？</p>
+<p>这个时候就需要修正一下，给这个数字 + 6 强迫他进位，进位以后剩下的，就是3，进走的就是1，结果就是 13：</p>
+<p>1101 + 0110（6）&#x3D; 10011 &#x3D; 0001 ｜ 0011，后四位正好是3，前面0001就是进位的1。</p>
+<p>8421 种四个bit的权值不变，分别是 8 4 2 1，所以这种也叫有权码。</p>
+<h2 id="2-2-余3码"><a href="#2-2-余3码" class="headerlink" title="2.2 余3码"></a>2.2 余3码</h2><p>就是在 8421 码的基础上，给每个数字都加3（0011），咱也不知道这是为啥，反正就是加了三。</p>
+<h2 id="2-3-2421-码"><a href="#2-3-2421-码" class="headerlink" title="2.3 2421 码"></a>2.3 2421 码</h2><p>也是在 8421 基础上改的，他修改了4个bit的权值，分别是 2 4 2 1，修改后映射关系如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703111812.png" alt="image.png"></p>
+<p>这样做是为了让 0-4 这五个数第一位都是0，5-9 第一位都是1。</p>
+<h2 id="2-4-总结"><a href="#2-4-总结" class="headerlink" title="2.4 总结"></a>2.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703112000.png" alt="image.png"></p>
+<h1 id="3-无符号整数表示与运算"><a href="#3-无符号整数表示与运算" class="headerlink" title="3. 无符号整数表示与运算"></a>3. 无符号整数表示与运算</h1><p>无符号数，也就是“自然数”，0 1 2 3 4 这种的。比如 C 语言里面的 <code>unsigned short a = 10; </code> 这就是声明了一个无符号短整型数。</p>
+<h2 id="3-1-无符号数的表示"><a href="#3-1-无符号数的表示" class="headerlink" title="3.1 无符号数的表示"></a>3.1 无符号数的表示</h2><p>一般一台电脑有机器字长限制，计算机的通用寄存器只能存8bit，那么无符号整数的上限也就是 8bit 了。ALU 最多也就只能进行8位运算。</p>
+<p>其实很简单，就是将无符号真值转换成二进制数然后填到 8bit 寄存器中，需要注意的是，如果真值过大，可能出现数据溢出的情况，如 256 对应二进制为 100000000，放不到 8bit 里面，只能保留后面的00000000.</p>
+<p>特点：</p>
+<ul>
+<li>全部二进制位都是数值位，没有符号位，第i位的位权是 2^(i-1)</li>
+<li>n bit 无符号整数表示范围是 0 - 2^n - 1，超出则溢出</li>
+<li>可以表示最小的数是全0，最大的数是全1.</li>
+</ul>
+<h2 id="3-2-无符号数的加减法"><a href="#3-2-无符号数的加减法" class="headerlink" title="3.2 无符号数的加减法"></a>3.2 无符号数的加减法</h2><p>很简单，就是正常的二进制加法，不说了。计算机如何进行无符号整数的减法？并不是像人一样给他列竖式计算，而是将减法转变为加法，为啥？因为加法电路便宜。</p>
+<p>A：99 &#x3D; 1100011；B：9 &#x3D; 1001，我们要计算 A - B 咋办？</p>
+<ul>
+<li>被减数不变，减数全部按位取反，末位 + 1</li>
+<li>减法变加法，从最低位开始，按位相加，并往高位进位</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">B = 00001001 </span><br><span class="line">按位取反：</span><br><span class="line">B = 11110110 </span><br><span class="line">然后末位加一：</span><br><span class="line">B = 11110111</span><br><span class="line"></span><br><span class="line">然后 A + B = </span><br><span class="line">    01100011</span><br><span class="line">+   11110111</span><br><span class="line">=  101011010</span><br><span class="line"></span><br><span class="line">最高位1溢出，保留后面的 01011010 = 90</span><br></pre></td></tr></table></figure>
+
+<h1 id="4-带符号整数"><a href="#4-带符号整数" class="headerlink" title="4. 带符号整数"></a>4. 带符号整数</h1><p>这种就是计算机里面的整数，比如 -2，-1，C 语言里面的就是 <code>int,short</code> 。同理，往后还按机器字长8bit来看。</p>
+<p>这玩意有三种表示法：原码、反码、补码。三种方式都可以表示带符号整数。</p>
+<h2 id="4-1-原码"><a href="#4-1-原码" class="headerlink" title="4.1 原码"></a>4.1 原码</h2><h3 id="4-1-1-原码表示"><a href="#4-1-1-原码表示" class="headerlink" title="4.1.1 原码表示"></a>4.1.1 原码表示</h3><p>很简单，bit里面最高位表示正符号，用 0 表示正，用 1 表示负，剩余的位数表示数值的真值绝对值。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703121515.png" alt="image.png"></p>
+<p>机器字长为n+1 的话，数值范围就是 -(2^n - 1) - 2^n - 1。同时，真值0有两种形式：+0 和 -0，对应的就是最开头的符号位不同，剩下的位数都是0.</p>
+<p>如果给明了机器字长为8bit的话，x &#x3D; -19 就可以写作 [x]原 &#x3D; 1,0010011，用逗号分隔符号位。没有指明机器字长的话，也可以写作 [x]原 &#x3D; 1,10011，补的0可以省略了。</p>
+<h3 id="4-1-2-原码的计算"><a href="#4-1-2-原码的计算" class="headerlink" title="4.1.2 原码的计算"></a>4.1.2 原码的计算</h3><p>直接说，不太好算，比如两个数 +10 和 -9，两个数的符号位分别是 0 和 1，如果直接按照上面的运算规则的话结果就是错的，因为<strong>符号位不能参与运算</strong>。</p>
+<p>如何让符号位也可以参与运算？这就提出了补码。</p>
+<h2 id="4-2-补码"><a href="#4-2-补码" class="headerlink" title="4.2 补码"></a>4.2 补码</h2><h3 id="4-2-1-原、反、补-转换"><a href="#4-2-1-原、反、补-转换" class="headerlink" title="4.2.1 原、反、补 转换"></a>4.2.1 原、反、补 转换</h3><p>原码到补码还有一个中间态，就是反码，转变规则如图：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703122316.png" alt="image.png"></p>
+<p>注：</p>
+<ul>
+<li>负数的情况下，原码、反码、补码 的最高位，全都表示的是符号</li>
+<li>还是负数的情况下，原码和反码可以按照规则相互转换，但是补码不能通过 + 1 的方式转回反码了，需要末位-1 才对，但是二进制减法有点麻烦，所以不用这种办法进行转换，而是补码直接转回原码，然后再转反码。</li>
+</ul>
+<h3 id="4-2-2-原码、补码-转换"><a href="#4-2-2-原码、补码-转换" class="headerlink" title="4.2.2 原码、补码 转换"></a>4.2.2 原码、补码 转换</h3><p>直接看图就行了：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703122826.png" alt="image.png"></p>
+<p>这种方法取反的时候可不包含第一个1，比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[x]原 = 1,1100100 从右往左找到第一个 1 ：</span><br><span class="line"></span><br><span class="line">[x]原 = 1,1100 1 00 然后不包括自己，左边的数值位取反：</span><br><span class="line"></span><br><span class="line">[x]原 = 1,0011 1 00 就变成了补码</span><br></pre></td></tr></table></figure>
+
+<p>但是实际上对于计算机而言，补码转原码还是一样的流程，数值位取反以后末位+1.</p>
+<h3 id="4-2-3-补码的加法"><a href="#4-2-3-补码的加法" class="headerlink" title="4.2.3 补码的加法"></a>4.2.3 补码的加法</h3><p>补码可以把符号位直接当作数值位来计算，然后按位相加，向更高位进位：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703124907.png" alt="image.png"></p>
+<p>最后按位相加以后向更高位进了个 1，然后舍去，保留最后8bit，得到0.如果是两个负数计算，同理：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703125106.png" alt="image.png"></p>
+<p>最后将结果从补码转回原码，从右往左找到第一个1，然后左边的数值位取反，得到 10100110，也就是 -38.</p>
+<h3 id="4-2-4-补码的减法"><a href="#4-2-4-补码的减法" class="headerlink" title="4.2.4 补码的减法"></a>4.2.4 补码的减法</h3><p>同理，减法电路比较贵，所以尽可能用加法处理，一个补码减去一个补码，就可以理解成一个补码加上一个补码的负数：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703125453.png" alt="image.png"></p>
+<p>补码转成负数也有简单的方法，从右往左找到第一个1，然后这个1左边的所有位包括符号位，全部取反即可。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703125834.png" alt="image.png"></p>
+<p>最后的计算结果首位是0，是个整数，所以原反补一样，故结果是38.</p>
+<h2 id="4-3-总结"><a href="#4-3-总结" class="headerlink" title="4.3 总结"></a>4.3 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703125948.png" alt="image.png"></p>
+<h2 id="4-4-三种码的比较"><a href="#4-4-三种码的比较" class="headerlink" title="4.4 三种码的比较"></a>4.4 三种码的比较</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703144600.png" alt="image.png"></p>
+<h2 id="4-5-移码"><a href="#4-5-移码" class="headerlink" title="4.5 移码"></a>4.5 移码</h2><p>很简单，在补码的基础上，符号位取反。这种玩意儿只能表示整数。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703144809.png" alt="image.png"></p>
+<p>对比：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703145002.png" alt="image.png"></p>
+<p>8比特机器数从全0到全1对应的四种码：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703145052.png" alt="image.png"></p>
+<h1 id="5-定点小数"><a href="#5-定点小数" class="headerlink" title="5. 定点小数"></a>5. 定点小数</h1><p>啥叫定点？就是说默认小数点的位置，前面的整数可以理解为定点整数，小数点默认隐藏在最后，定点小数就是小数点默认隐藏在符号位和数值位之间。</p>
+<p>定点小数可以用原码、反码、补码表示，但是不能用移码表示。</p>
+<h2 id="5-1-定点小数原码"><a href="#5-1-定点小数原码" class="headerlink" title="5.1 定点小数原码"></a>5.1 定点小数原码</h2><p>和之前几乎一毛一样，只是每一个bit的位权变了，从之前的 2^i 变成了现在的 2^(-i) 而已。符号位仍旧是 0 &#x3D; 正，1 &#x3D; 负。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703145515.png" alt="image.png"></p>
+<h2 id="5-2-定点小数补码"><a href="#5-2-定点小数补码" class="headerlink" title="5.2 定点小数补码"></a>5.2 定点小数补码</h2><p>和之前也是一模一样，仍旧是整数不变，负数先变成反码（除符号位以外全部取反）然后再变成补码（反码+1），当然之前那种简便方法也能用。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703145916.png" alt="image.png"></p>
+<h2 id="5-3-定点小数计算"><a href="#5-3-定点小数计算" class="headerlink" title="5.3 定点小数计算"></a>5.3 定点小数计算</h2><p>还是一模一样，两个定点小数做加减运算，需要先将定点小数转为补码，然后用补码运算。</p>
+<p>定点小数补码加法：从最低位开始，按位相加（符号位参与运算），并往高位进位；定点小数补码减法：被减数不变，减数全部位按位取反、末位+1，减法变加法；然后按位相加，进位。</p>
+<h2 id="5-4-定点小数VS定点整数"><a href="#5-4-定点小数VS定点整数" class="headerlink" title="5.4 定点小数VS定点整数"></a>5.4 定点小数VS定点整数</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230703150454.png" alt="image.png"></p>
+<p>同时，补位也不一样：</p>
+<ul>
+<li>定点整数 [x]原 &#x3D; 1,110，补位后 &#x3D; 1,<font color='red'>0000</font>110，得在符号位和数值位之间补0</li>
+<li>定点小数 [x]原 &#x3D; 1.110，补位后 &#x3D; 1.110<font color='red'>0000</font>，在数值位后面补0</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-01-%E6%9C%BA%E7%BB%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/" rel="prev" title="01-机组基本概念">
+      <i class="fa fa-chevron-left"></i> 01-机组基本概念
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/21/%E6%9C%BA%E7%BB%84-03-%E6%95%B0%E6%8D%AE%E8%BF%90%E7%AE%97/" rel="next" title="03-数据运算">
+      03-数据运算 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E6%95%B0%E6%8D%AE%E8%A1%A8%E7%A4%BA"><span class="nav-text">1. 数据表示</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E8%BF%9B%E5%88%B6%E8%BD%AC%E6%8D%A2"><span class="nav-text">1.1 进制转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E4%BA%8C%E8%BF%9B%E5%88%B6%E8%BD%AC%E5%85%AB%E3%80%81%E5%8D%81%E5%85%AD%E8%BF%9B%E5%88%B6"><span class="nav-text">1.2 二进制转八、十六进制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E5%8D%81%E8%BF%9B%E5%88%B6%E8%BD%ACR%E8%BF%9B%E5%88%B6"><span class="nav-text">1.3 十进制转R进制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-%E7%9C%9F%E5%80%BC%E5%92%8C%E6%9C%BA%E5%99%A8%E6%95%B0"><span class="nav-text">1.4 真值和机器数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-5-%E6%80%BB%E7%BB%93"><span class="nav-text">1.5 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-BCD-%E7%A0%81"><span class="nav-text">2. BCD 码</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-8421-%E7%A0%81"><span class="nav-text">2.1 8421 码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E4%BD%993%E7%A0%81"><span class="nav-text">2.2 余3码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-2421-%E7%A0%81"><span class="nav-text">2.3 2421 码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%E6%80%BB%E7%BB%93"><span class="nav-text">2.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E6%97%A0%E7%AC%A6%E5%8F%B7%E6%95%B4%E6%95%B0%E8%A1%A8%E7%A4%BA%E4%B8%8E%E8%BF%90%E7%AE%97"><span class="nav-text">3. 无符号整数表示与运算</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E6%97%A0%E7%AC%A6%E5%8F%B7%E6%95%B0%E7%9A%84%E8%A1%A8%E7%A4%BA"><span class="nav-text">3.1 无符号数的表示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E6%97%A0%E7%AC%A6%E5%8F%B7%E6%95%B0%E7%9A%84%E5%8A%A0%E5%87%8F%E6%B3%95"><span class="nav-text">3.2 无符号数的加减法</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E5%B8%A6%E7%AC%A6%E5%8F%B7%E6%95%B4%E6%95%B0"><span class="nav-text">4. 带符号整数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E5%8E%9F%E7%A0%81"><span class="nav-text">4.1 原码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-1-%E5%8E%9F%E7%A0%81%E8%A1%A8%E7%A4%BA"><span class="nav-text">4.1.1 原码表示</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-2-%E5%8E%9F%E7%A0%81%E7%9A%84%E8%AE%A1%E7%AE%97"><span class="nav-text">4.1.2 原码的计算</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E8%A1%A5%E7%A0%81"><span class="nav-text">4.2 补码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-1-%E5%8E%9F%E3%80%81%E5%8F%8D%E3%80%81%E8%A1%A5-%E8%BD%AC%E6%8D%A2"><span class="nav-text">4.2.1 原、反、补 转换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-2-%E5%8E%9F%E7%A0%81%E3%80%81%E8%A1%A5%E7%A0%81-%E8%BD%AC%E6%8D%A2"><span class="nav-text">4.2.2 原码、补码 转换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-3-%E8%A1%A5%E7%A0%81%E7%9A%84%E5%8A%A0%E6%B3%95"><span class="nav-text">4.2.3 补码的加法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-4-%E8%A1%A5%E7%A0%81%E7%9A%84%E5%87%8F%E6%B3%95"><span class="nav-text">4.2.4 补码的减法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E6%80%BB%E7%BB%93"><span class="nav-text">4.3 总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E4%B8%89%E7%A7%8D%E7%A0%81%E7%9A%84%E6%AF%94%E8%BE%83"><span class="nav-text">4.4 三种码的比较</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E7%A7%BB%E7%A0%81"><span class="nav-text">4.5 移码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%AE%9A%E7%82%B9%E5%B0%8F%E6%95%B0"><span class="nav-text">5. 定点小数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E5%AE%9A%E7%82%B9%E5%B0%8F%E6%95%B0%E5%8E%9F%E7%A0%81"><span class="nav-text">5.1 定点小数原码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E5%AE%9A%E7%82%B9%E5%B0%8F%E6%95%B0%E8%A1%A5%E7%A0%81"><span class="nav-text">5.2 定点小数补码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E5%AE%9A%E7%82%B9%E5%B0%8F%E6%95%B0%E8%AE%A1%E7%AE%97"><span class="nav-text">5.3 定点小数计算</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-4-%E5%AE%9A%E7%82%B9%E5%B0%8F%E6%95%B0VS%E5%AE%9A%E7%82%B9%E6%95%B4%E6%95%B0"><span class="nav-text">5.4 定点小数VS定点整数</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

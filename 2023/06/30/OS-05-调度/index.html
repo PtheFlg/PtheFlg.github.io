@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="调度">
+<meta property="og:type" content="article">
+<meta property="og:title" content="05.调度">
+<meta property="og:url" content="http://example.com/2023/06/30/OS-05-%E8%B0%83%E5%BA%A6/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="调度">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618103739.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618103931.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618104043.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618110321.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618145437.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618151318.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618151344.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618151642.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618152410.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618152556.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618153559.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618154812.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618154718.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618155507.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618160550.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618160746.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618160913.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618161034.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618161214.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618155620.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618163040.png">
+<meta property="article:published_time" content="2023-06-30T03:06:18.000Z">
+<meta property="article:modified_time" content="2023-07-12T15:35:14.018Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618103739.png">
+
+<link rel="canonical" href="http://example.com/2023/06/30/OS-05-%E8%B0%83%E5%BA%A6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>05.调度 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/30/OS-05-%E8%B0%83%E5%BA%A6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          05.调度
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-30 11:06:18" itemprop="dateCreated datePublished" datetime="2023-06-30T11:06:18+08:00">2023-06-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-07-12 23:35:14" itemprop="dateModified" datetime="2023-07-12T23:35:14+08:00">2023-07-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>调度</p>
+<span id="more"></span>
+
+<h1 id="1-调度概念"><a href="#1-调度概念" class="headerlink" title="1. 调度概念"></a>1. 调度概念</h1><p>有一堆任务要处理，但是由于资源有限，这些事情没法同时处理。这就需要确定<strong>某种规则</strong>来决定处理这些任务的顺序，这就是”调度“研究的问题。</p>
+<h1 id="2-调度三层次"><a href="#2-调度三层次" class="headerlink" title="2. 调度三层次"></a>2. 调度三层次</h1><h2 id="2-1-高级调度"><a href="#2-1-高级调度" class="headerlink" title="2.1 高级调度"></a>2.1 高级调度</h2><p>也叫作业调度，作业就是一个具体的任务，用户向系统提交一个作业 约等于 用户让操作系统启动一个程序（来处理一个具体的任务），这个时候这个程序还在磁盘里面呢。所以高级调度是从磁盘到内存的调度。</p>
+<p>我们要启动好几个程序，就需要将这些程序放入内存，但有的时候内存空间有限，无法放入内存。所以高级调度就是：按照一定的原则从外存的作业后备队列中挑选一个作业调入内存，并创建进程。每个作业只调入一次，调出一次。作业调入时会创建PCB，调出时会撤销PCB。</p>
+<h2 id="2-2-低级调度"><a href="#2-2-低级调度" class="headerlink" title="2.2 低级调度"></a>2.2 低级调度</h2><p>也就是进程调度或者叫处理机调度：按照某种策略从就绪队列中选取一个进程，将处理机分配给他。也就是我们之前说的进程的时间片轮转。</p>
+<p>进程调度时操作系统中<strong>最基本的一种调度</strong>，在一般的操作系统中都必须配置进程调度，而且进程调度的频率很高，一般几十毫秒一次。</p>
+<h2 id="2-3-中级调度"><a href="#2-3-中级调度" class="headerlink" title="2.3 中级调度"></a>2.3 中级调度</h2><p>也叫内存调度，内存不够时，可以将某些进程的数据调出外存。等内存空闲或者进程需要运行时再重新调入内存。</p>
+<p>暂时调到外存等待的进程状态为挂起状态。被挂起的进程PCB会被组织成挂起队列。</p>
+<p>所以总的来说，中级调度就是按照某种策略决定将哪个处于挂起状态的进程重新调入内存。同样是磁盘到内存。</p>
+<h2 id="2-4-七状态模型"><a href="#2-4-七状态模型" class="headerlink" title="2.4 七状态模型"></a>2.4 七状态模型</h2><p>之前我们说的进程状态是5个，开始、结束、就绪、运行、阻塞。现在有了挂起，那么就可以多两种状态：就绪挂起和阻塞挂起。</p>
+<ul>
+<li>就绪挂起：进程本来是就绪态，但是被挂起了，那就变成就绪挂起，有的时候运行态的进程发现内存没有地方了，也会直接被设为就绪挂起。</li>
+<li>阻塞挂起：好理解，就是阻塞的时候内存不够了，这个进程被挂起，就会进入阻塞挂起，阻塞挂起不能直接回到就绪，当阻塞结束时，他会先变为就绪挂起，然后再回到就绪态。</li>
+</ul>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618103739.png" alt="image.png"></p>
+<p>这种408可能不会考。</p>
+<h2 id="2-5-总结"><a href="#2-5-总结" class="headerlink" title="2.5 总结"></a>2.5 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618103931.png" alt="image.png"><br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618104043.png" alt="image.png"></p>
+<h1 id="3-进程调度的时机"><a href="#3-进程调度的时机" class="headerlink" title="3. 进程调度的时机"></a>3. 进程调度的时机</h1><p>注意，这里可是叫进程调度，也就是对应前面的低级调度。</p>
+<p>进程调度的时机就是什么时候可以进行进程调度，什么时候不能进行调度。</p>
+<h2 id="3-1-可以进程调度"><a href="#3-1-可以进程调度" class="headerlink" title="3.1 可以进程调度"></a>3.1 可以进程调度</h2><p>两种情况可以进行进程调度：</p>
+<ul>
+<li>当前运行的进程主动放弃处理机：进程正常终止，或者运行过程中发成异常，或者进程正在等待某事发生阻塞。</li>
+<li>当前运行的进程被动放弃处理机：时间片到了，有更紧急的事儿需要处理（比如IO中断），或者有更高优先级的进程进入就绪队列。</li>
+</ul>
+<h2 id="3-2-不能进程调度"><a href="#3-2-不能进程调度" class="headerlink" title="3.2 不能进程调度"></a>3.2 不能进程调度</h2><ul>
+<li>处理中断的过程中。中断处理过程复杂，与硬件密切相关，很难做到在处理中断的过程中进行进程切换</li>
+<li>进程在<font color = 'red'>操作系统内核程序临界区</font>中</li>
+<li>在原子操作过程中，比如原语。原子操作需要一气呵成，中间不能调度。</li>
+</ul>
+<h2 id="3-3-临界区"><a href="#3-3-临界区" class="headerlink" title="3.3 临界区"></a>3.3 临界区</h2><p>前面说到了操作系统内核临界区，这里解释一下：</p>
+<p>首先说一下临界资源：一个时间段内只允许一个进程使用的资源。各个进程需要互斥地访问临界资源。临界区：访问临界资源的那段代码。</p>
+<p>内核程序临界区一般是用来访问某种内核数据结构的，比如进程的就绪队列。根据我学JUC和MySQL 的经验，比如进程要操作就绪队列，就绪队列就属于临界资源，那么操作队列的这段代码就是临界区，为了实现互斥效果，操作队列之前就会给队列上锁，但是这个锁不能老上着啊，一直持有锁不释放很有可能发生BUG，所以这个时候就不能进程调度，而是让当前进程赶紧用完队列赶紧释放锁。</p>
+<p>但是还有一种情况，就是程序处在普通临界区，比如程序正在操作打印机，这个时候是没事的。</p>
+<h1 id="4-进程调度的方式"><a href="#4-进程调度的方式" class="headerlink" title="4. 进程调度的方式"></a>4. 进程调度的方式</h1><h2 id="4-1-非剥夺调度方式"><a href="#4-1-非剥夺调度方式" class="headerlink" title="4.1 非剥夺调度方式"></a>4.1 非剥夺调度方式</h2><p>也叫非抢占方式。只允许进程主动放弃处理机。在运行过程中即使有更近剖的任务到达，当前进程依然会继续使用处理机，直到该进程终止或主动阻塞。</p>
+<p>这种方式开销小，但是无法及时执行紧急任务。</p>
+<h2 id="4-2-剥夺调度方式"><a href="#4-2-剥夺调度方式" class="headerlink" title="4.2 剥夺调度方式"></a>4.2 剥夺调度方式</h2><p>也叫抢占方式。当一个进程正在处理机上时，如果有一个更重要或者更紧迫的进程需要使用处理机，则立即暂停正在执行的进程，将处理机分配给更重要的进程。</p>
+<p>可以优先处理更紧急的进程，也可以让各个进程按照时间片轮流执行。适合于分时操作系统和实时操作系统。</p>
+<h1 id="5-进程的切换与过程"><a href="#5-进程的切换与过程" class="headerlink" title="5. 进程的切换与过程"></a>5. 进程的切换与过程</h1><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618110321.png" alt="image.png"></p>
+<h1 id="6-调度器-x2F-调度程序"><a href="#6-调度器-x2F-调度程序" class="headerlink" title="6. 调度器&#x2F;调度程序"></a>6. 调度器&#x2F;调度程序</h1><p>调度器或者说调度程序（Scheduler）就是具体执行调度的东西，调度器来执行进程从就绪态到运行态的转变。具体调度程序需要决定：</p>
+<ul>
+<li>让谁来运行：调度算法</li>
+<li>运行多长时间：时间片大小</li>
+</ul>
+<p>而我们之前说的调度时机，其实就是什么事件会出发”调度程序“：</p>
+<ul>
+<li>创建新进程</li>
+<li>进程推出</li>
+<li>运行进程阻塞</li>
+<li>IO中断发生（可能唤醒某些阻塞的进程）</li>
+<li>非抢占式调度策略，只有运行进程发生阻塞或者退出才会触发调度程序工作</li>
+<li>抢占式调度策略，每个时钟中断或K个时钟中断会触发调度程序工作</li>
+</ul>
+<p>对于不支持内核线程的操作系统，调度程序的处理对象就是进程。而对于支持内核线程的操作系统，调度程序的处理对象就是内核线程。因为线程是调度的基本单位。</p>
+<h1 id="7-闲逛进程"><a href="#7-闲逛进程" class="headerlink" title="7. 闲逛进程"></a>7. 闲逛进程</h1><p>调度程序的备胎，如果没有其他就绪进程的话，就会运行闲逛进程（Idle）。</p>
+<p>Idle 的特性：</p>
+<ul>
+<li>优先级最低：单反有一个就绪的进程都不会运行他</li>
+<li>可以是0地址指令，占一个完整的指令周期（指令周期末尾例行检查中断）：就是说这个指令不需要访问CPU啥的</li>
+<li>能耗低</li>
+</ul>
+<h1 id="8-评价调度算法的指标"><a href="#8-评价调度算法的指标" class="headerlink" title="8. 评价调度算法的指标"></a>8. 评价调度算法的指标</h1><h2 id="8-1-CPU利用率"><a href="#8-1-CPU利用率" class="headerlink" title="8.1 CPU利用率"></a>8.1 CPU利用率</h2><p>$$<br>CPU利用率&#x3D;\frac{CPU忙碌时间}{总时间}<br>$$</p>
+<p>考研的时候往往会考察多道程序并发执行的情况，可以用“甘特图”来辅助计算。</p>
+<h2 id="8-2-系统吞吐量"><a href="#8-2-系统吞吐量" class="headerlink" title="8.2 系统吞吐量"></a>8.2 系统吞吐量</h2><p>指的就是单位时间内完成作业的数量。</p>
+<p>$$<br>所以吞吐量&#x3D;\frac{总共完成了多少道作业}{总共花了多少时间}<br>$$</p>
+<h2 id="8-3-周转时间"><a href="#8-3-周转时间" class="headerlink" title="8.3 周转时间"></a>8.3 周转时间</h2><p>指的是作业被提交给系统开始，到作业完成为止的这段时间间隔。包括四个部分：</p>
+<ul>
+<li>作业在外存后备队列上等待作业调度（高级调度）的时间</li>
+<li>进程在就绪队列上等待进程调度（低级调度）的时间</li>
+<li>进程在CPU上执行的时间</li>
+<li>进程等待IO操作完成的时间。</li>
+</ul>
+<p>后面三项在作业整个处理过程中可能发生多次。</p>
+<p>$$<br>周转时间 &#x3D; {作业完成时间} - {作业提交时间}<br>$$</p>
+<p>$$<br>平均周转时间 &#x3D; \frac{各作业周转时间和}{作业数}<br>$$</p>
+<p>两个作业虽然周转时间相同，但是实际运行时间可能不同，导致的感受也不同，所以又提出了带权周转时间：</p>
+<p>$$<br>带权周转时间 &#x3D; \frac{作业周转时间}{作业实际运行时间} &#x3D; \frac{作业完成时间 - 作业提交时间}{作业实际运行时间}<br>$$</p>
+<p>带权周转时间必然 &gt;&#x3D; 1，带权周转时间和周转时间都是越小越好。</p>
+<p>然后还有一个平均带权周转时间，就是各个作业带权周转时间的和除以作业数，不说了。</p>
+<h2 id="8-4-等待时间"><a href="#8-4-等待时间" class="headerlink" title="8.4 等待时间"></a>8.4 等待时间</h2><p>指的是进程&#x2F;作业处于等待处理机状态时间之和，等待时间越长，用户满意度越低。</p>
+<p>对于进程来说，等待时间就是指进程建立后等待被服务的时间之和，在等待IO完成的期间其实进程也是被服务的，所以不计入等待时间（也就是说打印机工作的时间不算）。</p>
+<p>对于作业来说，不仅要考虑建立进程后等待的时间，还要加上作业在外存后备队列中等待的时间。</p>
+<p>一个作业总共需要被CPU服务多久，被IO设备服务多久一般是确定不变的，因此调度算法其实只会影响作业&#x2F;进程的等待时间。</p>
+<p>$$<br>等待时间 &#x3D; 周转时间 - 运行时间（如果使用了IO设备，还需要减去IO设备使用时间）<br>$$</p>
+<h2 id="8-5-响应时间"><a href="#8-5-响应时间" class="headerlink" title="8.5 响应时间"></a>8.5 响应时间</h2><p>指的就是用户提交请求到首次产生响应所需要的时间。</p>
+<h2 id="8-6-总结"><a href="#8-6-总结" class="headerlink" title="8.6 总结"></a>8.6 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618145437.png" alt="image.png"></p>
+<h1 id="9-调度算法"><a href="#9-调度算法" class="headerlink" title="9. 调度算法"></a>9. 调度算法</h1><h2 id="9-1-先来先服务"><a href="#9-1-先来先服务" class="headerlink" title="9.1 先来先服务"></a>9.1 先来先服务</h2><p>很好理解，就是越先来的进程越先被服务。一般也就是按照时间顺序依次往后执行。核心思想就是“公平”，且属于非抢占式调度算法，除非任务主动放弃或者阻塞，不会强制让任务下线。用于作业调度时，考虑哪个作业先到达后备队列；用于进程调度时，考虑哪个进程先到达就绪队列。</p>
+<p>优点：公平、算法实现简单</p>
+<p>缺点：排在长作业后面的短作业需要等待很长时间，从指标来看就是带权周转时间非常长，这个体验就是非常不好了。</p>
+<p>这种算法不会导致饥饿，所以任务都会有序的被服务。</p>
+<h2 id="9-2-短作业优先"><a href="#9-2-短作业优先" class="headerlink" title="9.2 短作业优先"></a>9.2 短作业优先</h2><p>追求最少的平均等待时间，最少的平均周转时间、最少的平均带权周转时间。算法规则就是：最短的作业&#x2F;进程优先得到服务（最短指的是要求服务时间最短）。既可以用于作业调度，也可以用在进程调度。用于进程调度时称为“短进程优先（SPF）算法”。</p>
+<p>优点就是“最短的”平均等待时间、平均周转时间。</p>
+<p>缺点：不太公平。对短作业有利，对长作业不利。可能产生饥饿现象。另外，作业&#x2F;进程的运行时间是由用户提供的，并已定真实，不一定能做到真正的短作业优先</p>
+<p>然而短作业优先又分两种：抢占式和非抢占式：</p>
+<h3 id="9-2-1-非抢占式短作业优先"><a href="#9-2-1-非抢占式短作业优先" class="headerlink" title="9.2.1 非抢占式短作业优先"></a>9.2.1 非抢占式短作业优先</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618151318.png" alt="image.png"></p>
+<h3 id="9-2-2-抢占式短作业优先"><a href="#9-2-2-抢占式短作业优先" class="headerlink" title="9.2.2 抢占式短作业优先"></a>9.2.2 抢占式短作业优先</h3><p>这种算法也叫“最短剩余时间优先算法（SRNT）”，每次一个任务来了以后，他就会根据任务的剩余时间来重新调度。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618151344.png"></p>
+<h3 id="9-2-3-细节"><a href="#9-2-3-细节" class="headerlink" title="9.2.3 细节"></a>9.2.3 细节</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618151642.png" alt="image.png"></p>
+<h2 id="9-3-高响应比优先"><a href="#9-3-高响应比优先" class="headerlink" title="9.3 高响应比优先"></a>9.3 高响应比优先</h2><p>是一种非抢占式的算法，就是每次要重新调度的时候，我都看看谁等的时间长了而且活比较简单，优先让这类作业先上处理机。因此也不会饥饿。<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618152410.png" alt="image.png"></p>
+<h2 id="9-4-总结"><a href="#9-4-总结" class="headerlink" title="9.4 总结"></a>9.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618152556.png" alt="image.png"></p>
+<h2 id="9-5-时间片轮转"><a href="#9-5-时间片轮转" class="headerlink" title="9.5 时间片轮转"></a>9.5 时间片轮转</h2><p>比较常用的算法，只用于进程调度，伴随着分时操作系统引入的一种算法。所以这种算法更注重响应时间。</p>
+<p>如果时间片设置太大，使得每个进程都可以在一个时间片内完成，则算法就会退化成先来先服务算法，并且会增大进程响应时间。另一方面，如果进程切换过于频繁，就会导致系统会花费大量的时间来处理进程切换，从而导致进程执行的时间比例减少。一般来说，进程开销占比不少过1%。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618153559.png" alt="image.png"></p>
+<p>这里说一下算法规则：任务一定是按照顺序进入就绪队列中，所以调度的时候也是按顺序进行调度。如果时间片内任务没做完，则重新放回队列末尾。如果同一时间又有新任务加入，时间片也用完了旧任务要回队，我们默认旧任务排在新任务后面。</p>
+<h2 id="9-6-优先级调度算法"><a href="#9-6-优先级调度算法" class="headerlink" title="9.6 优先级调度算法"></a>9.6 优先级调度算法</h2><p>就是说每个任务来的时候都会有个优先数代表着优先级（优先级越高可不一定优先数越大，分情况讨论），每次调度都会选择最高优先级的任务先上处理机。</p>
+<p>同样有抢占式的和非抢占式的，非抢占式的好理解，抢占式的就是每次就绪队列发生变化都要重新调度一下，看看有没有新的任务优先级更高，就优先执行哪个。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618154812.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618154718.png" alt="image.png"></p>
+<h2 id="9-7-多级反馈队列调度算法"><a href="#9-7-多级反馈队列调度算法" class="headerlink" title="9.7 多级反馈队列调度算法"></a>9.7 多级反馈队列调度算法</h2><p>这个算法可就优点复杂了。<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618155507.png" alt="image.png"><br>看图看不懂，来上个例子：</p>
+<p>现在有三个任务：</p>
+<table>
+<thead>
+<tr>
+<th>进程</th>
+<th>到达时间</th>
+<th>运行时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>P1</td>
+<td>0</td>
+<td>8</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>1</td>
+<td>4</td>
+</tr>
+<tr>
+<td>P3</td>
+<td>5</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<p>多级反馈队列会提供多个队列，每个队列有自己的时间片，优先级越高的队列对应的时间片越低：<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618160550.png" alt="image.png"></p>
+<p>当P1进入，因为是先到达，所以首先进入一级队列，对应的时间片是1，所以执行1个时间，执行完以后，由于时间片没有被打断切P1没有完成，P1就会进入第二级队列，同时，P2来了，就会先进入一级队列。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618160746.png" alt="image.png"></p>
+<p>然后操作系统会优先执行优先级高的队列，所以就会优先执行一级队列中的P2，同样是执行一个时间，然后和P1一样进入二级队列。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618160913.png" alt="image.png"></p>
+<p>然后二级队列就会按照顺序执行P1，P1同样没有被打断而且没有执行完，那么P1就会进入三级队列，之后继续执行P2任务。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618161034.png" alt="image.png"></p>
+<p>P2执行了一个时间时，P3来了，这个时候就会重新调度，相当于P2执行被打断，如果执行被打断，就不会流向下一级队列，而是会重新返回当前队列等待执行。同时P3进入一级队列。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618161214.png" alt="image.png"></p>
+<p>操作系统又会优先执行高优先级队列，所以优先执行P3，P3执行完以后执行P2，P2执行了二个时间后执行完成，不会进入三级队列。最后执行P1，因为是最低级队列，即便是时间片内没有执行完，也会重新回到当前队列重新执行。</p>
+<h2 id="9-8-总结"><a href="#9-8-总结" class="headerlink" title="9.8 总结"></a>9.8 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618155620.png" alt="image.png"></p>
+<h2 id="9-9-多级队列调度"><a href="#9-9-多级队列调度" class="headerlink" title="9.9 多级队列调度"></a>9.9 多级队列调度</h2><p>这个他们就是提了一句，感觉也不是很难。就是说设计好几个任务队列，每个任务队列都有自己的功能划分，所以队列自己就有优先级。各个队列也可以分别设置不同的调度策略。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618163040.png" alt="image.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-04-%E7%BA%BF%E7%A8%8B/" rel="prev" title="04.线程">
+      <i class="fa fa-chevron-left"></i> 04.线程
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-06-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/" rel="next" title="06.同步与互斥">
+      06.同步与互斥 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E8%B0%83%E5%BA%A6%E6%A6%82%E5%BF%B5"><span class="nav-text">1. 调度概念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E8%B0%83%E5%BA%A6%E4%B8%89%E5%B1%82%E6%AC%A1"><span class="nav-text">2. 调度三层次</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E9%AB%98%E7%BA%A7%E8%B0%83%E5%BA%A6"><span class="nav-text">2.1 高级调度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E4%BD%8E%E7%BA%A7%E8%B0%83%E5%BA%A6"><span class="nav-text">2.2 低级调度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E4%B8%AD%E7%BA%A7%E8%B0%83%E5%BA%A6"><span class="nav-text">2.3 中级调度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%E4%B8%83%E7%8A%B6%E6%80%81%E6%A8%A1%E5%9E%8B"><span class="nav-text">2.4 七状态模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-5-%E6%80%BB%E7%BB%93"><span class="nav-text">2.5 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E6%97%B6%E6%9C%BA"><span class="nav-text">3. 进程调度的时机</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E5%8F%AF%E4%BB%A5%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6"><span class="nav-text">3.1 可以进程调度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E4%B8%8D%E8%83%BD%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6"><span class="nav-text">3.2 不能进程调度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E4%B8%B4%E7%95%8C%E5%8C%BA"><span class="nav-text">3.3 临界区</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%9A%84%E6%96%B9%E5%BC%8F"><span class="nav-text">4. 进程调度的方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E9%9D%9E%E5%89%A5%E5%A4%BA%E8%B0%83%E5%BA%A6%E6%96%B9%E5%BC%8F"><span class="nav-text">4.1 非剥夺调度方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E5%89%A5%E5%A4%BA%E8%B0%83%E5%BA%A6%E6%96%B9%E5%BC%8F"><span class="nav-text">4.2 剥夺调度方式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%88%87%E6%8D%A2%E4%B8%8E%E8%BF%87%E7%A8%8B"><span class="nav-text">5. 进程的切换与过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E8%B0%83%E5%BA%A6%E5%99%A8-x2F-%E8%B0%83%E5%BA%A6%E7%A8%8B%E5%BA%8F"><span class="nav-text">6. 调度器&#x2F;调度程序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-%E9%97%B2%E9%80%9B%E8%BF%9B%E7%A8%8B"><span class="nav-text">7. 闲逛进程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#8-%E8%AF%84%E4%BB%B7%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95%E7%9A%84%E6%8C%87%E6%A0%87"><span class="nav-text">8. 评价调度算法的指标</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#8-1-CPU%E5%88%A9%E7%94%A8%E7%8E%87"><span class="nav-text">8.1 CPU利用率</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-2-%E7%B3%BB%E7%BB%9F%E5%90%9E%E5%90%90%E9%87%8F"><span class="nav-text">8.2 系统吞吐量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-3-%E5%91%A8%E8%BD%AC%E6%97%B6%E9%97%B4"><span class="nav-text">8.3 周转时间</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-4-%E7%AD%89%E5%BE%85%E6%97%B6%E9%97%B4"><span class="nav-text">8.4 等待时间</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-5-%E5%93%8D%E5%BA%94%E6%97%B6%E9%97%B4"><span class="nav-text">8.5 响应时间</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-6-%E6%80%BB%E7%BB%93"><span class="nav-text">8.6 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#9-%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95"><span class="nav-text">9. 调度算法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#9-1-%E5%85%88%E6%9D%A5%E5%85%88%E6%9C%8D%E5%8A%A1"><span class="nav-text">9.1 先来先服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-2-%E7%9F%AD%E4%BD%9C%E4%B8%9A%E4%BC%98%E5%85%88"><span class="nav-text">9.2 短作业优先</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#9-2-1-%E9%9D%9E%E6%8A%A2%E5%8D%A0%E5%BC%8F%E7%9F%AD%E4%BD%9C%E4%B8%9A%E4%BC%98%E5%85%88"><span class="nav-text">9.2.1 非抢占式短作业优先</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-2-2-%E6%8A%A2%E5%8D%A0%E5%BC%8F%E7%9F%AD%E4%BD%9C%E4%B8%9A%E4%BC%98%E5%85%88"><span class="nav-text">9.2.2 抢占式短作业优先</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-2-3-%E7%BB%86%E8%8A%82"><span class="nav-text">9.2.3 细节</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-3-%E9%AB%98%E5%93%8D%E5%BA%94%E6%AF%94%E4%BC%98%E5%85%88"><span class="nav-text">9.3 高响应比优先</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-4-%E6%80%BB%E7%BB%93"><span class="nav-text">9.4 总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-5-%E6%97%B6%E9%97%B4%E7%89%87%E8%BD%AE%E8%BD%AC"><span class="nav-text">9.5 时间片轮转</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-6-%E4%BC%98%E5%85%88%E7%BA%A7%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95"><span class="nav-text">9.6 优先级调度算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-7-%E5%A4%9A%E7%BA%A7%E5%8F%8D%E9%A6%88%E9%98%9F%E5%88%97%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95"><span class="nav-text">9.7 多级反馈队列调度算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-8-%E6%80%BB%E7%BB%93"><span class="nav-text">9.8 总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-9-%E5%A4%9A%E7%BA%A7%E9%98%9F%E5%88%97%E8%B0%83%E5%BA%A6"><span class="nav-text">9.9 多级队列调度</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

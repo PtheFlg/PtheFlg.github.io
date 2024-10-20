@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="线程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="04.线程">
+<meta property="og:url" content="http://example.com/2023/06/30/OS-04-%E7%BA%BF%E7%A8%8B/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="线程">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618093531.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618093825.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618095730.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618100033.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618100426.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618100601.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618101420.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618101912.png">
+<meta property="article:published_time" content="2023-06-30T03:06:13.000Z">
+<meta property="article:modified_time" content="2023-07-12T15:35:07.037Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230618093531.png">
+
+<link rel="canonical" href="http://example.com/2023/06/30/OS-04-%E7%BA%BF%E7%A8%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>04.线程 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/30/OS-04-%E7%BA%BF%E7%A8%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          04.线程
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-30 11:06:13" itemprop="dateCreated datePublished" datetime="2023-06-30T11:06:13+08:00">2023-06-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-07-12 23:35:07" itemprop="dateModified" datetime="2023-07-12T23:35:07+08:00">2023-07-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>线程</p>
+<span id="more"></span>
+
+<h1 id="1-什么是线程"><a href="#1-什么是线程" class="headerlink" title="1. 什么是线程"></a>1. 什么是线程</h1><p>有的进程可能需要“同时”做很多事情，而传统的进程只能穿性的执行一系列程序。为此引入了“线程”，来增加并发度。可以吧线程理解成“轻量级进程”</p>
+<p>传统的进程是程序执行流的最小单位，引入线程后，线程成为了程序执行流的最小单位，线程是一个基本的CPU执行单元，进程内的各个线程也可以并发，从而进一步提高了系统并发度。</p>
+<h1 id="2-线程带来的变化"><a href="#2-线程带来的变化" class="headerlink" title="2. 线程带来的变化"></a>2. 线程带来的变化</h1><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618093531.png" alt="image.png"></p>
+<p>这里再提一句，这个进程运行环境在上一章专门说过，也就是CPU里面寄存器那些东西，这些东西需要保存到PCB中，切换进程就需要将当前进程的环境保存到PCB，然后将下一个进程的PCB数据读入，开销会比较大。</p>
+<h1 id="3-线程的属性"><a href="#3-线程的属性" class="headerlink" title="3. 线程的属性"></a>3. 线程的属性</h1><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618093825.png" alt="image.png"></p>
+<h1 id="4-线程的实现方式"><a href="#4-线程的实现方式" class="headerlink" title="4. 线程的实现方式"></a>4. 线程的实现方式</h1><h2 id="4-1-用户级线程"><a href="#4-1-用户级线程" class="headerlink" title="4.1 用户级线程"></a>4.1 用户级线程</h2><p>早起的操作系统（比如 Unix）只支持进程不支持线程。当时的“线程”是由线程库实现的。比如说我们要写一个程序，这个程序要同时处理文字聊天，视频，文件传输，我们就可以在代码层面这么写：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="type">int</span> i = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">		<span class="keyword">if</span>(i == <span class="number">0</span>) &#123; 文字聊天 &#125;</span><br><span class="line">		<span class="keyword">if</span>(i == <span class="number">1</span>) &#123; 视频 &#125;</span><br><span class="line">		<span class="keyword">if</span>(i == <span class="number">2</span>) &#123; 文件传输 &#125;</span><br><span class="line">		i = (i + <span class="number">1</span>) % <span class="number">3</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的代码我们就简单实现了三个线程，很多编程语言提供了强大的线程库，可以实现线程的创建、销毁、调度等功能。</p>
+<p>说明几个问题：</p>
+<ul>
+<li>线程的管理工作由用户来完成，操作系统感知不到线程的存在</li>
+<li>线程切换不需要CPU变态，因为进程没变</li>
+</ul>
+<p>这种线程的实现在用户空间即可完成，不需要CPU切换到核心态，所以管理的系统开销小，效率高。但是从代码角度看，如果一个线程被阻塞，整个程序都会被阻塞，并发度不高。同时因为CPU感知不到线程，多个线程不可以在多核处理机上并行运行。</p>
+<h2 id="4-2-内核级线程"><a href="#4-2-内核级线程" class="headerlink" title="4.2 内核级线程"></a>4.2 内核级线程</h2><p>这种就是操作系统层面上支持线程，线程的管理工作如线程调度、切换等由操作系统内核完成，所以内核级线程的切换必须要在核心态下才能完成。</p>
+<p>和进程类似，操作系统会为每个内核级线程创建相应的TCB（Thread Control Block），通过对TCB来管理线程。“内核级线程”就是“从操作系统内核角度能看到的线程”。</p>
+<p>这么做的优点就是当一个线程被阻塞后，别的线程还可以继续执行，并发能力强，而且多个线程就可以被分配到多个处理机上并行执行。而缺点就是一个用户进程会占用多个内核级线程，线程切换由操作系统内核完成，需要切换到核心态，因此线程管理成本高。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618095730.png" alt="image.png"></p>
+<h1 id="5-多线程模型"><a href="#5-多线程模型" class="headerlink" title="5. 多线程模型"></a>5. 多线程模型</h1><p>如果将用户线程和内核线程结合起来，将用户线程映射到内核线程上，就会有下面这么三种多线程模型。</p>
+<h2 id="5-1-一对一模型"><a href="#5-1-一对一模型" class="headerlink" title="5.1 一对一模型"></a>5.1 一对一模型</h2><p>每个用户线程映射到一个内核线程。每个用户进程有与用户线程同数量的内核线程。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618100033.png" alt="image.png"></p>
+<p>当一个线程被阻塞后，别的线程还可以继续运行，并发能力强。多线程可以在多核处理机上并行。但是一个用户进程占用多个内核线程，线程管理开销大。</p>
+<h2 id="5-2-多对一模型"><a href="#5-2-多对一模型" class="headerlink" title="5.2 多对一模型"></a>5.2 多对一模型</h2><p>多个用户及线程映射到一个内核级线程。且一个进程只分配一个内核级线程。这个东西就是退化回去了，优点和之前一样，线程转换不需要切换到核心态，线程管理开销小。但是线程一旦被阻塞整个进程就会被阻塞，并发度不高。多个线程也不能在多核处理机上并行。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618100426.png" alt="image.png"></p>
+<p>切记：<font color='red'> 操作系统只“看得见”内核级线程，因此只有内核线程才是处理机分配的单位。</font></p>
+<h2 id="5-3-多对多模型"><a href="#5-3-多对多模型" class="headerlink" title="5.3 多对多模型"></a>5.3 多对多模型</h2><p>N个用户线程映射到M个内核线程上（N&gt;M）。每个用户进程对应M个内核线程。克服了多对一模型并发度不高的缺点，又克服了一对一模型中一个用户进程占用太多内核线程，开销太大的缺点。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618100601.png" alt="image.png"></p>
+<p>这里用户线程和核心线程的关系：</p>
+<ul>
+<li>用户线程是“代码逻辑”的载体</li>
+<li>内核线程是”运行机会“的载体</li>
+</ul>
+<p>一端代码逻辑只有获得了运行机会才能被CPU执行。比如三个功能，视频聊天，文字聊天，文件传输，其中视频聊天比较占用资源，就可以给视频聊天的用户线程单独分配一个核心线程，然后文字聊天和文件传输共用另一个核心线程。</p>
+<h1 id="6-线程的状态与转换"><a href="#6-线程的状态与转换" class="headerlink" title="6. 线程的状态与转换"></a>6. 线程的状态与转换</h1><p>这个就十分的简单了，和前面的进程几乎是一毛一样，我们只需要着重关注三个状态：就绪、运行、阻塞。线程首先进入就绪状态然后等待CPU分配时间片，然后运行，时间片用完以后就会返回就绪状态。如果在运行的时候等待某件事，就会进入阻塞，等待结束返回就绪态。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618101420.png" alt="image.png"></p>
+<h1 id="7-线程的组织与控制"><a href="#7-线程的组织与控制" class="headerlink" title="7. 线程的组织与控制"></a>7. 线程的组织与控制</h1><p>这个和进程也是很类似，操作系统为了管理线程就会为每个线程创建一个TCB线程控制块：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230618101912.png" alt="image.png"></p>
+<p>这里只说两个东西：</p>
+<ul>
+<li>其他寄存器：这个东西和之前的进程运行状态类似，就是CPU在执行这个线程的时候寄存器的值</li>
+<li>堆栈指针：这个玩意如果学过JVM的话就好理解了，就是指向虚拟机栈的指针，然后这个栈用来记录函数调用情况。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-03-%E8%BF%9B%E7%A8%8B/" rel="prev" title="03.进程">
+      <i class="fa fa-chevron-left"></i> 03.进程
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-05-%E8%B0%83%E5%BA%A6/" rel="next" title="05.调度">
+      05.调度 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E4%BB%80%E4%B9%88%E6%98%AF%E7%BA%BF%E7%A8%8B"><span class="nav-text">1. 什么是线程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E7%BA%BF%E7%A8%8B%E5%B8%A6%E6%9D%A5%E7%9A%84%E5%8F%98%E5%8C%96"><span class="nav-text">2. 线程带来的变化</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%B1%9E%E6%80%A7"><span class="nav-text">3. 线程的属性</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F"><span class="nav-text">4. 线程的实现方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E7%94%A8%E6%88%B7%E7%BA%A7%E7%BA%BF%E7%A8%8B"><span class="nav-text">4.1 用户级线程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B"><span class="nav-text">4.2 内核级线程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="nav-text">5. 多线程模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E4%B8%80%E5%AF%B9%E4%B8%80%E6%A8%A1%E5%9E%8B"><span class="nav-text">5.1 一对一模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E5%A4%9A%E5%AF%B9%E4%B8%80%E6%A8%A1%E5%9E%8B"><span class="nav-text">5.2 多对一模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E5%A4%9A%E5%AF%B9%E5%A4%9A%E6%A8%A1%E5%9E%8B"><span class="nav-text">5.3 多对多模型</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E4%B8%8E%E8%BD%AC%E6%8D%A2"><span class="nav-text">6. 线程的状态与转换</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%BB%84%E7%BB%87%E4%B8%8E%E6%8E%A7%E5%88%B6"><span class="nav-text">7. 线程的组织与控制</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

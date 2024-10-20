@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="内存管理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="08.内存管理">
+<meta property="og:url" content="http://example.com/2023/06/30/OS-08-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="内存管理">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620214937.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620215209.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230621095105.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230621095349.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230621101032.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230621101659.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230621102838.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230621103405.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230621103801.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230621104505.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230621105053.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230621105655.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230621110137.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230621110210.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230621110917.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230621111411.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623111452.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623111907.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623112131.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623112644.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623113100.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623114108.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623114348.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623121352.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623160805.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623160851.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623161519.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623162703.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623163426.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623163653.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623164440.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623170308.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623170418.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623170441.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623214709.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623215054.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623215457.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623220447.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623220419.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623221313.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623221515.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623221633.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623222346.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623222714.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623222930.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623223002.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230623223110.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230628094725.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230628095607.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230628095944.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230628100408.png">
+<meta property="article:published_time" content="2023-06-30T03:06:39.000Z">
+<meta property="article:modified_time" content="2023-07-12T15:35:31.455Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620214937.png">
+
+<link rel="canonical" href="http://example.com/2023/06/30/OS-08-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>08.内存管理 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/30/OS-08-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          08.内存管理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-30 11:06:39" itemprop="dateCreated datePublished" datetime="2023-06-30T11:06:39+08:00">2023-06-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-07-12 23:35:31" itemprop="dateModified" datetime="2023-07-12T23:35:31+08:00">2023-07-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>内存管理</p>
+<span id="more"></span>
+
+<h1 id="1-内存基础知识"><a href="#1-内存基础知识" class="headerlink" title="1. 内存基础知识"></a>1. 内存基础知识</h1><h2 id="1-1-什么是内存"><a href="#1-1-什么是内存" class="headerlink" title="1.1 什么是内存"></a>1.1 什么是内存</h2><p>内存可存放数据。程序执行钱需要先放到内存中才能被 CPU 处理，以此缓和 CPU 和硬盘之间的速度矛盾。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620214937.png" alt="image.png"><br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620215209.png" alt="image.png"></p>
+<h2 id="1-2-进程运行的基本原理"><a href="#1-2-进程运行的基本原理" class="headerlink" title="1.2 进程运行的基本原理"></a>1.2 进程运行的基本原理</h2><h3 id="1-2-1-指令工作原理"><a href="#1-2-1-指令工作原理" class="headerlink" title="1.2.1 指令工作原理"></a>1.2.1 指令工作原理</h3><p>假设我们现在要执行一条语句：<code>x = x + 1</code>，这条语句可能就会被编译成下面三条CPU指令：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230621095105.png" alt="image.png"></p>
+<ul>
+<li>指令一：数据传送，将内存中 01001111 地址（X变量的位置，值为10）的数据，传送到 00000011 寄存器</li>
+<li>指令二：加速指令，将寄存器 00000011 中的数据 加上 00000001</li>
+<li>指令三：数据传送，将寄存器 00000011 中的数据，传送给内存 01001111 地址（将 X 的值更新到内存）</li>
+</ul>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230621095349.png" alt="image.png"></p>
+<p>这里我们假设地址从0开始，那么指令中的所有地址都是真实的“物理地址”。那如果指令不是从 0 开始的，如何应对？</p>
+<h3 id="1-2-2-逻辑地址-VS-物理地址"><a href="#1-2-2-逻辑地址-VS-物理地址" class="headerlink" title="1.2.2 逻辑地址 VS 物理地址"></a>1.2.2 逻辑地址 VS 物理地址</h3><p>为了简化理解，我们默认操作系统会给进程分配一片连续的内存空间。如果程序所在的物理地址起始位置不是0，那么指令中的地址如何修改？</p>
+<p>可以这么着，指令中的地址不是真实的物理地址，而是一种相对地址，相对于当前进程在物理地址中的起始位置的一种偏移量。比如：指令要求从内存的 79 地址处拿到x，这个79是进程的起始地址往后数 79 个，而非真正的物理79。如果进程起始地址为100，那么x的位置就是 100 + 79。</p>
+<h3 id="1-2-3-如何实现地址转换"><a href="#1-2-3-如何实现地址转换" class="headerlink" title="1.2.3 如何实现地址转换"></a>1.2.3 如何实现地址转换</h3><p>计算机中可执行文件也叫装入模块，将装入模块装入内存的时候如何将地址进行转换？这就涉及到三种装入方式：</p>
+<p><strong>绝对装入</strong></p>
+<p>在编译时，可以预知程序会被放入到哪个位置，那么编译器将产生绝对地址的目标代码，装入程序按照装入模块中的地址，将程序和数据装入内存。也就是说编译出来的可执行文件（装入模块）里面地址就已经写死了。</p>
+<p>比如，我们已经知道程序会被装入到 100 的位置，那么编译的时候直接把 x 的位置修改成 179 物理地址即可，也就是绝对地址。这种方式只适合单道程序环境，换一台电脑这个可执行文件怕是就没法用了。</p>
+<p><strong>可重定位装入</strong></p>
+<p>也叫可重定位装入。编译，链接后装入模块的地址都是从0开始，指令地址中的地址都是相对于起始地址而言的逻辑地址。但是在装入模块被装入内存时会进行地址转换，根据装入的实际位置，将指令中的所有地址修改为物理地址。</p>
+<p>这样有个要求：作业装入内存时，必须分配其要求的全部内存空间，如果没有足够的内存，就不能装入作业。且作业一旦装入完成，运行期间作业不能移动，也不能申请新的内存空间。</p>
+<p><strong>动态运行时装入</strong></p>
+<p>也叫动态运行时装入，装入模块里面的指令是逻辑地址，装入内存后的指令同样是逻辑地址。然后会有一个重定位寄存器，记录着装入模块存放的起始位置，运行时只需要将指令中的逻辑地址和寄存器中的起始地址相加即可获取真实的物理地址。</p>
+<h3 id="1-2-4-写程序到程序运行"><a href="#1-2-4-写程序到程序运行" class="headerlink" title="1.2.4 写程序到程序运行"></a>1.2.4 写程序到程序运行</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230621101032.png" alt="image.png"></p>
+<p>这里说一下：这个目标模块同样也是指令，然后里面的地址全都是逻辑地址，各个模块的逻辑地址相互独立。链接就是将这些目标模块整合起来，变成一个完整的逻辑地址，当然这些地址同时包含着你用到的一些库函数。最后装入我们之前已经说过了。</p>
+<p>这里的链接同样有三种模式：</p>
+<p><strong>静态链接</strong></p>
+<p>和图里的意思一样，在程序运行之前，将各个目标模块已经库函数链接成一个完整的装入模块，以后不再拆开。</p>
+<p><strong>装入时动态链接</strong></p>
+<p>这种方式并不会一上来就链接，而是在装入内存时，边装入边链接。</p>
+<p><strong>运行时动态链接</strong></p>
+<p>运行时将逻辑地址转换为物理地址，需要设置重定位寄存器。如果运行时不需要某个目标模块，则不会加载。</p>
+<h2 id="1-3-总结"><a href="#1-3-总结" class="headerlink" title="1.3 总结"></a>1.3 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230621101659.png" alt="image.png"></p>
+<h1 id="2-内存管理概念"><a href="#2-内存管理概念" class="headerlink" title="2. 内存管理概念"></a>2. 内存管理概念</h1><h2 id="2-1-内存的分配和回收"><a href="#2-1-内存的分配和回收" class="headerlink" title="2.1 内存的分配和回收"></a>2.1 内存的分配和回收</h2><p>操作系统要负责内存空间的分配与回收，操作系统如何记录哪些内存区域已经被分配出去，哪些空闲。进程结束后又如何回收内存空间。一个新进程来了，该将他放到哪片内存上，这都是问题。</p>
+<h2 id="2-2-内存空间的扩展"><a href="#2-2-内存空间的扩展" class="headerlink" title="2.2 内存空间的扩展"></a>2.2 内存空间的扩展</h2><p>操作系统需要提供某种技术从逻辑上对内存空间进行扩充。</p>
+<h2 id="2-3-地址转换"><a href="#2-3-地址转换" class="headerlink" title="2.3 地址转换"></a>2.3 地址转换</h2><p>操作系统需要提供地址转换功能，负责程序的逻辑地址与物理地址的转换。这个我们之前已经说过了，也就是三种装入方式。</p>
+<h2 id="2-4-内存保护"><a href="#2-4-内存保护" class="headerlink" title="2.4 内存保护"></a>2.4 内存保护</h2><p>操作系统在内存中有专门的一片空间专门用于保存操作系统的一些数据，如何避免其他进程非法访问，这就是内存保护。</p>
+<h3 id="2-4-1-上下限寄存器"><a href="#2-4-1-上下限寄存器" class="headerlink" title="2.4.1 上下限寄存器"></a>2.4.1 上下限寄存器</h3><p>CPU 会提供一对上下限寄存器，分别存放进程的上下限地址。进程的指令要访问地址时，CPU 就会首先检查地址是否越界。</p>
+<h3 id="2-4-2-重定位寄存器"><a href="#2-4-2-重定位寄存器" class="headerlink" title="2.4.2 重定位寄存器"></a>2.4.2 重定位寄存器</h3><p>和上面这个也很类似，CPU 提供两个寄存器：重定位寄存器（基址寄存器），保存进程的起始物理地址；界地址寄存器（限长寄存器），记录指令中允许的最大偏移地址。执行指令时，首先检查逻辑地址是否在最大偏移地址之内，合法则通过重定位寄存器找到真实的物理地址进行执行。</p>
+<h2 id="2-5-总结"><a href="#2-5-总结" class="headerlink" title="2.5 总结"></a>2.5 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230621102838.png" alt="image.png"></p>
+<h1 id="3-覆盖与交换"><a href="#3-覆盖与交换" class="headerlink" title="3. 覆盖与交换"></a>3. 覆盖与交换</h1><h2 id="3-1-覆盖技术"><a href="#3-1-覆盖技术" class="headerlink" title="3.1 覆盖技术"></a>3.1 覆盖技术</h2><p>前朝的计算机内存通常非常的小，所以经常出现内存不够用的情况，如何将一个更大的程序装入内存成功运行？这就提出了覆盖技术。</p>
+<p>简单说，内存会给进程提供固定区和覆盖区，固定区存储进程的核心部分，覆盖区存储不可能被同时访问的程序段。一个模块不用了就可以调出内存腾地方。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230621103405.png" alt="image.png"></p>
+<h2 id="3-2-交换技术"><a href="#3-2-交换技术" class="headerlink" title="3.2 交换技术"></a>3.2 交换技术</h2><p>核心思想和之前说到的中级调度（挂起）很像：内存空间紧张时，系统将内存中某些进程暂时换出内存，把内存中某些已具备运行条件的进程换入内存（进程在内存和磁盘间动态调度）。</p>
+<p>再说一句：即便进程被挂起，PCB 也会被记录到内存的挂起队列中，PCB 会记录进程在磁盘中的挂起位置，所以 PCB 一定是常驻内存。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230621103801.png" alt="image.png"></p>
+<p>之前的七状态模型再拿过来看一眼。</p>
+<h3 id="3-2-1-换出位置"><a href="#3-2-1-换出位置" class="headerlink" title="3.2.1 换出位置"></a>3.2.1 换出位置</h3><p>外存的什么位置用来保存被换出的进程？具有交换功能的操作系统中，通常把磁盘空间分为“文件区”和“交换区”。</p>
+<p>文件区只负责存文件，主要追求存储空间的利用率，因为文件区空间的管理<font color = 'red'>采用离散分配方式</font>。而交换区主要追求的就是交换速度，所以采用<font color = 'red'>连续分配方式</font>，总之就是交换区比文件区更快。</p>
+<h3 id="3-2-2-什么时候交换"><a href="#3-2-2-什么时候交换" class="headerlink" title="3.2.2 什么时候交换"></a>3.2.2 什么时候交换</h3><p>许多进程运行而且内存吃紧的时候进行交换，当系统负荷降低就暂停交换。比如：进程运行时进场发生缺页，则内存吃紧，就可以换出一些进程。如果缺页率显著下降，则暂停换出</p>
+<h3 id="3-2-3-换出哪些进程"><a href="#3-2-3-换出哪些进程" class="headerlink" title="3.2.3 换出哪些进程"></a>3.2.3 换出哪些进程</h3><p>优先换出阻塞进程；优先级低的进程；为了防止优先级低的继承在被调入内存后很快又被换出，有些系统还会考虑进程在内存的驻留时间。</p>
+<h2 id="3-3-总结"><a href="#3-3-总结" class="headerlink" title="3.3 总结"></a>3.3 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230621104505.png" alt="image.png"></p>
+<h1 id="4-连续分配管理方式"><a href="#4-连续分配管理方式" class="headerlink" title="4. 连续分配管理方式"></a>4. 连续分配管理方式</h1><p>第四和第五章开始说一下内存管理的重点：内存分配与回收。分为两类：连续分配管理和非连续分配管理。</p>
+<p>连续分配指的就是：系统为用户进程分配的必须是一个连续的内存空间。其中又分为三种方式。</p>
+<h2 id="4-1-单一连续分配"><a href="#4-1-单一连续分配" class="headerlink" title="4.1 单一连续分配"></a>4.1 单一连续分配</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230621105053.png" alt="image.png"></p>
+<h2 id="4-2-固定分区分配"><a href="#4-2-固定分区分配" class="headerlink" title="4.2 固定分区分配"></a>4.2 固定分区分配</h2><p>就是升级版的单一连续分配，将整个用户区分为多个小分区，每个小分区只能放入一个进程，或者说一道作业，这就是最早的最简单的一种可以运行多道程序的内存管理方式。内存的分区数被预先划分。</p>
+<p>在某些特定场景下，分区的大小全都相等，比如炼钢厂，每个钢炉的控制程序都一样，就可以将内存分为多个大小相等的区放入控制程序。</p>
+<p>分区的大小也可以不相等，增加了灵活性。根据常在系统中运行的作业大小情况来划分。可以划分多个小分区，适量中分区，少量大分区。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230621105655.png" alt="image.png"></p>
+<h2 id="4-3-动态分区分配"><a href="#4-3-动态分区分配" class="headerlink" title="4.3 动态分区分配"></a>4.3 动态分区分配</h2><p>也叫可变分区分配，这种分配方式不会预先划分内存分区，而是在进程装入内存时，根据进程的大小动态建立分区，让分区的大小正好适合进程的需要，因此系统分区的大小和数目可变。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230621110137.png" alt="image.png"><br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230621110210.png" alt="image.png"></p>
+<p>最后一个问题：如何分配和回收。</p>
+<p>这个其实很简单，就是要更新空闲分区表或者空闲分区链。分配的时候看有没有填满某个空闲分区，以此决定是更新该分区的参数还是直接删除该空闲分区。回收的时候，看前后是否有相邻的空闲分区，以此来决定是合并空闲分区还是添加空闲分区。如果是要增加一个空闲分区，这个空闲分区排在哪个位置由动态分区分配算法来决定。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230621110917.png" alt="image.png"></p>
+<p>紧凑技术就是把内存中的各个进程往紧拼一拼，将外部碎片整理起来。</p>
+<p>说一下第二个问题：</p>
+<ul>
+<li>肯定是要用动态运行时装入方式，那么肯定要用到重定位寄存器</li>
+<li>紧凑之后，肯定要修改进程的起始地址，这个地址原本是存在重定位寄存器中，但是在进程调度的时候之前说过，会将各种寄存器保存到 PCB 中。所以这个时候进程的起始地址肯定是在 PCB 里面，我们只需要修改 PCB 中的起始地址即可。</li>
+</ul>
+<h2 id="4-5-分配方式总结"><a href="#4-5-分配方式总结" class="headerlink" title="4.5 分配方式总结"></a>4.5 分配方式总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230621111411.png" alt="image.png"></p>
+<h2 id="4-6-动态分区分配算法"><a href="#4-6-动态分区分配算法" class="headerlink" title="4.6 动态分区分配算法"></a>4.6 动态分区分配算法</h2><p>这个东西比较多，所以单独放一起。上面说过了动态分区分配策略，里面有一个空闲分区表，现在一个新的进程来了，该把他放在哪个空闲分区？这就是分配算法要解决的问题。</p>
+<h3 id="4-2-1-首次适应算法"><a href="#4-2-1-首次适应算法" class="headerlink" title="4.2.1 首次适应算法"></a>4.2.1 首次适应算法</h3><p>这个很简单，空闲表或者空闲链会根据地址从低到高排列，一个新的进程来了以后，会从头开始，依次寻找满足条件的空闲分区，一旦找到直接分配。分配完成以后修改空闲分区结构。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623111452.png" alt="image.png"></p>
+<p>看图可知，空闲表和空闲链就是按照内存从上到下维护空闲空间。</p>
+<h3 id="4-2-2-最佳适应算法"><a href="#4-2-2-最佳适应算法" class="headerlink" title="4.2.2 最佳适应算法"></a>4.2.2 最佳适应算法</h3><p>因为动态分区分配是一种连续分配方式，为各进程分配的空间必须是连续的一整片空间。所以为了保证“大进程”来了以后有足够的空间分配，所以该算法会尽可能优先使用小空闲分区。</p>
+<p>空闲分区表或者链会按照空闲分区的大小从小到大依次排列，当一个进程来了以后同样是从头开始找，第一个满足条件的分区就会是最小分区。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623111907.png" alt="image.png"></p>
+<p>缺点：内存中会遗留很多非常小的外部碎片，这些外部碎片很难被利用。</p>
+<h3 id="4-2-3-最坏适应算法"><a href="#4-2-3-最坏适应算法" class="headerlink" title="4.2.3 最坏适应算法"></a>4.2.3 最坏适应算法</h3><p>和最佳相反，为了不留下很多难以利用的外部碎片，这种算法会优先分配大的空闲分区。</p>
+<p>空闲分区数据结构按照空闲分区大小从大到小排列，进程来了以后也是从头开始找，分配第一个满足要求的分区。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623112131.png" alt="image.png"></p>
+<p>这种的缺点就显而易见了：大进程来了以后可能就会导致内存分区不够用。</p>
+<h3 id="4-2-4-邻近适应算法"><a href="#4-2-4-邻近适应算法" class="headerlink" title="4.2.4 邻近适应算法"></a>4.2.4 邻近适应算法</h3><p>这种算法是为了解决首次适应算法的一个小问题：首次适应算法优先将低地址空闲分区分配出去，这就会导致低地址部分出现很多小的外部碎片。而下一次分配还会扫描低地址的这些碎片，没有必要。</p>
+<p>所以临近适应算法就会从上一次分配的位置开始往下找，而不是从开头。数据结构仍然是按照地址从低到高排序，如果是空闲分区链的话可以设计成一个双向循环链表。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623112644.png" alt="image.png"></p>
+<p>现在要分配一个 5M 的进程，就会从链头开始找，发现 6 这个空闲分区可以分配，然后进行分配空间，将链表修改为 4 -&gt; 1 -&gt; 10 -&gt; 4。</p>
+<p>下一次一个3M的进程来了，就会从 1 的位置开始找，然后找到了 10 这个空闲分区，进行分配，修改链表为 4 -&gt; 1 -&gt; 7 -&gt; 4。</p>
+<p>这样的一个优点就是：空闲分区表不需要重新排列。缺点就是降低了低地址部分小分区的利用率，不利于保存高地址部分的大分区。</p>
+<h3 id="4-2-4-总结"><a href="#4-2-4-总结" class="headerlink" title="4.2.4 总结"></a>4.2.4 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623113100.png" alt="image.png"></p>
+<h1 id="5-非连续分配管理方式"><a href="#5-非连续分配管理方式" class="headerlink" title="5. 非连续分配管理方式"></a>5. 非连续分配管理方式</h1><h2 id="5-1-基本分页存储管理"><a href="#5-1-基本分页存储管理" class="headerlink" title="5.1 基本分页存储管理"></a>5.1 基本分页存储管理</h2><p>将内存分为一个个大小相等的分区，假设每个分区4kb，每个分区就是一个<font color = 'red'>页框（页帧，内存快，物理块，物理页）</font>。然后每一个页框都会给编上号，这个号就叫<font color='red'>页框号</font>。从 0 开始。</p>
+<p>每个进程的逻辑地址空间（也就是存放指令的那一部分）也会被划分为大小相等的一个个分区，每个分区就叫<font color='red'>页（页面）</font>。同理有一个编号：<font color='red'>页号</font>。从 0 开始。</p>
+<p>操作系统就会以页框为单位给各个进程分配内存空间。进程的每个页面分别放入一个页框中，进程的页面和内存的页框一一对应。整个进程在内存中对应的页框不一定会连续存储。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623114108.png" alt="image.png"></p>
+<p>对应的，操作系统为了知道每个进程的页面在内存中的存放位置，就会给每个进程创建一张 <font color = 'red'>页表</font>。页表通常也会存在 PCB 中。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623114348.png" alt="image.png"></p>
+<h3 id="5-1-1-页表占用空间大小"><a href="#5-1-1-页表占用空间大小" class="headerlink" title="5.1.1 页表占用空间大小"></a>5.1.1 页表占用空间大小</h3><p>假设内存 4GB，每个页框4KB，那么：</p>
+<p>$$ 4GB &#x3D; 2^2 * 2^{20} &#x3D; 2 ^ {32} $$</p>
+<p>$$ 4KB &#x3D; 2 ^ 2 * 2 ^ {10} &#x3D; 2 ^ {12} $$<br>$$ 4GB &#x2F; 4KB &#x3D; 2^{20} $$</p>
+<p>所以内存中总共有 2 ^ 20 个内存块，想要编号就需要 24bit 也就是 3Byte 来存储页框号。</p>
+<p>页号呢？页号不需要占用空间，因为页号从0开始，类似于数组下标，所以是隐藏的。因此，每个表项占 3B，存储整个表就需要 3 * (n+1) 字节。但是，页表中记录的仅仅是页框号，而不是页框的物理地址，如果想要得到物理地址还需要 页框号 * 页框大小。</p>
+<h3 id="5-1-2-如何地址转换"><a href="#5-1-2-如何地址转换" class="headerlink" title="5.1.2 如何地址转换"></a>5.1.2 如何地址转换</h3><p>之前说：进程如果在内存中被连续分配，那么指令中的地址就可以是相对于当前内存的一个偏移量。而在页存储中，如何记录指令中的地址？虽然各个页面是离散存放的，但是页面内部是连续的，所以指令中的逻辑地址A，就需要：</p>
+<ul>
+<li>确定逻辑地址A对应的页号P</li>
+<li>确定P号页面在内存中的其实地址（需要查找页表，也就是页框号 * 页框大小）</li>
+<li>确定逻辑地址A的页内偏移量 W</li>
+</ul>
+<p>然后，逻辑地址A对应的物理地址 &#x3D; P号页面在内存中的起始地址 + 页内偏移量 W。</p>
+<p><strong>如何确定逻辑地址对应的页号和页内偏移量？</strong></p>
+<p>假设：页面大小 50B。进程的逻辑地址空间是 200B，则逻辑地址110对应的页号和页内偏移量是多少？</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623121352.png" alt="image.png"></p>
+<p>如果页面大小是2的整数次方的话，这个事就会变的比较简单。比如，一个页面的大小是 4KB，计算机用 32 个比特位来表示逻辑地址。那么 4KB &#x3D; 2^12 B，需要12个比特位来表示这些存储单元（每个存储单元一个Byte），则：</p>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">0号页面逻辑地址范围 0 - 4095：</span><br><span class="line">00000000000000000000｜000000000000 - 00000000000000000000｜111111111111</span><br><span class="line"></span><br><span class="line">1号页面逻辑地址范围 4096 - 8191：</span><br><span class="line">00000000000000000001｜000000000000 - 00000000000000000001｜111111111111</span><br><span class="line"></span><br><span class="line">2号页面逻辑地址范围 8192 - 12287：</span><br><span class="line">00000000000000000010｜000000000000 - 00000000000000000010｜111111111111</span><br></pre></td></tr></table></figure>
+<p>我们就可以发现，多少号逻辑地址，就是把它化成二进制，然后前20位就是他的页号，后12位就是他的页内偏移量。</p>
+<p>然后，逻辑地址要转化成物理地址，如果这个计算机的物理地址也适用32个bit来表示的话，那么页框的划分就和上面几乎一样，比如一条逻辑地址在一号页面，偏移地址为000000000011，一号页面分配对应九号页框，9的二进制是 1001，那么这条逻辑地址的物理地址就是：<code>00000000000000001001｜000000000011</code>。也就是页框号的二进制直接拼接页内偏移地址。</p>
+<p>如果不满足这种特性的话，就需要去算页框的起始地址。</p>
+<p>综上说的，我们可以吧逻辑地址看作这种结构：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623160805.png" alt="image.png"></p>
+<h3 id="5-1-3-总结"><a href="#5-1-3-总结" class="headerlink" title="5.1.3 总结"></a>5.1.3 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623160851.png" alt="image.png"></p>
+<h2 id="5-2-基本地址变换机构"><a href="#5-2-基本地址变换机构" class="headerlink" title="5.2 基本地址变换机构"></a>5.2 基本地址变换机构</h2><p>这个机构是顺着上一部分说的，上面说到了逻辑地址转化为物理地址可以怎么转，这里就是说具体哪个部件负责干这个事儿。</p>
+<p>基本地址变换机构可以借助进程的页表将逻辑地址转换为物理地址。通常会在系统中设置一个<strong>页表寄存器（PRT）</strong>，存放页表的内存中的起始地址F和页表长度M。进程未执行时，页表的起始地址和页表长度存放在PCB 中，当进程被调度时，操作系统内核会把他们放到页表寄存器。</p>
+<h3 id="5-2-1-地址转换流程"><a href="#5-2-1-地址转换流程" class="headerlink" title="5.2.1 地址转换流程"></a>5.2.1 地址转换流程</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623161519.png" alt="image.png"></p>
+<p>文字说一下：</p>
+<ol>
+<li>首先要计算逻辑地址A在哪一页的哪个偏移量上，这个上一节就说过了。得出页号 P 和偏移量 W。</li>
+<li>比较页号 P 和 页表长度 M。M就是说页表总共有几项，如果发现 P &gt;&#x3D; M，则发生越界中断，否则继续执行（如果 P &#x3D;= M 也不行）</li>
+<li>根据页表寄存器中的页表起始地址 F 和页号 P 就可以访问到页表：<code>页表项地址 = 页表起始地址 F + 页号 P * 页表项长度（页框号所占字节）</code>，这个地址就可以得到 b。</li>
+<li>顺着 b 就可以算出具体的地址：逻辑地址A的物理地址 &#x3D; b * 页面大小 + 页面偏移量。</li>
+</ol>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623162703.png" alt="image.png"></p>
+<h3 id="5-2-2-页表项长度"><a href="#5-2-2-页表项长度" class="headerlink" title="5.2.2 页表项长度"></a>5.2.2 页表项长度</h3><p>这个之前讲过了，如果内存 4G，一个页是 4K，总共就有2^20 个页框，也就需要20个bit来表示页框号，所以操作系统会给页框号划分 3B。</p>
+<p>页表这个结构最后也是会存储在内存的页框中的，一个页框4K，但是一个页表项3B，那么一个页框可以存储1365个页表项， 4096 % 3 &#x3D; 1，也就是说最后这个页框会产生 1B 的内部碎片。</p>
+<p>如果我们要计算1365号页表项的话，由于上面产生了1B的碎片，所以1365号页表项的地址就要在计算结果的基础上 + 1。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623163426.png" alt="image.png"></p>
+<p>解决办法就是，页表项也就是页框号，我们直接给他划 4B 的空间，让页表能把页框填满。如果题目中要问最小的页表项可以是多少，还按 3B 来。</p>
+<h3 id="5-2-3-总结"><a href="#5-2-3-总结" class="headerlink" title="5.2.3 总结"></a>5.2.3 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623163653.png" alt="image.png"></p>
+<p>这里提到一个概念：页式管理中地址是一维的，就是说 CPU 想要知道逻辑地址对应的物理地址，只需要知道逻辑地址的值即可。</p>
+<h2 id="5-3-快表"><a href="#5-3-快表" class="headerlink" title="5.3 快表"></a>5.3 快表</h2><p>快表就是基本地址变换结构的改进版本，可以让地址转换更快。快表也叫联想寄存器（TLB），是一种访问速度比内存快很多的高速缓存（注意，这可不是内存，而是在 CPU 内部的一种缓存），用来存放最近访问的页表项的副本，可以加快地址变换的速度。因为访问高速缓存比访问内存块，所以叫快表，对应的内存中的页表常叫慢表。</p>
+<p>由于快表成本高，存储空间小，所以不能存放完整的页表。</p>
+<h3 id="5-3-1-地址变换流程"><a href="#5-3-1-地址变换流程" class="headerlink" title="5.3.1 地址变换流程"></a>5.3.1 地址变换流程</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623164440.png" alt="image.png"></p>
+<p>这玩意儿，就是一种缓存，具体流程如下：</p>
+<ol>
+<li>第一次访问 0-0 地址，除去基本流程外，会去看快表里面有没有页号为0的记录，发现没有，未命中。</li>
+<li>按照慢表的思路，去内存里面找到页表，然后发现页号0对应页框600，然后将 0-600 复制到快表中一份。然后访问物理地址。</li>
+<li>第二次访问0-4地址，去看快表，发现有了0号页表的记录，0号页表指向600号页框，那他就会拿着600直接去和偏移量拼接得到真实的物理地址，然后访问。</li>
+<li>第三次访问0-8，同样的道理，不说了。</li>
+</ol>
+<p>如果快表存满了，会按照一种算法进行替换，这种算法后面会说。由于局部性原理，快表的命中率可以达到 90% 以上。假设访问一次快表1us，访问一次内存100us，那么平均访问内存时间 ：</p>
+<p>$$<br>(1 + 100) * 0.9 + (1 + 100 + 100) * 0.1 &#x3D; 111us<br>$$</p>
+<p>1 + 100 就是访问快表然后访问页框，1 + 200 就是先访问快表没命中，然后访问慢表，再访问页框。有些系统支持快表慢表同时访问，那么 （1+100+100）可以优化成 （100 + 100），最后的时间就是 110.9us。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623170308.png" alt="image.png"></p>
+<h3 id="5-3-2-局部性原理"><a href="#5-3-2-局部性原理" class="headerlink" title="5.3.2 局部性原理"></a>5.3.2 局部性原理</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623170418.png" alt="image.png"></p>
+<h3 id="5-3-3-总结"><a href="#5-3-3-总结" class="headerlink" title="5.3.3 总结"></a>5.3.3 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623170441.png" alt="image.png"></p>
+<h2 id="5-4-两级页表"><a href="#5-4-两级页表" class="headerlink" title="5.4 两级页表"></a>5.4 两级页表</h2><p>假设内存 4GB，页面大小 4KB，页表项长度 4B。则系统会将内存划分为 2^20 个页框，相应的用户进程最多有 2^20页，进而一个进程的页表中，最多有2^20个页表项，一个页表最大需要 2^22 B，共需要2^10个页框存储该页表。</p>
+<p>然后，虽然说进程所对应的页框不一定要连续存放，但是表页却需要连续存放，因为我们要顺着页表找页框号，所以内存就需要给这个页表分配 1024 个页框。而且，进程在一段时间内，只需要用到几个页框，其他页框可能并不需要。</p>
+<p>所以问题：</p>
+<ul>
+<li>页表必须连续存放，如果页表很大，则需要占用很多连续的页框</li>
+<li>没有必要让页表常驻内存，因为一段时间内可能只需要访问某几个特定的页框。</li>
+</ul>
+<h3 id="5-4-1-两级页表设计"><a href="#5-4-1-两级页表设计" class="headerlink" title="5.4.1 两级页表设计"></a>5.4.1 两级页表设计</h3><p>为了解决上面的第一个问题，就出现了两级页表。之前，我们是将进程的逻辑内存空间按照页划分，这回我们将页表按同样的形式进行划分。</p>
+<p>如果计算机内存 4GB，页表项 4B，页面大小 4KB，则一个页面可以装入 1024 个页表项，我们就可以按照1024将页表进行划分，然后将这些小页表离散的存储到内存中。然后，为这些小页表建立上层的页目录表（顶级页表或者叫外层页表）：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623214709.png" alt="image.png"></p>
+<h3 id="5-4-2-如何地址变换"><a href="#5-4-2-如何地址变换" class="headerlink" title="5.4.2 如何地址变换"></a>5.4.2 如何地址变换</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623215054.png" alt="image.png"></p>
+<p>这个顺着图看就行了：</p>
+<ol>
+<li>根据一级页号 0 去页目录表中找到了页框号3，也就是说二级页表存在了3号页框也就是起始地址为12KB的位置。</li>
+<li>读取三号页框，得到了二级页表，根据二级页号 1 找到了页框号4，就是说我们要访问的地址在4号页框。</li>
+<li>然后 4号页框的起始地址 4 x 4KB 加上偏移地址 111111111111 也就是 1023 得到了最终的物理地址。</li>
+</ol>
+<p>或者我们也可以把二级页号的哪个值理解成页框号在二级页表所在的页框中的偏移量。所以说，这里一个页面可以存 2^10 个页表项，那么二级页号就需要 10bit 来存储。</p>
+<h3 id="5-4-3-如何按需访问页表"><a href="#5-4-3-如何按需访问页表" class="headerlink" title="5.4.3 如何按需访问页表"></a>5.4.3 如何按需访问页表</h3><p>这个是为了解决上面的第二个问题，这里涉及到虚拟存储技术，以后再说。可以在页表项中添加一个标志为，用于表示该页面是否已经调入内存。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623215457.png" alt="image.png"></p>
+<h3 id="5-4-4-多级页表"><a href="#5-4-4-多级页表" class="headerlink" title="5.4.4 多级页表"></a>5.4.4 多级页表</h3><p>是一个例题：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623220447.png" alt="image.png"></p>
+<p>这里解释一下为啥弄三级页表：题目规定各级页表的大小不能超过一个页面，一个页面只能存 1024 个页表项，也就需要 10bit 来表示偏移量。</p>
+<p>假设我们让他是二级页表结构，则28bit的页号就分为了 18bit的一级页表和 10bit 的二级页表，则一级页表理论上就可以储存最多 2^18个页表项，一个页面显然存不下了，所以需要再给这个一级页表按页分层，然后上层设计更高级的目录。</p>
+<h3 id="5-4-5-总结"><a href="#5-4-5-总结" class="headerlink" title="5.4.5 总结"></a>5.4.5 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623220419.png" alt="image.png"></p>
+<h2 id="5-5-基本分段存储管理"><a href="#5-5-基本分段存储管理" class="headerlink" title="5.5 基本分段存储管理"></a>5.5 基本分段存储管理</h2><p>这个是从进程本身出发，根据程序的自身逻辑关系划分为若干个段，每个段都有一个段名（在低级语言中，程序猿使用段名来编程），每段从0开始编址。进程的每个段可以在内存中不连续，但是段内是连续的。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623221313.png" alt="image.png"></p>
+<p>分了段之后如何访问地址？</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623221515.png" alt="image.png"></p>
+<p>系统为了找到程序的每个段在内存中的物理地址，就设计出了段表：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623221633.png" alt="image.png"></p>
+<h3 id="5-5-1-地址变换"><a href="#5-5-1-地址变换" class="headerlink" title="5.5.1 地址变换"></a>5.5.1 地址变换</h3><p>这个和之前的分页存储很像，分段式系统里面同样会提供一个段表寄存器，里面存放段表地址F和段表长度M，这个东西也是存在PCB中，然后进程上 CPU 之后被放入寄存器。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623222346.png" alt="image.png"></p>
+<p>这里所说的段表长度就是段长C和基址b所占的字节数。</p>
+<h3 id="5-5-2-分段、分页对比"><a href="#5-5-2-分段、分页对比" class="headerlink" title="5.5.2 分段、分页对比"></a>5.5.2 分段、分页对比</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623222714.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623222930.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623223002.png" alt="image.png"></p>
+<h3 id="5-5-3-总结"><a href="#5-5-3-总结" class="headerlink" title="5.5.3 总结"></a>5.5.3 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230623223110.png" alt="image.png"></p>
+<h2 id="5-6-段页式存储管理"><a href="#5-6-段页式存储管理" class="headerlink" title="5.6 段页式存储管理"></a>5.6 段页式存储管理</h2><p>其实就是分段和分页式管理，先给进程分段，然后给每个段分页，将分好的页填到内存的页框中。按照这种方法的话，逻辑地址的设计如下：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230628094725.png" alt="image.png"></p>
+<ul>
+<li>段号规定当前地址在哪个段，同时段号的位数也规定了这个进程最多可以分多少段</li>
+<li>页号规定当前地址在段内的哪个页上，页号位数规定了一个段可以分出来多少页</li>
+<li>页内偏移量好理解。同时位数规定了页面大小、内存快大小</li>
+</ul>
+<p>所以上面这图，进程可以分2^16个段，每个段可以分4个页，每个页 2^12页就是4K大小。对于程序员来说，段是程序猿决定的。</p>
+<h3 id="5-6-1-段表、页表"><a href="#5-6-1-段表、页表" class="headerlink" title="5.6.1 段表、页表"></a>5.6.1 段表、页表</h3><p>同理，系统也会给进程维护一个段表，同时每个段还要分页，所以每个段自己还有一个页表。所以段表的结构就是：段号-页表长度-当前段的页表所在的页框号。根据页框号，就可以得到这个段自己的页表，然后页表里面记录 页号-内存页框号，再得到段里面页的实际物理地址。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230628095607.png" alt="image.png"></p>
+<p>一个进程对应一个段表，但是每个段都会对应一个页表。</p>
+<h3 id="5-6-2-地址变换"><a href="#5-6-2-地址变换" class="headerlink" title="5.6.2 地址变换"></a>5.6.2 地址变换</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230628095944.png" alt="image.png"></p>
+<p>我们会发现这个寻址过程，三种内存管理方式都大差不差，一个套路。</p>
+<ul>
+<li>首先，肯定都会提供一个寄存器，什么段表寄存器，什么页表寄存器，他们的作用就是记录这个表的起始位置和每一个表项的大小，只要有了段号或者页号，就可以根据这两个数值访问到具体的表项。</li>
+<li>拿到表项以后根据需求不同的到具体的段地址或者页地址，或者是这种情况得到的是段页表。</li>
+</ul>
+<h3 id="4-6-3-总结"><a href="#4-6-3-总结" class="headerlink" title="4.6.3 总结"></a>4.6.3 总结</h3><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230628100408.png" alt="image.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-07-%E6%AD%BB%E9%94%81/" rel="prev" title="07.死锁">
+      <i class="fa fa-chevron-left"></i> 07.死锁
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-09-%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98/" rel="next" title="09.虚拟内存">
+      09.虚拟内存 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E5%86%85%E5%AD%98%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86"><span class="nav-text">1. 内存基础知识</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E4%BB%80%E4%B9%88%E6%98%AF%E5%86%85%E5%AD%98"><span class="nav-text">1.1 什么是内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E8%BF%9B%E7%A8%8B%E8%BF%90%E8%A1%8C%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-text">1.2 进程运行的基本原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-1-%E6%8C%87%E4%BB%A4%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-text">1.2.1 指令工作原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-2-%E9%80%BB%E8%BE%91%E5%9C%B0%E5%9D%80-VS-%E7%89%A9%E7%90%86%E5%9C%B0%E5%9D%80"><span class="nav-text">1.2.2 逻辑地址 VS 物理地址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-3-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2"><span class="nav-text">1.2.3 如何实现地址转换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-4-%E5%86%99%E7%A8%8B%E5%BA%8F%E5%88%B0%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C"><span class="nav-text">1.2.4 写程序到程序运行</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E6%80%BB%E7%BB%93"><span class="nav-text">1.3 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E6%A6%82%E5%BF%B5"><span class="nav-text">2. 内存管理概念</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E5%86%85%E5%AD%98%E7%9A%84%E5%88%86%E9%85%8D%E5%92%8C%E5%9B%9E%E6%94%B6"><span class="nav-text">2.1 内存的分配和回收</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E5%86%85%E5%AD%98%E7%A9%BA%E9%97%B4%E7%9A%84%E6%89%A9%E5%B1%95"><span class="nav-text">2.2 内存空间的扩展</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2"><span class="nav-text">2.3 地址转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%E5%86%85%E5%AD%98%E4%BF%9D%E6%8A%A4"><span class="nav-text">2.4 内存保护</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-1-%E4%B8%8A%E4%B8%8B%E9%99%90%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-text">2.4.1 上下限寄存器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-2-%E9%87%8D%E5%AE%9A%E4%BD%8D%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-text">2.4.2 重定位寄存器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-5-%E6%80%BB%E7%BB%93"><span class="nav-text">2.5 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E8%A6%86%E7%9B%96%E4%B8%8E%E4%BA%A4%E6%8D%A2"><span class="nav-text">3. 覆盖与交换</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E8%A6%86%E7%9B%96%E6%8A%80%E6%9C%AF"><span class="nav-text">3.1 覆盖技术</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E4%BA%A4%E6%8D%A2%E6%8A%80%E6%9C%AF"><span class="nav-text">3.2 交换技术</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-1-%E6%8D%A2%E5%87%BA%E4%BD%8D%E7%BD%AE"><span class="nav-text">3.2.1 换出位置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-2-%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E4%BA%A4%E6%8D%A2"><span class="nav-text">3.2.2 什么时候交换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-3-%E6%8D%A2%E5%87%BA%E5%93%AA%E4%BA%9B%E8%BF%9B%E7%A8%8B"><span class="nav-text">3.2.3 换出哪些进程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E6%80%BB%E7%BB%93"><span class="nav-text">3.3 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E8%BF%9E%E7%BB%AD%E5%88%86%E9%85%8D%E7%AE%A1%E7%90%86%E6%96%B9%E5%BC%8F"><span class="nav-text">4. 连续分配管理方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E5%8D%95%E4%B8%80%E8%BF%9E%E7%BB%AD%E5%88%86%E9%85%8D"><span class="nav-text">4.1 单一连续分配</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E5%9B%BA%E5%AE%9A%E5%88%86%E5%8C%BA%E5%88%86%E9%85%8D"><span class="nav-text">4.2 固定分区分配</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E5%88%86%E9%85%8D"><span class="nav-text">4.3 动态分区分配</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E5%88%86%E9%85%8D%E6%96%B9%E5%BC%8F%E6%80%BB%E7%BB%93"><span class="nav-text">4.5 分配方式总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-6-%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E5%88%86%E9%85%8D%E7%AE%97%E6%B3%95"><span class="nav-text">4.6 动态分区分配算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-1-%E9%A6%96%E6%AC%A1%E9%80%82%E5%BA%94%E7%AE%97%E6%B3%95"><span class="nav-text">4.2.1 首次适应算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-2-%E6%9C%80%E4%BD%B3%E9%80%82%E5%BA%94%E7%AE%97%E6%B3%95"><span class="nav-text">4.2.2 最佳适应算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-3-%E6%9C%80%E5%9D%8F%E9%80%82%E5%BA%94%E7%AE%97%E6%B3%95"><span class="nav-text">4.2.3 最坏适应算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-4-%E9%82%BB%E8%BF%91%E9%80%82%E5%BA%94%E7%AE%97%E6%B3%95"><span class="nav-text">4.2.4 邻近适应算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-4-%E6%80%BB%E7%BB%93"><span class="nav-text">4.2.4 总结</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E9%9D%9E%E8%BF%9E%E7%BB%AD%E5%88%86%E9%85%8D%E7%AE%A1%E7%90%86%E6%96%B9%E5%BC%8F"><span class="nav-text">5. 非连续分配管理方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E5%9F%BA%E6%9C%AC%E5%88%86%E9%A1%B5%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86"><span class="nav-text">5.1 基本分页存储管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-1-%E9%A1%B5%E8%A1%A8%E5%8D%A0%E7%94%A8%E7%A9%BA%E9%97%B4%E5%A4%A7%E5%B0%8F"><span class="nav-text">5.1.1 页表占用空间大小</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-2-%E5%A6%82%E4%BD%95%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2"><span class="nav-text">5.1.2 如何地址转换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-3-%E6%80%BB%E7%BB%93"><span class="nav-text">5.1.3 总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E5%9F%BA%E6%9C%AC%E5%9C%B0%E5%9D%80%E5%8F%98%E6%8D%A2%E6%9C%BA%E6%9E%84"><span class="nav-text">5.2 基本地址变换机构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-1-%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2%E6%B5%81%E7%A8%8B"><span class="nav-text">5.2.1 地址转换流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-2-%E9%A1%B5%E8%A1%A8%E9%A1%B9%E9%95%BF%E5%BA%A6"><span class="nav-text">5.2.2 页表项长度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-3-%E6%80%BB%E7%BB%93"><span class="nav-text">5.2.3 总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E5%BF%AB%E8%A1%A8"><span class="nav-text">5.3 快表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-1-%E5%9C%B0%E5%9D%80%E5%8F%98%E6%8D%A2%E6%B5%81%E7%A8%8B"><span class="nav-text">5.3.1 地址变换流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-2-%E5%B1%80%E9%83%A8%E6%80%A7%E5%8E%9F%E7%90%86"><span class="nav-text">5.3.2 局部性原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-3-%E6%80%BB%E7%BB%93"><span class="nav-text">5.3.3 总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-4-%E4%B8%A4%E7%BA%A7%E9%A1%B5%E8%A1%A8"><span class="nav-text">5.4 两级页表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-1-%E4%B8%A4%E7%BA%A7%E9%A1%B5%E8%A1%A8%E8%AE%BE%E8%AE%A1"><span class="nav-text">5.4.1 两级页表设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-2-%E5%A6%82%E4%BD%95%E5%9C%B0%E5%9D%80%E5%8F%98%E6%8D%A2"><span class="nav-text">5.4.2 如何地址变换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-3-%E5%A6%82%E4%BD%95%E6%8C%89%E9%9C%80%E8%AE%BF%E9%97%AE%E9%A1%B5%E8%A1%A8"><span class="nav-text">5.4.3 如何按需访问页表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-4-%E5%A4%9A%E7%BA%A7%E9%A1%B5%E8%A1%A8"><span class="nav-text">5.4.4 多级页表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-5-%E6%80%BB%E7%BB%93"><span class="nav-text">5.4.5 总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-5-%E5%9F%BA%E6%9C%AC%E5%88%86%E6%AE%B5%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86"><span class="nav-text">5.5 基本分段存储管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-5-1-%E5%9C%B0%E5%9D%80%E5%8F%98%E6%8D%A2"><span class="nav-text">5.5.1 地址变换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-5-2-%E5%88%86%E6%AE%B5%E3%80%81%E5%88%86%E9%A1%B5%E5%AF%B9%E6%AF%94"><span class="nav-text">5.5.2 分段、分页对比</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-5-3-%E6%80%BB%E7%BB%93"><span class="nav-text">5.5.3 总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-6-%E6%AE%B5%E9%A1%B5%E5%BC%8F%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86"><span class="nav-text">5.6 段页式存储管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-6-1-%E6%AE%B5%E8%A1%A8%E3%80%81%E9%A1%B5%E8%A1%A8"><span class="nav-text">5.6.1 段表、页表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-6-2-%E5%9C%B0%E5%9D%80%E5%8F%98%E6%8D%A2"><span class="nav-text">5.6.2 地址变换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-6-3-%E6%80%BB%E7%BB%93"><span class="nav-text">4.6.3 总结</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

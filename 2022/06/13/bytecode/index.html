@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="前面几经讲完了JVM的一些底层原理，从这章开始，我们会深入字节码文件，说一说字节码的各种指令，从指令层面了解Java代码。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM-字节码">
+<meta property="og:url" content="http://example.com/2022/06/13/bytecode/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="前面几经讲完了JVM的一些底层原理，从这章开始，我们会深入字节码文件，说一说字节码的各种指令，从指令层面了解Java代码。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-06-13T01:24:29.000Z">
+<meta property="article:modified_time" content="2022-06-13T02:07:56.966Z">
+<meta property="article:author" content="PtheF">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="底层">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2022/06/13/bytecode/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>JVM-字节码 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/06/13/bytecode/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JVM-字节码
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-06-13 09:24:29 / 修改时间：10:07:56" itemprop="dateCreated datePublished" datetime="2022-06-13T09:24:29+08:00">2022-06-13</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>前面几经讲完了JVM的一些底层原理，从这章开始，我们会深入字节码文件，说一说字节码的各种指令，从指令层面了解Java代码。</p>
+<span id="more"></span>
+
+<h1 id="1-前言"><a href="#1-前言" class="headerlink" title="1. 前言"></a>1. 前言</h1><p>从这里开始，就进入了字节码和类加载器篇，这一篇讲字节码文件，可能还有类加载器。</p>
+<h2 id="1-1-正式开始之前，先来道题"><a href="#1-1-正式开始之前，先来道题" class="headerlink" title="1.1 正式开始之前，先来道题"></a>1.1 正式开始之前，先来道题</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Integer</span> <span class="variable">i1</span> <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line"><span class="type">Integer</span> <span class="variable">i2</span> <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line">System.out.println(i1 == i2);</span><br><span class="line"></span><br><span class="line"><span class="type">Integer</span> <span class="variable">i3</span> <span class="operator">=</span> <span class="number">128</span>;</span><br><span class="line"><span class="type">Integer</span> <span class="variable">i4</span> <span class="operator">=</span> <span class="number">128</span>;</span><br><span class="line">System.out.println(i3 == i4);</span><br><span class="line"></span><br><span class="line"><span class="type">Integer</span> <span class="variable">i5</span> <span class="operator">=</span> <span class="number">5</span>;</span><br><span class="line"><span class="type">int</span> <span class="variable">i6</span> <span class="operator">=</span> <span class="number">5</span>;</span><br><span class="line">System.out.println(i5 == i6);</span><br></pre></td></tr></table></figure>
+
+<p>解决这个问题，光看代码不行，你这一看，行啊，false   false   false 呗，为啥？那对象和int能比么,对象比对象那不是比的hashCode吗，俩对象，hash不一致，对吧。结果让你头疼，结果还真就不是，而是 true      false      true。</p>
+<p>所以为了解决这道题，我们就得看字节码，我们会发现，在字节码的角度来说 Integer i1 &#x3D; 10 其实是 <code>Integer i1 = Integer.valueOf(10);</code>  而不是 <code>Integer i1 = new Integer(10)</code>，那问题肯定是在valueOf 上了，所以我们进入源码看 valueOf。我们就会发现惊人的事实，以下高能：</p>
+<p>Integer 内部有一个IntegerCache，里面缓存了一部分Integer对象，这部分对象是已经创建好的，范围是 -128 - 127，如果他发现你传入的int是在这个范围内的话，他就会把对应的Integer直接给你而不会创建新的Integer，所以说上面 i1 和 i2 其实都是一个IntegerCache中的一个固定的Integer，压根就是同一个对象所以肯定想等。</p>
+<p>i5 和 i6 是咋回事？还得看字节码，我们会发现在判断的时候其实i5做了一个intValue的动作得到了 int 5，所以 i5 &#x3D;&#x3D; i6 其实是 i5.intValue() &#x3D;&#x3D; i6，那这个intValue是一个int，所以说也相等。</p>
+<h2 id="1-2-正式开始前，再来一道阴间题目"><a href="#1-2-正式开始前，再来一道阴间题目" class="headerlink" title="1.2 正式开始前，再来一道阴间题目"></a>1.2 正式开始前，再来一道阴间题目</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Father</span>&#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">x</span> <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Father</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="built_in">this</span>.print();</span><br><span class="line">        <span class="built_in">this</span>.x = <span class="number">20</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">print</span><span class="params">()</span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;Father.x=&quot;</span> + x);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Son</span> <span class="keyword">extends</span> <span class="title class_">Father</span>&#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">x</span> <span class="operator">=</span> <span class="number">30</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Son</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="built_in">this</span>.print();</span><br><span class="line">        <span class="built_in">this</span>.x = <span class="number">40</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">print</span><span class="params">()</span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;Son.x=&quot;</span> + x);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Test</span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span>&#123;</span><br><span class="line">        <span class="comment">// 1. Father f = new Son();</span></span><br><span class="line">        <span class="comment">// 2. Father f = new Father();</span></span><br><span class="line">        System.out.println(f.x);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这家伙，要想想明白这个事，咱们先不看2，咱们先看1.</p>
+<p>众所周知，这个成员变量的赋值顺序：</p>
+<ul>
+<li>默认赋值</li>
+<li>显式赋值 &#x2F; 实例代码块中赋值</li>
+<li>构造器赋值</li>
+<li>后期直接 XXX.xxx 或者 XXX.setXxx(xxx)</li>
+</ul>
+<p>那现在，直接 <code>Father f = new Father();</code> 对吧，根据顺序，首先 x &#x3D; 10，然后构造，所以一上来打印：Father.x &#x3D; 10,然后打印 f.x，那就是 20呗，这个没啥异议。</p>
+<p>然后看2，这个时候看不太懂了，我们去看看字节码，我们又会发现一个小秘密：我们以前说过，创建子类对象会首先调用父类的构造方法，也就是有一个隐藏的 super()，这个super我们说必须放在构造器第一行，对吧。但是我们看字节码我们发现，何止是第一行，父类构造器是整个 &lt;init&gt; 方法的第一步。</p>
+<p>我们的Son类，首先 int x &#x3D; 30 对吧，这个按顺序应该是&lt;init&gt;() 方法的第一步，这是正常情况下，但是在继承中， x &#x3D; 30 和 x &#x3D; 40 却在后面，第一步是调用了 Father.&lt;init&gt;() 方法，然后进入了Father.init，Father调用了 print 方法，但是print已经被子类重写了， 所以调用的其实是子类的print方法，子类要打印子类的x，这个时候因为我们前面说的原因，x &#x3D; 30 还没有执行，所以目前x 只有默认0值，所以打印出来的结果居然是 son.x &#x3D; 0。</p>
+<p>父类构造器执行完成，返回子类构造器，子类x必定是显式初始化了对吧，所以30，调用print，没有异议，然后最后打印 f.x，Java中，成员可没有多态，所以打印的父类的x，也就是20。~~~~</p>
+<p>最后结果：</p>
+<p>Son.x&#x3D;0;Son.x&#x3D;30;20</p>
+<h2 id="1-3-普及几个概念"><a href="#1-3-普及几个概念" class="headerlink" title="1.3 普及几个概念"></a>1.3 普及几个概念</h2><p>这些概念后面要用：</p>
+<p>操作码：opcode</p>
+<p>就是字节码指令的前面那部分，比如 bipush</p>
+<p>操作数：operand</p>
+<p>就是操作码后面的参数，一般是一个数</p>
+<h1 id="2-解析字节码文件"><a href="#2-解析字节码文件" class="headerlink" title="2. 解析字节码文件"></a>2. 解析字节码文件</h1><p>很好，终于是到了这步了，很显然我们的 class文件都是乱码，那么我们就需要把他转成16进制看。以后肯定不用这么的，直接 JClassLib 插件看就行，但是刚开始嘛，多学点，总是好的。</p>
+<p>Windows特别方便，直接notepad++安装一个 hex editor 插件就行了，Ubuntu 不行啊，好吧，vim 走起，弄一个class文件，然后：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vim xxx.class</span><br><span class="line">:%!xxd</span><br></pre></td></tr></table></figure>
+
+<p>就行了。</p>
+<h2 id="2-1-Class文件存储方式"><a href="#2-1-Class文件存储方式" class="headerlink" title="2.1 Class文件存储方式"></a>2.1 Class文件存储方式</h2><p>Class 文件整体采用一种类似 C 语言结构体的存储方式，存储单位有两个：无符号数 和 表，下面具体区分：</p>
+<ul>
+<li>无符号数：用于存储基本数据类型，分为 u1 u2 u4 u8 4种类型，分别代表  1 2 4 8 个字节的无符号数，这个东西可以用来描述：数字，索引引用，数量，或者 utf-8 编码的字符串值。</li>
+<li>表：表是由多个无符号数或者其他表构成的复合数据类型，所有表都习惯性的以 _info 结尾。表 用于描述有层次关系的复合结构的数据，整个class文件其实就是一张表，由于一个表长度不一定，所以一般会在表前面加一个数字来表示表长。</li>
+</ul>
+<h2 id="2-2-Class文件结构"><a href="#2-2-Class文件结构" class="headerlink" title="2.2 Class文件结构"></a>2.2 Class文件结构</h2><p>这里写一下java虚拟机规范中的说明：</p>
+<table>
+<thead>
+<tr>
+<th>所用类型</th>
+<th>文件结构</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>u4</td>
+<td>magic 魔数</td>
+<td>识别class文件的标识</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>minor_version : class文件副版本</td>
+<td>识别class文件版本</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>major_version: class文件主版本</td>
+<td>识别class文件版本</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>constant_pool_count：常量池长度</td>
+<td>记录常量池长度.就像之前说的.一个表会在前面记录表长</td>
+</tr>
+<tr>
+<td>cp_info</td>
+<td>constant_pool[c_p_c-1]：常量池</td>
+<td>特别重要.以后再说</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>access_flags：访问标志</td>
+<td>体现你这个东西是个类还是个接口.public还是private</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>this_class：类索引</td>
+<td></td>
+</tr>
+<tr>
+<td>u2</td>
+<td>super_class：父类索引</td>
+<td></td>
+</tr>
+<tr>
+<td>u2</td>
+<td>interfaces_count：接口索引集合长度</td>
+<td></td>
+</tr>
+<tr>
+<td>u2</td>
+<td>interfaces[interfaces_count-1]:接口索引集合</td>
+<td></td>
+</tr>
+<tr>
+<td>u2</td>
+<td>fields_count：字段表集合 长度</td>
+<td>记录字段表长度,这里的字段就是成员.或者我们平常说属性</td>
+</tr>
+<tr>
+<td>field_info</td>
+<td>fields[fields_count-1]：字段表集合</td>
+<td>记录所有的字段</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>methods_count：方法表集合 长度</td>
+<td>记录方法表长</td>
+</tr>
+<tr>
+<td>method_info</td>
+<td>methods[methods_count-1]：方法表集合</td>
+<td>记录所有方法</td>
+</tr>
+<tr>
+<td>u2</td>
+<td>attributes_count：属性表集合 长度</td>
+<td>这个属性指的是当前类自己的属性,比如类名这种的信息,不是字段</td>
+</tr>
+<tr>
+<td>attribute_info</td>
+<td>attributes[attributes_count-1]：属性表 集合</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>是不是觉得上面的特别多，其实很多东西是合二为一的，下面总结一下，ClassFile的结构：</p>
+<ul>
+<li>魔数</li>
+<li>class文件版本</li>
+<li>常量池</li>
+<li>访问标志</li>
+<li>类索引 父类索引 接口索引集合</li>
+<li>字段表集合</li>
+<li>方法表集合</li>
+<li>属性表集合</li>
+</ul>
+<p>很好，知道了这些以后，来吧，开始手撕16进制字节码。</p>
+<h1 id="3-字节码文件详解"><a href="#3-字节码文件详解" class="headerlink" title="3. 字节码文件详解"></a>3. 字节码文件详解</h1><p>上面已经说了字节码文件分为了那么多部分，所以这里详细说一说每个部分都是干嘛的</p>
+<h2 id="3-1-Magic-魔数"><a href="#3-1-Magic-魔数" class="headerlink" title="3.1 Magic 魔数"></a>3.1 Magic 魔数</h2><p>魔数，占用4个字节，用于表示这个class文件是一个合法的class文件，可以被jvm识别。</p>
+<p>肯定是 0xCAFEBABE，如果不是，那说明不是合法的class文件，就会抛出错误，具体啥错误我就不说了。</p>
+<p>这个东西应用比较广，比如两张图片，你去对比他们的十六进制，会发现他们的第一行基本一样。</p>
+<h2 id="3-2-class文件版本号"><a href="#3-2-class文件版本号" class="headerlink" title="3.2 class文件版本号"></a>3.2 class文件版本号</h2><p>跟在magic后面， 5 6 字节一组，7 8 字节一组，56是 minor version，也叫小版本，78是major version，大版本。两个东西共同组成class文件的版本号，比如 大版本是M，小版本是m，那么class文件的版本就是 M.m。</p>
+<p>那这玩意有啥用，不同的编译器，编译出来的版本不一样，下面是一个对照表：</p>
+<table>
+<thead>
+<tr>
+<th>大版本(后面)</th>
+<th>小版本(前面)</th>
+<th>对应编译器版本</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>45</td>
+<td>3</td>
+<td>1.1</td>
+</tr>
+<tr>
+<td>46</td>
+<td>0</td>
+<td>1.2</td>
+</tr>
+<tr>
+<td>47</td>
+<td>0</td>
+<td>1.3</td>
+</tr>
+</tbody></table>
+<p>不往后写了，因为后面的小版本都是0，然后编译器每加一个版本，大版本+1.</p>
+<p>别犯傻啊，字节码文件里面可是16进制，你看到是34，其实是52，也就是 jdk1.8.</p>
+<p>目前，高版本的编译器可以执行低版本编译器编译出来的字节码文件，但是反过来不行，如果class文件版本高于当前编译器版本，会抛出异常</p>
+<blockquote>
+<p>java.lang.UnsupportedClassVersionError</p>
+</blockquote>
+<h2 id="3-3-常量池-ConstantPool"><a href="#3-3-常量池-ConstantPool" class="headerlink" title="3.3 常量池 ConstantPool"></a>3.3 常量池 ConstantPool</h2><p>这东西是class文件中内容最丰富的地方之一，而且这个对class文件的字段和方法解析也非常的重要。</p>
+<p>随着java的发展，常量池的内容日渐丰富，可以说常量池是class文件的基石。</p>
+<p>这东西分为两部分，首先是版本号后面紧跟着的 常量池计数器，毕竟字节码文件没有分隔符，jvm又得分隔，所以这里就写一个计数器，告诉jvm后面的东西到第几个就结束了，不同于java语言，这个计数器从1开始，而不是0。第二部分是若干常量池表项，常量池表项中，用于存放编译时期产生的各种字面量和符号引用，这部分内容将在类加载以后进入方法区，存在运行时常量池中。</p>
+<h3 id="3-3-1-常量池计数器-Constant-pool-count"><a href="#3-3-1-常量池计数器-Constant-pool-count" class="headerlink" title="3.3.1 常量池计数器 Constant_pool_count"></a>3.3.1 常量池计数器 Constant_pool_count</h3><p>说过了，起始是1，也就是如果常量池计数器&#x3D;1，说明常量池中没东西，那为啥从1开始？因为常量池的东西相互之间各种引用，如果里面的一项谁都没有引用怎么整，怎么表示，那就是引用0呗，所以把0空出来。这里我的常量池计数器是16，也就是22，那么常量池的范围就是1-21.</p>
+<h3 id="3-3-2-常量池表-ConstantPool"><a href="#3-3-2-常量池表-ConstantPool" class="headerlink" title="3.3.2 常量池表 ConstantPool"></a>3.3.2 常量池表 ConstantPool</h3><p>常量池主要存放两大类常量：字面量Literal和符号引用SymbolicReferences。</p>
+<ul>
+<li><p>字面量：两种，第一种是文本字符串，第二种是声明为final的常量值。</p>
+</li>
+<li><p>符号引用：类和接口的全限定名，字段的名称和描述符，方法的名称和描述符。</p>
+<ul>
+<li><p>全限定名：包名+类名，但是和全类名不一样，他把全类名的 . 换成了 &#x2F;，比如：cn&#x2F;zhzp&#x2F;commons&#x2F;JwtUtils 这就是全限定名，为了不混淆，一般在最后面加一个 ; 表示结尾，就是 cn&#x2F;zhzp&#x2F;commons&#x2F;JwtUtils;</p>
+</li>
+<li><p>简单名称：上面提到的 字段名，方法名，仅仅是那个名字，就是简单名称，比如 main 方法的 main这个单词，就是一个简单名称。</p>
+</li>
+<li><p>描述符：用于描述字段的数据类型，方法的形参列表，返回值类型。这里提到了数据类型，按照规定，有以下规则来表示类型：</p>
+<table>
+<thead>
+<tr>
+<th>标志符</th>
+<th>数据类型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>B</td>
+<td>基本数据类型 byte</td>
+</tr>
+<tr>
+<td>C</td>
+<td>基本数据类型 char</td>
+</tr>
+<tr>
+<td>D</td>
+<td>基本数据类型 double</td>
+</tr>
+<tr>
+<td>F</td>
+<td>基本数据类型 float</td>
+</tr>
+<tr>
+<td>I</td>
+<td>基本数据类型 int</td>
+</tr>
+<tr>
+<td>J</td>
+<td>基本数据类型 long</td>
+</tr>
+<tr>
+<td>S</td>
+<td>基本数据类型 short</td>
+</tr>
+<tr>
+<td>Z</td>
+<td>基本数据类型 boolean</td>
+</tr>
+<tr>
+<td>V</td>
+<td>代表void类型</td>
+</tr>
+<tr>
+<td>L</td>
+<td>代表对象类型，L + 全限定名，比如 Ljava&#x2F;lang&#x2F;Object</td>
+</tr>
+<tr>
+<td>[</td>
+<td>代表一维数组，比如 int[][][][][] [] [] -&gt; [[[I</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>这里我们再回到我们刚学jvm的时候学到的类加载三个阶段：加载链接初始化，链接阶段分为 验证 准备 解析，最后一步解析当时说的是：把字节码文件中的符号引用替换成直接引用。这里我们详细的说一说：</p>
+<p>这里我们提到符号引用记录全限定名，比如我们用到了 System.out.println()，那他符号引用就会记录 Ljava&#x2F;lang&#x2F;System（不一定对，我猜的啊，只是举个例子），就说明我们当前这个类需要引用到 System，但这只是一个符号。然后在类加载阶段，就会解析这个符号引用，然后去加载这个 System类，加载完以后我们也学过方法区了，System这个类就会放在方法区，就会有一个内存地址，这个时候，把常量池中的符号引用，替换成内存地址，让常量池可以真正引用到方法区的System类。</p>
+<p>这个不局限于类或者接口，同理方法也是这样的，常量池中有一个 add 符号，啥也不是，然后类加载之后把他真正的指向方法区中的add方法内存。</p>
+<p>所以再说啥叫符号引用和直接引用：</p>
+<p>符号引用，和内存半毛钱关系没有，仅仅是一个符号，用来表示这个class引用了啥。</p>
+<p>直接引用，一个内存地址，偏移量，或者句柄，总之可以定位到真正的对象，和内存有直接关系。</p>
+</blockquote>
+<p>常量池中包含了这个class结构和他的子结构中包含的所有：字符串常量，类和接口名，字段名，和其他常量。</p>
+<p>常量池中的每一项都具有相同的结构，每一项的第一个字节是类型标记符，用于确定这一项的格式，这个字节叫做 tag byte。</p>
+<p>再具体的，就是说常量池中每一部分都是怎么构成的，不说了，太多了，我在里面又放了一个尚硅谷的md文件，看那个就行了。</p>
+<h2 id="3-4-访问标志-Access-Flag"><a href="#3-4-访问标志-Access-Flag" class="headerlink" title="3.4 访问标志 Access_Flag"></a>3.4 访问标志 Access_Flag</h2><p>常量池后面u2是访问标志，访问标志有很多啊，比如 ACC_PUBLIC, ACC_SUPER 这种的，每一种访问标志都有一个十六进制数值表示，然后class文件中的这个访问标志其实个加和，是多个访问标志加到一起得到的数字。</p>
+<p>各个访问标志也在尚硅谷的md里面，需要的话自己看，不多说了。</p>
+<p>补充说明：</p>
+<ul>
+<li>带有 ACC_INTERFACE 标识的class，说明他是一个接口，没带，那就是类。</li>
+<li>如果一个class有 ACC_INTERFACE,那他必须同时有 ACC_ABSTRACT，不能有 ACC_SUPER  ACC_ENUM  ACC_FINAL.</li>
+<li>注解类型必须有 ACC_ANNOTATION 标识，如果有 ACC_ANNOTATION，那必须同时有 ACC_INTERFACE 标识。</li>
+<li>ACC_SUPER，只要是类，那基本都有这个标志，详细的不多说了。</li>
+</ul>
+<h2 id="3-5-类索引-父类索引-接口索引集合"><a href="#3-5-类索引-父类索引-接口索引集合" class="headerlink" title="3.5 类索引 父类索引 接口索引集合"></a>3.5 类索引 父类索引 接口索引集合</h2><p>先说啥叫索引，上面不是有常量池吗，常量池中有符号引用对吧，然后常量池里面的每一项都一个位置对吧，那么索引的意思就是指向了常量池的哪个位置，指向了常量池的第几项。所以索引是一个u2。</p>
+<p>放在这里也很好理解了，类索引就是常量池中本类符号引用的位置，父类索引同理，然后接口索引集合，首先他是个集合，那他肯定前面肯定有一个u2的计数器，然后后面才是每一个索引。</p>
+<h2 id="3-6-字段表集合"><a href="#3-6-字段表集合" class="headerlink" title="3.6 字段表集合"></a>3.6 字段表集合</h2><p>首先，集合，所有u2的计数器，不多说。</p>
+<p>然后，我们着重看看字段表里面包含了啥，包含以下内容：</p>
+<ul>
+<li>访问标志，这里的访问表示还不同于上面的class文件访问标识，而是字段自己的一套访问表示，在尚硅谷那里都有写，这里不说了，占用u2</li>
+<li>字段名索引，显然是指向常量池中的属性名称。</li>
+<li>字段描述符搜因，字段的描述符就是这个字段的类型，同理指向常量池</li>
+<li>字段属性表集合，这个东西比较特殊，有些字段也是有属性的，用于存放一些额外信息，比如初始化值(主要针对常量)，注释等信息，这里不举例了，了解就行。</li>
+</ul>
+<h2 id="3-7-方法表集合"><a href="#3-7-方法表集合" class="headerlink" title="3.7 方法表集合"></a>3.7 方法表集合</h2><p>在字节码文件中，每一个 method_info 都对应着当前类或接口中的方法，用于描述这个方法的方法名，访问标识，返回值类型，参数列表等信息。</p>
+<p>如果一个方法不是abstract 不是native的，那么这个方法就会在字节码中体现出来。</p>
+<p>methods 中只会有当前类或者接口中声明的方法，不会有父类的方法，同时，methods中可能会有些类加载期间自动加上的方法，比如 clinit init 这种方法。</p>
+<p>方法表中包含的信息，总的来说，包括这些：u2访问标识，u2方法名索引，u2描述符索引，u2属性计数器，attribute_info属性集合。</p>
+<p>然后属性里面有啥东西？特别麻烦，各种 code，什么 本地变量表，操作数栈深度，还什么line_number_table，不说了，太恶心了，这里不说了。</p>
+<h2 id="3-8-属性表集合"><a href="#3-8-属性表集合" class="headerlink" title="3.8 属性表集合"></a>3.8 属性表集合</h2><p>一上来u2计数器，不说了。</p>
+<p>只要是属性，不管是这里的属性，还是字段表的属性，还是方法表的属性，都有有些共同的地方，一般来说，属性表肯定有三个东西：</p>
+<ul>
+<li>属性名索引</li>
+<li>属性长度</li>
+<li>属性表</li>
+</ul>
+<p>然后，根据属性名索引找到属性名，然后拿着属性名去找这个名字的属性里面包含了哪些信息，就这么个过程，不细说了。</p>
+<h1 id="4-字节码相关命令"><a href="#4-字节码相关命令" class="headerlink" title="4. 字节码相关命令"></a>4. 字节码相关命令</h1><p>上面的字节码，一个一个16进制扣，看得我反胃了开始，不看了，太恶心了。</p>
+<p>说一说一些命令，以及一些命令的参数：</p>
+<h2 id="4-1-javac-命令"><a href="#4-1-javac-命令" class="headerlink" title="4.1 javac 命令"></a>4.1 javac 命令</h2><p>肯定都用过这个东西，有个小知识点得说一说，使用这个命令的时候如果加上 -g 参数，就会生成局部变量表，不加的话，是没有局部变量表的。</p>
+<p>idea 或者 eclipse 给我们编译都会把局部变量表编译出来。</p>
+<p>其他参数：</p>
+<ul>
+<li><p>-version，返回 javac所在的jdk的版本，而不是class是被哪个jdk生成的，和class文件没关系，直接 javac -version就行了</p>
+</li>
+<li><p>-public，仅显示当前class中的公开成员</p>
+</li>
+<li><p>-protected，显示当前class中的高于protected成员</p>
+</li>
+<li><p>-p、-private，显示高于private成员</p>
+</li>
+<li><p>-package，显示程序包&#x2F;受保护的&#x2F;公开类 和成员</p>
+</li>
+<li><p>-sysinfo，显示正在处理的类的系统信息，比如路径，大小，md5，散列 等等信息。</p>
+</li>
+<li><p>-constants，显示静态常量，和上面的其实差不多，只是上面的显示常量不显示值，这里会显示值而已。</p>
+</li>
+</ul>
+<h2 id="4-2-javap命令"><a href="#4-2-javap命令" class="headerlink" title="4.2 javap命令"></a>4.2 javap命令</h2><p>也用过吧，这玩意用来反编译的，参数如下：</p>
+<ul>
+<li><p>-s，输出内部类型签名，其实就是返回每个成员的描述信息</p>
+</li>
+<li><p>-l，返回行号和局部变量表，前提是你得有局部变量表</p>
+</li>
+<li><p>-c，对代码进行反汇编，挺高深奥，其实就是返回你每个方法的code属性，代码都给你转成jvm指令</p>
+</li>
+<li><p>-v、-verbose，输出附加信息，包括行号，本地变量表，反汇编等详细信息。简单说，一个v包括上面的所有东西，但是不包括私有，你要包括私有咋办，直接 <code>javap -v -p xxx.class</code></p>
+</li>
+</ul>
+<p>常用的是 -v -c -l</p>
+<p>顺带说一句，javap里面你看不到clinit和init，因为javap又给你还原成了你的构造方法，或者代码块。</p>
+<h1 id="5-字节码指令"><a href="#5-字节码指令" class="headerlink" title="5. 字节码指令"></a>5. 字节码指令</h1><p>字节码指令，首先众所周知，分为两个部分，操作符 和 操作数，然后每个操作符都会有一个助记符，说白了，就是每一个指令，都会有一个对应的16进制数字来表示，方便在字节码文件中体现，然后助记符后面又会有一个16进制操作数。这就是一个指令具体在字节码中的结构。</p>
+<h2 id="5-1-执行模型"><a href="#5-1-执行模型" class="headerlink" title="5.1 执行模型"></a>5.1 执行模型</h2><p>jvm执行指令的流程，如果不考虑异常处理的话，可以概括成以下过程：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">do</span>&#123;</span><br><span class="line">    自动计算PC寄存器的值 + <span class="number">1</span>;</span><br><span class="line">    根据PC寄存器的值到相应的地方取出指令;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(指令存在操作数)</span><br><span class="line">        取出操作数;</span><br><span class="line"></span><br><span class="line">    执行操作码对应的操作;</span><br><span class="line"></span><br><span class="line">&#125;<span class="keyword">while</span>(字节码长度 &gt; <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-2-字节码数据类型"><a href="#5-2-字节码数据类型" class="headerlink" title="5.2 字节码数据类型"></a>5.2 字节码数据类型</h2><p>一般情况下，字节码指令是有数据类型区分的，比如 iload，这个i就是int，fload 自然就是 load float。常见的数据类型：</p>
+<ul>
+<li><p>int -&gt; i</p>
+</li>
+<li><p>float -&gt; f</p>
+</li>
+<li><p>double -&gt; d</p>
+</li>
+<li><p>char -&gt; c</p>
+</li>
+<li><p>byte -&gt; b</p>
+</li>
+<li><p>short -&gt; s</p>
+</li>
+<li><p>long -&gt; l</p>
+</li>
+</ul>
+<p>需要注意的是，绝大多数指令对于整数，一般不支持 byte short char，甚至不支持 boolean，其实在运算的时候，会通过带符号扩展 变为 int，而对于boolean，boolean这会通过 零位扩展转化为char进行运算。这个规则也适用于数组，数组里面的各个元素也会转为int。所以大部分对于 char byte short boolean 的操作，其实都是用int操作的。</p>
+<h2 id="5-3-指令分类"><a href="#5-3-指令分类" class="headerlink" title="5.3 指令分类"></a>5.3 指令分类</h2><p>指令，那太多了，所以我们先分个类，对于字节码指令，有以下分类：</p>
+<ul>
+<li><p>加载与存储指令</p>
+</li>
+<li><p>算数指令</p>
+</li>
+<li><p>类型转换指令</p>
+</li>
+<li><p>对象的创建和访问指令</p>
+</li>
+<li><p>操作数栈管理指令</p>
+</li>
+<li><p>比较控制指令</p>
+</li>
+<li><p>异常处理指令</p>
+</li>
+<li><p>同步控制指令</p>
+</li>
+</ul>
+<p>注意：</p>
+<p>一个指令，可以从局部变量表，常量池，堆中对象，方法调用，系统调用中获取数据，这些数据会压入操作数栈</p>
+<p>一个指令，也可以从操作数栈获取多个数据，也就是pop多次，然后可以进行各种操作，然后结果还可以存入操作数栈</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+              <a href="/tags/%E5%BA%95%E5%B1%82/" rel="tag"># 底层</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/06/07/java-exam/" rel="prev" title="Java期末考试">
+      <i class="fa fa-chevron-left"></i> Java期末考试
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/06/13/bytecode-command/" rel="next" title="字节码指令">
+      字节码指令 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E5%89%8D%E8%A8%80"><span class="nav-text">1. 前言</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E6%AD%A3%E5%BC%8F%E5%BC%80%E5%A7%8B%E4%B9%8B%E5%89%8D%EF%BC%8C%E5%85%88%E6%9D%A5%E9%81%93%E9%A2%98"><span class="nav-text">1.1 正式开始之前，先来道题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E6%AD%A3%E5%BC%8F%E5%BC%80%E5%A7%8B%E5%89%8D%EF%BC%8C%E5%86%8D%E6%9D%A5%E4%B8%80%E9%81%93%E9%98%B4%E9%97%B4%E9%A2%98%E7%9B%AE"><span class="nav-text">1.2 正式开始前，再来一道阴间题目</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E6%99%AE%E5%8F%8A%E5%87%A0%E4%B8%AA%E6%A6%82%E5%BF%B5"><span class="nav-text">1.3 普及几个概念</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E8%A7%A3%E6%9E%90%E5%AD%97%E8%8A%82%E7%A0%81%E6%96%87%E4%BB%B6"><span class="nav-text">2. 解析字节码文件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-Class%E6%96%87%E4%BB%B6%E5%AD%98%E5%82%A8%E6%96%B9%E5%BC%8F"><span class="nav-text">2.1 Class文件存储方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-Class%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84"><span class="nav-text">2.2 Class文件结构</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E5%AD%97%E8%8A%82%E7%A0%81%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3"><span class="nav-text">3. 字节码文件详解</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-Magic-%E9%AD%94%E6%95%B0"><span class="nav-text">3.1 Magic 魔数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-class%E6%96%87%E4%BB%B6%E7%89%88%E6%9C%AC%E5%8F%B7"><span class="nav-text">3.2 class文件版本号</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E5%B8%B8%E9%87%8F%E6%B1%A0-ConstantPool"><span class="nav-text">3.3 常量池 ConstantPool</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-1-%E5%B8%B8%E9%87%8F%E6%B1%A0%E8%AE%A1%E6%95%B0%E5%99%A8-Constant-pool-count"><span class="nav-text">3.3.1 常量池计数器 Constant_pool_count</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-2-%E5%B8%B8%E9%87%8F%E6%B1%A0%E8%A1%A8-ConstantPool"><span class="nav-text">3.3.2 常量池表 ConstantPool</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-%E8%AE%BF%E9%97%AE%E6%A0%87%E5%BF%97-Access-Flag"><span class="nav-text">3.4 访问标志 Access_Flag</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-%E7%B1%BB%E7%B4%A2%E5%BC%95-%E7%88%B6%E7%B1%BB%E7%B4%A2%E5%BC%95-%E6%8E%A5%E5%8F%A3%E7%B4%A2%E5%BC%95%E9%9B%86%E5%90%88"><span class="nav-text">3.5 类索引 父类索引 接口索引集合</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-6-%E5%AD%97%E6%AE%B5%E8%A1%A8%E9%9B%86%E5%90%88"><span class="nav-text">3.6 字段表集合</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-7-%E6%96%B9%E6%B3%95%E8%A1%A8%E9%9B%86%E5%90%88"><span class="nav-text">3.7 方法表集合</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-8-%E5%B1%9E%E6%80%A7%E8%A1%A8%E9%9B%86%E5%90%88"><span class="nav-text">3.8 属性表集合</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E5%AD%97%E8%8A%82%E7%A0%81%E7%9B%B8%E5%85%B3%E5%91%BD%E4%BB%A4"><span class="nav-text">4. 字节码相关命令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-javac-%E5%91%BD%E4%BB%A4"><span class="nav-text">4.1 javac 命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-javap%E5%91%BD%E4%BB%A4"><span class="nav-text">4.2 javap命令</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%AD%97%E8%8A%82%E7%A0%81%E6%8C%87%E4%BB%A4"><span class="nav-text">5. 字节码指令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E6%89%A7%E8%A1%8C%E6%A8%A1%E5%9E%8B"><span class="nav-text">5.1 执行模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E5%AD%97%E8%8A%82%E7%A0%81%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="nav-text">5.2 字节码数据类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E6%8C%87%E4%BB%A4%E5%88%86%E7%B1%BB"><span class="nav-text">5.3 指令分类</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

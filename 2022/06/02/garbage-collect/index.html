@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="这章开始进入垃圾回收，只是这一章不讲垃圾回收的具体回收器，而是讲一下垃圾回收的一些基本概念。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="垃圾回收">
+<meta property="og:url" content="http://example.com/2022/06/02/garbage-collect/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="这章开始进入垃圾回收，只是这一章不讲垃圾回收的具体回收器，而是讲一下垃圾回收的一些基本概念。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/gc/gc_ref_counting.png">
+<meta property="article:published_time" content="2022-06-02T09:33:38.000Z">
+<meta property="article:modified_time" content="2022-06-06T03:39:16.305Z">
+<meta property="article:author" content="PtheF">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="底层">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/gc/gc_ref_counting.png">
+
+<link rel="canonical" href="http://example.com/2022/06/02/garbage-collect/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>垃圾回收 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/06/02/garbage-collect/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          垃圾回收
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-06-02 17:33:38" itemprop="dateCreated datePublished" datetime="2022-06-02T17:33:38+08:00">2022-06-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-06-06 11:39:16" itemprop="dateModified" datetime="2022-06-06T11:39:16+08:00">2022-06-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM/" itemprop="url" rel="index"><span itemprop="name">JVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这章开始进入垃圾回收，只是这一章不讲垃圾回收的具体回收器，而是讲一下垃圾回收的一些基本概念。</p>
+<span id="more"></span>
+
+<h1 id="1-GC-垃圾收集"><a href="#1-GC-垃圾收集" class="headerlink" title="1. GC 垃圾收集"></a>1. GC 垃圾收集</h1><p>同理，首先明确几个概念：</p>
+<ul>
+<li><p>什么是垃圾</p>
+</li>
+<li><p>为啥要清理垃圾</p>
+</li>
+<li><p>垃圾回收机制</p>
+</li>
+</ul>
+<h2 id="1-1-什么是垃圾"><a href="#1-1-什么是垃圾" class="headerlink" title="1.1 什么是垃圾"></a>1.1 什么是垃圾</h2><p>垃圾指的是，在程序运行期间没有任何指针指向的对象，这个对象就是垃圾。</p>
+<p>如果不及时清理垃圾，这些垃圾对象就会一直存在占用空间，可能导致内存溢出。</p>
+<h2 id="1-2-为什么要GC"><a href="#1-2-为什么要GC" class="headerlink" title="1.2 为什么要GC"></a>1.2 为什么要GC</h2><ul>
+<li><p>对于高级语言来说，如果不进行GC，内存迟早消耗完，所以需要不断地分配内存和回收内存</p>
+</li>
+<li><p>除了垃圾回收，GC同时还能整理内存碎片，碎片整理把堆内存移到堆的一端，给新对象腾地方</p>
+</li>
+<li><p>业务越来越庞大，没有GC程序就没法运行，而经常GC会导致频繁地STW，所以就需要不断的对GC进行优化。</p>
+</li>
+</ul>
+<h2 id="1-3-Java垃圾回收机制"><a href="#1-3-Java垃圾回收机制" class="headerlink" title="1.3 Java垃圾回收机制"></a>1.3 Java垃圾回收机制</h2><ul>
+<li><p>自动内存管理，无需开发人员手动分配和释放，降低了内存溢出的可能性。</p>
+</li>
+<li><p>能让我们更专注于 业务逻辑的开发</p>
+</li>
+</ul>
+<h1 id="2-GC-机制与算法-标记阶段"><a href="#2-GC-机制与算法-标记阶段" class="headerlink" title="2. GC 机制与算法-标记阶段"></a>2. GC 机制与算法-标记阶段</h1><p>大纲：</p>
+<ul>
+<li><p>标记阶段：引用计数算法</p>
+</li>
+<li><p>标记阶段：可达性分析算法</p>
+</li>
+<li><p>对象的 finalization 机制</p>
+</li>
+<li><p>MAT和JProfiler 的 GC roots 溯源</p>
+</li>
+<li><p>清除阶段：标记清除算法</p>
+</li>
+<li><p>清除阶段：复制算法</p>
+</li>
+<li><p>清除阶段：标记-压缩 算法</p>
+</li>
+</ul>
+<h2 id="2-1-垃圾标记阶段"><a href="#2-1-垃圾标记阶段" class="headerlink" title="2.1 垃圾标记阶段"></a>2.1 垃圾标记阶段</h2><ul>
+<li><p>在堆中存放着几乎所有的Java实例，在回收之前，首先要区分哪些是存活对象，哪些对象已经死了，只有已经死亡的对象，GC才会在收集的时候释放他们的内存，这个区分死活的阶段就是<strong>垃圾标记阶段</strong></p>
+</li>
+<li><p>如何判断一个对象已经死了？就是，没有任何指针指向他，不被任何存活对象引用，那他就死了</p>
+</li>
+<li><p>判断没有引用的算法有两个：<strong>引用计数算法</strong> 和 <strong>可达性分析算法</strong></p>
+</li>
+</ul>
+<h3 id="2-1-1-引用计数算法"><a href="#2-1-1-引用计数算法" class="headerlink" title="2.1.1 引用计数算法"></a>2.1.1 引用计数算法</h3><ul>
+<li><p>Reference Counting，比较简单，就是给每一个对象保留一个引用计数器来记录被引用的情况</p>
+</li>
+<li><p>当一个对象引用A对象，A的计数器+1，同理，引用失效，计数器 - 1</p>
+</li>
+<li><p>优点：实现简单，垃圾对象便于标识；判定效率高，没有延迟</p>
+</li>
+<li><p>缺点：</p>
+<ul>
+<li><p>需要另外的字段存储计数器，有额外存储空间开销</p>
+</li>
+<li><p>每次操作都需要更新计数器，伴随着 - + 操作，额外时间开销</p>
+</li>
+<li><p>无法处理循环引用问题，导致 Java 垃圾回收器不使用这个东西</p>
+<blockquote>
+<p>什么叫循环引用：</p>
+<p><img src="/images/gc/gc_ref_counting.png"></p>
+<p>如上图第二种情况，如果三个对象循环引用，那么根据技术算法，他们的计数器都是1，不是0，但是其实，这三个对象已经是垃圾了，但是由于算法问题，这个垃圾不被回收。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><p>小结：</p>
+<ul>
+<li><p>引用计数算法是很多语言的标记算法，比如python</p>
+</li>
+<li><p>具体场景下，可能还会使用引用计数，来提高系统的吞吐量</p>
+</li>
+<li><p>Java没有选择引用计数是因为循环依赖不好处理</p>
+</li>
+<li><p>python如何解决循环依赖：1. 解除相互之间的引用；2.引入强引用和弱引用</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-1-2-可达性分析算法-根搜索，追踪性垃圾收集"><a href="#2-1-2-可达性分析算法-根搜索，追踪性垃圾收集" class="headerlink" title="2.1.2 可达性分析算法(根搜索，追踪性垃圾收集)"></a>2.1.2 可达性分析算法(根搜索，追踪性垃圾收集)</h3><ul>
+<li><p>相对引用计数来说，可达算法同样简单高效，而且这个算法可以很好的解决循环引用问题</p>
+</li>
+<li><p>Java C# 都采用可达算法</p>
+</li>
+</ul>
+<p>说先说一个基本概念：GC Roots：一个必须活跃的引用集合，在这个基础上，进行可达性分析算法的基本思路</p>
+<ul>
+<li><p>以GC Roots 为起始点，往下<strong>搜索被根对象集合连接的目标对象是否可达</strong></p>
+</li>
+<li><p>经过可达性分析后，内存中存活的对象直接或间接的被根对象集合连接着，搜索过的路径就叫做 <strong>引用链</strong></p>
+</li>
+<li><p>如果目标对象没有被任何引用链相连，则不可达，说明对象已经死亡，需要被收集</p>
+</li>
+<li><p>可达算法中，只有被根对象集合直接或间接引用的对象，才是存活对象</p>
+</li>
+<li><p>可达性分析必须在数据的快照中进行，来保证数据一致性</p>
+</li>
+<li><p>这个算法会导致 STW，即使是号称不会STW的CMS(新的垃圾回收器)，在枚举根节点的时候也是会停顿的。</p>
+</li>
+</ul>
+<h2 id="2-2-详细说说-GC-Roots"><a href="#2-2-详细说说-GC-Roots" class="headerlink" title="2.2 详细说说 GC Roots"></a>2.2 详细说说 GC Roots</h2><p>GC Roots 中包含一下内容：</p>
+<ul>
+<li><p>虚拟机栈中引用的对象，比如方法参数和局部变量</p>
+</li>
+<li><p>本地方法栈中 JNI(本地方法) 中引用的对象</p>
+</li>
+<li><p>方法区中，类的静态属性引用的对象</p>
+</li>
+<li><p>方法区中，常量引用的对象</p>
+</li>
+<li><p>被同步锁 synchronized 所持有的对象</p>
+</li>
+<li><p>JVM内部的引用，比如基本数据类型的 Class，各种异常等常驻对象</p>
+</li>
+<li><p>除了这些以外，根据用户所选用的垃圾收集器和和内存区域不同，还可能有其他的对象临时加入roots，举个例子就是 分代收集和局部回收。就是说，你要收集堆中年轻代的数据，那么年轻代外面，老年代的数据也可能被认为是roots。</p>
+</li>
+<li><p>可以这么认为，如果一个指针指向堆中的一个对象，但是这个指针不在堆中，那么他就可能是 root，那么根据上面所说的分代回收，我认为可以这么理解，指针指向了一个待回收区域但是指针不在这个区域，对于这个区域来说，这个指针就是 root。当然，这个区域一般都是堆，毕竟只有 堆 和 方法区有垃圾收集，而且方法区一般不收集。</p>
+</li>
+</ul>
+<p>我觉得可以这么理解，如果GC区域不同，那么GC Roots 也就不确定，GC Roots归根到底就是除了这个被回收区域以外有可能用到这个区域中对象的地方，就是GC Roots，比如我们要收集堆，那么堆中的对象大多被栈指向，所以栈在这里就是堆的GC Roots，那么如果我们要回收年轻代，那么老年代也有可能是GC Roots。</p>
+<h2 id="2-3-对象的-finalize机制"><a href="#2-3-对象的-finalize机制" class="headerlink" title="2.3 对象的 finalize机制"></a>2.3 对象的 finalize机制</h2><p>对象Object内有一个方法：finalize() 方法，这个方法是对象被GC的时候，释放之前，会调用这么一个方法，有那么点类似于析构函数，我们最好不要手动去调用他，最好让JVM去调用他。</p>
+<p>就是因为finalize的存在，导致一个对象在虚拟机中存在三种状态：</p>
+<ul>
+<li><p>可触及的：GC Roots 连接的对象，肯定是存活的</p>
+</li>
+<li><p>可复活的：对象的所有引用都被释放，但是对象可能在 finalize方法中复活</p>
+</li>
+<li><p>不可触及的：对象的finalize方法被调用，且对象没有复活，那么这个对象就是不可触及的，一个不可触及的对象肯定不能复活，因为一个对象的finalize方法只能调用一次。</p>
+</li>
+</ul>
+<p>只有不可触及的对象，才会被回收。</p>
+<h2 id="2-4-总结标记过程"><a href="#2-4-总结标记过程" class="headerlink" title="2.4 总结标记过程"></a>2.4 总结标记过程</h2><p>就因为有finalize方法的存在，gc不能仅仅通过引用链来判断是否回收，总共需要两次标记：</p>
+<ul>
+<li><p>如果对象到GC Roots 之间没有引用链，进行第一次标记</p>
+</li>
+<li><p>进行筛选，判断该对象的finalize方法有没有必要执行：</p>
+<ul>
+<li><p>如果对象没有重写 finalize 方法或者 finalize方法已经被调用过了，则被判定位不可触及对象</p>
+</li>
+<li><p>如果对象重写了finalize方法，且还未执行过，则会把这个对象插入F-Queue 中，一个被虚拟机自动创建的，低优先级的线程 Finalizer，挨个触发队列里面的finalize方法。</p>
+</li>
+<li><p>finalize方法是对象最后逃离死亡的机会，稍后GC会对 F-Queue里面的对象进行第二次标记，如果调用finalize，方法里面和引用链中任何一个对象建立了联系，那么这个对象就被移出“即将回收集合”。之后，如果对象再次没有引用的情况，这时finalize方法不会调用，finalize方法只执行一次，然后对象直接变成不可触及。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="省略"><a href="#省略" class="headerlink" title="省略"></a>省略</h2><p>中间差了一堆东西，有堆相关工具的使用，以后有需要看 P144 - P146</p>
+<h1 id="3-GC-清理阶段"><a href="#3-GC-清理阶段" class="headerlink" title="3. GC -清理阶段"></a>3. GC -清理阶段</h1><p>成功区分出存活对象和死亡对象后，JVM要进行下一步，也就是清理垃圾，释放内存，给下面的对象腾地方</p>
+<p>具体算法下面三个：</p>
+<ul>
+<li><p>复制算法 Copying</p>
+</li>
+<li><p>标记-清除 算法 Mark-Sweep</p>
+</li>
+<li><p>标记-压缩 算法 Mark-Compact</p>
+</li>
+</ul>
+<h2 id="3-1-标记清除算法"><a href="#3-1-标记清除算法" class="headerlink" title="3.1 标记清除算法"></a>3.1 标记清除算法</h2><p>标记清除是一个比较低级，常见的垃圾回收算法，第一次被用在 Lisp语言上(Lisp：世界上第一个有GC的语言)。</p>
+<h3 id="3-1-1-执行过程"><a href="#3-1-1-执行过程" class="headerlink" title="3.1.1 执行过程"></a>3.1.1 执行过程</h3><p>当内存满了以后，就会停止整个程序(包括用户线程，这个停止就叫 Stop The World，也就是我们说的 STW)，然后进行下面两件事：</p>
+<ul>
+<li><p>Collector进行标记，从GCRoots 开始遍历可达对象(很显然就是我们前面说的可达性分析算法)，在对象头header中标记这是个可达对象，被引用对象，注意，标记的不是垃圾，没被标记的才是垃圾。</p>
+</li>
+<li><p>Collector进行清理，遍历对象，检查对象头的可达标记，如果没有，则被回收。</p>
+</li>
+</ul>
+<h3 id="3-1-2-缺点"><a href="#3-1-2-缺点" class="headerlink" title="3.1.2 缺点"></a>3.1.2 缺点</h3><ul>
+<li><p>效率不高，主要原因就是需要遍历，怎么遍历的？递归</p>
+</li>
+<li><p>在GC的时候需要停止整个程序，用户体验不好</p>
+</li>
+<li><p>清理出来的内存不是连续的，所以同时还需要维护一个内存空闲列表，我们之前说对象内存分配的时候 Chapter07-23 下说过。</p>
+</li>
+</ul>
+<h3 id="3-1-3-注-清除到底指的啥"><a href="#3-1-3-注-清除到底指的啥" class="headerlink" title="3.1.3 注:清除到底指的啥"></a>3.1.3 注:清除到底指的啥</h3><p>清除指的不是说直接这块内存上的东西就清空了，并非。</p>
+<p>垃圾还会留着，但是内存地址会写到空闲列表中，如果再次分配对象，新对象会覆盖垃圾对象。</p>
+<h2 id="3-2-复制算法"><a href="#3-2-复制算法" class="headerlink" title="3.2 复制算法"></a>3.2 复制算法</h2><p>为了解决标记清除算法低效的问题，提出的复制算法，这个算法同理 堆中年轻代的GC。</p>
+<p>思路：</p>
+<p>将内存分为两半，一半空着，另一半放数据，当数据区进行垃圾回收时，同理先进行可达性分析，但是，在分析的同时，如果发现对象是可达的，就会把对象复制到另一半内存中，不是复制内存地址，而是整个对象拷贝(拷贝肯定是规整的拷贝)。然后可达性分析完成，数据也就全部复制到另一半，就说明当前这块内存已经没有有用数据了，全都是垃圾，所以直接清理这一半内存即可。然后下一次GC，把对象全都复制到这里即可。</p>
+<h3 id="3-2-1-优点"><a href="#3-2-1-优点" class="headerlink" title="3.2.1 优点"></a>3.2.1 优点</h3><ul>
+<li><p>简单，快速</p>
+</li>
+<li><p>复制以后内存连续，不会出现内存碎片</p>
+</li>
+</ul>
+<h3 id="3-2-2-缺点"><a href="#3-2-2-缺点" class="headerlink" title="3.2.2 缺点"></a>3.2.2 缺点</h3><ul>
+<li>需要两倍大的内存空间</li>
+</ul>
+<h3 id="3-2-3-注意"><a href="#3-2-3-注意" class="headerlink" title="3.2.3 注意"></a>3.2.3 注意</h3><p>如果空间的存活对象多，那一次直接全盘复制一轮，垃圾没几个，就会导致效率过低。</p>
+<p>这个算法的应用场景最好是存活对象不太多的时候。垃圾多，复制的少，就会效率高。所以这就解释了为啥新生代采用类似这个算法来GC，原因就是新生代的对象大多数朝生暮死。</p>
+<h2 id="3-3-标记-压缩-整理-算法"><a href="#3-3-标记-压缩-整理-算法" class="headerlink" title="3.3 标记-压缩(整理) 算法"></a>3.3 标记-压缩(整理) 算法</h2><h3 id="3-3-1-背景"><a href="#3-3-1-背景" class="headerlink" title="3.3.1 背景"></a>3.3.1 背景</h3><p>复制算法适用于存活对象少，垃圾多的地方，比如新生代，所以新生代采用复制算法，但是老年代普遍对象比较大，岁数大，复制算法不再适用，所以基于老年代，就需要其他的垃圾收集算法。</p>
+<p>标记清除算法可以用在老年代，但是效率底下，会产生内存碎片，所以JVM在次基础上，退出了 标记压缩算法。</p>
+<h3 id="3-3-2-执行过程"><a href="#3-3-2-执行过程" class="headerlink" title="3.3.2 执行过程"></a>3.3.2 执行过程</h3><p>第一阶段和标记清除算法一样，也是需要进行遍历标记。</p>
+<p>然后，将所有存活对象按顺序压缩到内存的一端，然后这一端以外的对象全部清除。</p>
+<h3 id="3-3-3-优点"><a href="#3-3-3-优点" class="headerlink" title="3.3.3 优点"></a>3.3.3 优点</h3><ul>
+<li><p>解决了标记清除算法中 内存碎片的问题</p>
+</li>
+<li><p>解决了复制算法中内存双倍的问题</p>
+</li>
+</ul>
+<h3 id="3-3-4-缺点"><a href="#3-3-4-缺点" class="headerlink" title="3.3.4 缺点"></a>3.3.4 缺点</h3><ul>
+<li><p>效率低于复制算法</p>
+</li>
+<li><p>移动数据时，指针的指向需要修改</p>
+</li>
+<li><p>移动过程中 STW</p>
+</li>
+</ul>
+<h1 id="4-垃圾收集拓展"><a href="#4-垃圾收集拓展" class="headerlink" title="4. 垃圾收集拓展"></a>4. 垃圾收集拓展</h1><p>拓展两个东西：</p>
+<ul>
+<li><p>增量收集算法</p>
+</li>
+<li><p>分区算法</p>
+</li>
+</ul>
+<p>这两个算法都是为了提高垃圾收集效率，降低STW。</p>
+<h2 id="4-1-增量收集算法"><a href="#4-1-增量收集算法" class="headerlink" title="4.1 增量收集算法"></a>4.1 增量收集算法</h2><p>我们之前看三种垃圾收集算法，有个共同的特点，就是STW时间长，垃圾攒的太多了，一次收集有点费劲，所以出现了增量收集算法。</p>
+<p>思想如下：</p>
+<p>弄一个GC线程，一个用户线程，咱们也别等到他内存沾满了GC，咱们直接 用户线程和GC线程交替执行，这样就会节省GC时间，减短STW时间，特别好。</p>
+<p>然而问题就是：切换线程也很消耗资源。</p>
+<h2 id="4-2-分区算法"><a href="#4-2-分区算法" class="headerlink" title="4.2 分区算法"></a>4.2 分区算法</h2><p>众所周知，堆空间越大，收集的区域越大，收集就越费劲，所以我们干脆把堆分成n多不同小区域，分开收集，这样就可以降低消耗时间，降低STW。</p>
+<p>分代算法把对象分为了年轻代和老年代，分区算法就是把整个堆分成了若干小区域。</p>
+<p>每个区域独立分配，独立回收，好处就是可以控制一次收集多少个区域。</p>
+<p>缺点：可能会导致GC 频繁，线程切换频率提高，降低吞吐量。</p>
+<h1 id="5-垃圾回收的相关概念"><a href="#5-垃圾回收的相关概念" class="headerlink" title="5. 垃圾回收的相关概念"></a>5. 垃圾回收的相关概念</h1><ul>
+<li><p>System.gc() 的理解</p>
+</li>
+<li><p>内存溢出与泄露</p>
+</li>
+<li><p>Stop The World</p>
+</li>
+<li><p>垃圾回收的并行与并发</p>
+</li>
+<li><p>安全点与安全区域：只有在安全点才能停止用户线程</p>
+</li>
+</ul>
+<h2 id="5-1-System-gc"><a href="#5-1-System-gc" class="headerlink" title="5.1 System.gc()"></a>5.1 System.gc()</h2><blockquote>
+<p>本地方法，System.gc() 调用 Runtime.getRuntime().gc()</p>
+</blockquote>
+<p>我们可以通过 System.gc() 和 Runtime.getRuntime().gc() 来显式调用 FullGC(对整个堆进行回收)。</p>
+<p>但是同时，JVM附带一个免责声明，JVM不保证你调用gc() 就一定能执行GC。</p>
+<p>一般情况下，GC应该是自动进行的，不应该是我们手动进行，否则就太麻烦了，有一种应用场景是我们要写一个性能基准，我们手动调用gc。</p>
+<p>所以说，我们可以认为 System.gc() 是提醒JVM进行垃圾收集，至于JVM干不干活？不知道。</p>
+<p>详细请看：pri.TestSystemGC 和 pri.LocalVarGC</p>
+<h2 id="5-2-内存溢出-Out-Of-Memory"><a href="#5-2-内存溢出-Out-Of-Memory" class="headerlink" title="5.2 内存溢出(Out Of Memory)"></a>5.2 内存溢出(Out Of Memory)</h2><p>首先，什么叫内存溢出：java给的解释是，内存不够了，而且gc完了也不够，那就内存溢出</p>
+<p>为什么会内存溢出：</p>
+<ul>
+<li><p>堆空间大小设置的不够</p>
+</li>
+<li><p>大对象太多而且不能回收，最后就会沾满。jdk7中会抛出：java.lang.OutOfMemory: PermGen space; jdk8中则会抛出：java.lang.OutOfMemory: Metaspace</p>
+</li>
+</ul>
+<p>这里可以看出，再抛出 OOM 之前，肯定要触发一次GC，去尽可能腾出空间</p>
+<ul>
+<li>比如：他会尝试去回收软引用指向的对象</li>
+</ul>
+<p>但是，也并非任何情况下都会进行GC，如果我们要分配一个超大的对象，JVM判断整个堆压根就不够用，GC没有意义，就不会GC，直接抛出OOM。</p>
+<h2 id="5-3-内存泄露-Memory-Leak"><a href="#5-3-内存泄露-Memory-Leak" class="headerlink" title="5.3 内存泄露(Memory Leak)"></a>5.3 内存泄露(Memory Leak)</h2><p>总的来说，就是一个对象，程序不会再用到他了，但是GC又不能把它回收，这就很恶心，这就是内存泄露.</p>
+<p>实际情况是，我们的一些代码习惯不好，导致一些对象有了特别长的生命周期，最终导致 OOM，这个也可以理解成<strong>宽泛意义上的内存泄露。</strong></p>
+<p>尽管发生内存泄露不会立马导致程序崩溃，但是会逐步侵蚀内存，最终有可能导致内存溢出。</p>
+<blockquote>
+<p>注意：这里说的所有内存不是真实内存，而是虚拟机内存，虚拟机内存取决于物理内存。</p>
+</blockquote>
+<p>尤其注意：要举内存泄露的例子，不要举循环引用。循环引用是不是内存泄露？是，但是Java不会发生这种情况，因为Java没有采用引用计数算法。</p>
+<p>具体举几个例子：</p>
+<ul>
+<li><p>单例模式的某些对象，因为是单例，所以可能生命周期特别长，然后单例里面引用了外部的一些生命周期短的对象，用完了不释放</p>
+</li>
+<li><p>各种流，比如 socket，io 等东西，用完了不close</p>
+</li>
+<li><p>看弹幕说有ThreadLocal？</p>
+</li>
+</ul>
+<h2 id="5-4-并发和并行"><a href="#5-4-并发和并行" class="headerlink" title="5.4 并发和并行"></a>5.4 并发和并行</h2><p>并发：就是单核CPU，来回切换时间片，来达到宏观并行，看似同时操作，实际频繁切换。同一个时间段上同时发生。</p>
+<p>并行：多核CPU，每个CPU都在干活，好多任务同时进行，就是并行。同一个时间点上同时发生</p>
+<h2 id="5-5-垃圾回收的并发与并行"><a href="#5-5-垃圾回收的并发与并行" class="headerlink" title="5.5 垃圾回收的并发与并行"></a>5.5 垃圾回收的并发与并行</h2><p>并行(Parallel)的垃圾回收器：</p>
+<p><strong>多条垃圾回收线程并行工作</strong>，但是用户线程仍然停止，比如：ParNew，Parallel Scavenge，Parallel Old</p>
+<p>串行(Serial) 的垃圾回收器：</p>
+<p>与并行的对应，只有一个垃圾回收线程工作，同样STW</p>
+<p>并发(Concurrent)的垃圾回收器：</p>
+<p>回收线程和用户线程同时进行，但是不一定是并行的。得看你CPU，单核CPU那就是靠线程切换来达到并发效果，多核那就是GC和用户在两个CPU上。这样看起来不会暂停用户线程(只要是GC，就必定需要暂停用户线程)。</p>
+<p>比如G1,CMS。</p>
+<h2 id="5-6-安全点-Safe-Point"><a href="#5-6-安全点-Safe-Point" class="headerlink" title="5.6 安全点 Safe Point"></a>5.6 安全点 Safe Point</h2><p>并非任何时间都可以停下来GC，只有在特定的时间点才会进行GC，STW，那么这个时间点就是 sp。</p>
+<p>sp的选择挺重要的，如果sp过少，那么gc次数少，如果sp多，那么经常gc就会导致性能下降。大多数指令的执行时间都比较短。那么选择sp的一个标准就是 “是否具有让程序长时间执行的特征”。选择一个执行时间长的指令作为sp，比如 方法调用 循环跳转 异常跳转。</p>
+<p>所以，如果保证所有线程都走到了安全点？两种办法：</p>
+<ul>
+<li><p>抢先式中断：先让所有线程停下来，然后让没有到达安全点的线程继续跑到安全点。然后这种方法已经不用了</p>
+</li>
+<li><p>主动式中断：设置一个中断标志，线程跑到安全点主动轮询这个标志，如果标志是true，说明JVM现在要GC，那么线程停止。</p>
+</li>
+</ul>
+<h2 id="5-7-安全区域-Safe-Region"><a href="#5-7-安全区域-Safe-Region" class="headerlink" title="5.7 安全区域 Safe Region"></a>5.7 安全区域 Safe Region</h2><p>安全点确保了正在执行的线程可以停止进行GC，如果一个线程sleep了，他没法运行，咋办，这时候引入安全区域。</p>
+<p>在一个区域内，引用不会发生改变，就说明在这个区域内任何地方都是安全的，那么就可以进行GC。这个区域就是sr。sr可以看作是sp的扩展。</p>
+<h1 id="6-四种引用"><a href="#6-四种引用" class="headerlink" title="6. 四种引用"></a>6. 四种引用</h1><p>我们希望有这么一类对象，当我们内存不够的时候，触发GC，然后GC完了还是不够，那么JVM就会根据引用的不同，自动抛弃一些对象来腾地方。那么这里就涉及到了四种引用：强 软 弱 虚。四种引用的强度依次递减。</p>
+<p>涉及到的对象：</p>
+<p>父类：java.lang.ref.Reference 这是个抽象类</p>
+<p>实现：WeakReference(弱), SoftReference(软), PhantomReference(虚)</p>
+<h2 id="6-1-概括的说一下四种引用："><a href="#6-1-概括的说一下四种引用：" class="headerlink" title="6.1 概括的说一下四种引用："></a>6.1 概括的说一下四种引用：</h2><ul>
+<li><p>强引用 StrongReference：最传统的引用方式，代码中最普遍存在的引用赋值，Object o &#x3D; new Object() 这种引用关系，只要引用关系还在，任何情况下GC都不能释放对象。</p>
+</li>
+<li><p>软引用 SoftReference：在系统要内存溢出之前，会把这些引用指向的对象进行二次回收，如果还是不够，才会抛出OOM</p>
+</li>
+<li><p>弱引用 WeakReference：被弱引用关联的对象只能活到下一次GC，下一次GC无论内存够不够，都会回收</p>
+</li>
+<li><p>虚引用 PhantomReference：一个对象是否存在虚引用，完全不会影响他的生存时间，我们也无法通过虚引用获取实例，设置虚引用的<strong>唯一目的就是他关联的对象被收集了以后得到一个系统通知</strong>。</p>
+</li>
+</ul>
+<h2 id="6-2-强引用"><a href="#6-2-强引用" class="headerlink" title="6.2 强引用"></a>6.2 强引用</h2><p>这种引用在程序中最常见，我们直接通过new直接创建一个对象，然后直接把这个对象赋值给一个变量，那么就构成了强引用。</p>
+<p>强引用是可触及的(还有指向的时候，我们手动置为null不算)，GC 永远不会回收他。</p>
+<p>对于一个普通的对象，只要对象超过了作用域，或者我们手动把变量变为null，则对象会被GC。</p>
+<p>相对的，我们把软 弱 虚 表示为：软可触及，弱可触及，虚可触及。他们都是在一定情景下可以被回收，只有强可达不可能被回收。</p>
+<p>所以强引用是造成内存泄漏的主要原因.</p>
+<h2 id="6-3-软引用-Soft-Reference"><a href="#6-3-软引用-Soft-Reference" class="headerlink" title="6.3 软引用 Soft Reference"></a>6.3 软引用 Soft Reference</h2><p>软引用用来描述一些虽然存活，但是不重要的对象，如果要发生内存泄漏，GC会先回收所有的软引用指向的对象，如果内存还是不够，则会抛出OOM异常。一句话概括：内存不足即回收。</p>
+<p>软引用使用场景：高速缓存，如果还有内存，则会使用缓存，提高速度，如果内存没了，就会清除缓存，免得因为缓存而导致内存溢出。</p>
+<p>虚拟机在某一时刻决定清理软可达的对象时，就会清理软引用。我们也可以把软引用放入一个队列，依次清理。</p>
+<p>类似弱引用，区别就是JVM迫不得已才会回收软科大对象，弱引用是直接就回收了。</p>
+<h2 id="6-4-弱引用-Weak-Reference"><a href="#6-4-弱引用-Weak-Reference" class="headerlink" title="6.4 弱引用 Weak Reference"></a>6.4 弱引用 Weak Reference</h2><p>只被弱引用关联的对象只能活到下一次GC，无论下一次GC是否有空间，弱引用关联的对象都会被回收。一句话概括：发现即回收。</p>
+<p>但是，由于GC线程的优先级比较低，所以可能不能马上发现弱引用，所以弱引用可能也能存活很长时间。</p>
+<p>这个东西同理和软引用一样，我们也可以弄一个队列，把弱引用放入队列中进行处理。</p>
+<p>弱引用和软引用适合做缓存，如果内存不够了就释放内存，内存够就放缓存。</p>
+<h2 id="6-5-虚引用-Phantom-Reference"><a href="#6-5-虚引用-Phantom-Reference" class="headerlink" title="6.5 虚引用 Phantom Reference"></a>6.5 虚引用 Phantom Reference</h2><p>这东西，完全不决定对象的生命周期，有跟没有一个样，甚至我们没法像前两种引用一样去get。</p>
+<p>这东西唯一的作用，就是对象被回收的时候我们会收到一个系统通知。</p>
+<p>同时这个引用在创建的时候必须传入一个回收队列。</p>
+<p>因为，系统回收一个对象如果发现这个对象有一个虚引用，就会回收后把这个虚引用放入引用队列，来进行通知。</p>
+<h2 id="6-6-代码"><a href="#6-6-代码" class="headerlink" title="6.6 代码"></a>6.6 代码</h2><p>上面说的十分抽象，这里给一段代码看看：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 对于强 软 弱 引用 代码如下：</span></span><br><span class="line"><span class="comment"> * 软和弱引用好歹可以通过get得到他们指向的对象，我们gc以后通过get去获取对象看看情况，</span></span><br><span class="line"><span class="comment"> * 但是对于虚引用那就是另外一种情况了。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Main</span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span>&#123;</span><br><span class="line">        <span class="comment">// 强引用，除非null才回收</span></span><br><span class="line">        <span class="type">User</span> <span class="variable">u1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 软引用，内存不足及回收</span></span><br><span class="line">        SoftReference&lt;User&gt; u2 = <span class="keyword">new</span> <span class="title class_">SoftReference</span>&lt;&gt;(<span class="keyword">new</span> <span class="title class_">User</span>());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 弱引用，发现及回收</span></span><br><span class="line">        WeakReference&lt;User&gt; u3 = <span class="keyword">new</span> <span class="title class_">SoftReference</span>&lt;&gt;(<span class="keyword">new</span> <span class="title class_">User</span>());</span><br><span class="line"></span><br><span class="line">        System.gc();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// u1 还在，u2 看情况，如果内存满了就没了，u3 八成是没了</span></span><br><span class="line">        u1.get();</span><br><span class="line">        u2.get();</span><br><span class="line">        u3.get();</span><br><span class="line">    &#125;    </span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面仅仅是强软弱引用的情况，对于虚引用，那得下面专门说了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//package pri;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.lang.ref.PhantomReference;</span><br><span class="line"><span class="keyword">import</span> java.lang.ref.ReferenceQueue;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PhantomReferenceTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> PhantomReferenceTest obj;</span><br><span class="line">    <span class="keyword">static</span> ReferenceQueue&lt;PhantomReferenceTest&gt; queue;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 这个线程用于监听ReferenceQueue</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">CheckReferenceQueue</span> <span class="keyword">extends</span> <span class="title class_">Thread</span>&#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span>&#123;</span><br><span class="line">            <span class="keyword">while</span>(<span class="literal">true</span>)&#123;</span><br><span class="line">                <span class="keyword">if</span>(queue != <span class="literal">null</span>)&#123;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 前面我们说到了第二次gc会把obj对象彻底清理掉，因为finlize已经执行过了</span></span><br><span class="line">                    <span class="comment">// 所以虚引用指向的对象被回收时，是怎么个流程？</span></span><br><span class="line">                    <span class="comment">// 我们创建虚引用的时候传入了一个队列，回收时，这个队列就会接收到这个虚引用，</span></span><br><span class="line">                    <span class="comment">// 但是注意，虚引用和软弱引用不一样，虚引用压根就没法get到他指向的那个对象</span></span><br><span class="line">                    <span class="comment">// 所以这里其实仅仅就是通知一下这个队列：ok，现在有一个虚引用指向的对象被我gc回收了，</span></span><br><span class="line">                    <span class="comment">// 虚引用就是充当一个信号的作用</span></span><br><span class="line"></span><br><span class="line">                    PhantomReference&lt;PhantomReferenceTest&gt; objt = <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">try</span>&#123;</span><br><span class="line">                        <span class="comment">// 从引用队列中得到虚引用，如果得到了，说明gc的时候obj被回收了，</span></span><br><span class="line">                        <span class="comment">// 因为只有真正被回收，才会把虚引用传给队列。</span></span><br><span class="line">                        objt = (PhantomReference&lt;PhantomReferenceTest&gt;) queue.remove();</span><br><span class="line"></span><br><span class="line">                        System.out.println(<span class="string">&quot;objt=&quot;</span> + objt);</span><br><span class="line">                    &#125;<span class="keyword">catch</span>(Exception e)&#123;</span><br><span class="line">                        e.printStackTrace();</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 最后判断一下，虚引用不为null，说明回收成功,然后回到108行</span></span><br><span class="line">                    <span class="keyword">if</span>(objt != <span class="literal">null</span>)&#123;</span><br><span class="line">                        System.out.println(<span class="string">&quot;objt != null,队列中可以得到虚引用，证明回收成功&quot;</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">finalize</span><span class="params">()</span> <span class="keyword">throws</span> Throwable&#123;</span><br><span class="line">        <span class="built_in">super</span>.finalize();</span><br><span class="line">        System.out.println(<span class="string">&quot;finlize start&quot;</span>);</span><br><span class="line">        obj = <span class="built_in">this</span>;</span><br><span class="line">        System.out.println(<span class="string">&quot;重新给obj赋值为this，finlize中把obj救活了&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 首先创建一个自己的强引用</span></span><br><span class="line">        obj = <span class="keyword">new</span> <span class="title class_">PhantomReferenceTest</span>();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 创建引用队列，这个玩意待会儿会接收gc信息</span></span><br><span class="line">        queue = <span class="keyword">new</span> <span class="title class_">ReferenceQueue</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 创建一个监听ReferenceQueue的线程，同时设置为守护线程，也就是这个线程不会随着main线程的结束而结束</span></span><br><span class="line">        <span class="type">CheckReferenceQueue</span> <span class="variable">checkReferenceQueue</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CheckReferenceQueue</span>();</span><br><span class="line">        checkReferenceQueue.setDaemon(<span class="literal">true</span>);</span><br><span class="line">        checkReferenceQueue.start();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 给obj添加虚引用，创建虚引用的同时需要指定引用队列</span></span><br><span class="line">        PhantomReference&lt;PhantomReferenceTest&gt; ref = <span class="keyword">new</span> <span class="title class_">PhantomReference</span>&lt;&gt;(obj, queue);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            <span class="comment">// 很好，我们先试试虚引用能不能像软弱引用一样get，发现不行，也就是说虚引用仅仅就充当一个信号的作用</span></span><br><span class="line">            System.out.println(ref.get());</span><br><span class="line"></span><br><span class="line">            System.out.println(<span class="string">&quot;第一次GC&quot;</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 我们进行第一轮gc，我们给强引用置空，这个时候虚引用指向的这个对象就没有强引用，</span></span><br><span class="line">            <span class="comment">// 按理说会直接回收掉</span></span><br><span class="line">            obj = <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">            System.gc();</span><br><span class="line"></span><br><span class="line">            Thread.sleep(<span class="number">1000</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 但是我们发现这个时候obj居然不为空，居然还是this，这是为啥？</span></span><br><span class="line">            <span class="comment">// 因为我们上面重写了finlize方法，这个方法里面复活了obj，让obj重新回到了可触及的状态</span></span><br><span class="line">            <span class="comment">// 所以第一轮gc并没有清理掉obj</span></span><br><span class="line">            <span class="keyword">if</span>(obj == <span class="literal">null</span>)&#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;obj == null&quot;</span>);</span><br><span class="line">            &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;obj != null, finlize生效使obj复活&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            System.out.println(<span class="string">&quot;第二次GC&quot;</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 很好，我们开始进行第二轮gc，再一次清除强引用指向并调用gc开始清理</span></span><br><span class="line">            obj = <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">            System.gc();</span><br><span class="line"></span><br><span class="line">            Thread.sleep(<span class="number">1000</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// ok，这个时候先不要着急看这里，回到上面的第11行，我们从第十一行接着分析。</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            <span class="comment">// 行了，上面的队列刘晨我们走完了，最后这里收个尾，最后判断一下obj是不是null</span></span><br><span class="line">            <span class="comment">// 是的话，ok，回收成功</span></span><br><span class="line">            System.out.println(<span class="string">&quot;obj == null?  &quot;</span> + (obj == <span class="literal">null</span>));</span><br><span class="line"></span><br><span class="line">        &#125;<span class="keyword">catch</span>(InterruptedException e)&#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+              <a href="/tags/%E5%BA%95%E5%B1%82/" rel="tag"># 底层</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/06/02/String/" rel="prev" title="深入字符串">
+      <i class="fa fa-chevron-left"></i> 深入字符串
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/06/06/garbage-collectors/" rel="next" title="垃圾收集器">
+      垃圾收集器 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-GC-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86"><span class="nav-text">1. GC 垃圾收集</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E4%BB%80%E4%B9%88%E6%98%AF%E5%9E%83%E5%9C%BE"><span class="nav-text">1.1 什么是垃圾</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81GC"><span class="nav-text">1.2 为什么要GC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-Java%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6"><span class="nav-text">1.3 Java垃圾回收机制</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-GC-%E6%9C%BA%E5%88%B6%E4%B8%8E%E7%AE%97%E6%B3%95-%E6%A0%87%E8%AE%B0%E9%98%B6%E6%AE%B5"><span class="nav-text">2. GC 机制与算法-标记阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E5%9E%83%E5%9C%BE%E6%A0%87%E8%AE%B0%E9%98%B6%E6%AE%B5"><span class="nav-text">2.1 垃圾标记阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-1-%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E7%AE%97%E6%B3%95"><span class="nav-text">2.1.1 引用计数算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-2-%E5%8F%AF%E8%BE%BE%E6%80%A7%E5%88%86%E6%9E%90%E7%AE%97%E6%B3%95-%E6%A0%B9%E6%90%9C%E7%B4%A2%EF%BC%8C%E8%BF%BD%E8%B8%AA%E6%80%A7%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86"><span class="nav-text">2.1.2 可达性分析算法(根搜索，追踪性垃圾收集)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E8%AF%A6%E7%BB%86%E8%AF%B4%E8%AF%B4-GC-Roots"><span class="nav-text">2.2 详细说说 GC Roots</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E5%AF%B9%E8%B1%A1%E7%9A%84-finalize%E6%9C%BA%E5%88%B6"><span class="nav-text">2.3 对象的 finalize机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%E6%80%BB%E7%BB%93%E6%A0%87%E8%AE%B0%E8%BF%87%E7%A8%8B"><span class="nav-text">2.4 总结标记过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9C%81%E7%95%A5"><span class="nav-text">省略</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-GC-%E6%B8%85%E7%90%86%E9%98%B6%E6%AE%B5"><span class="nav-text">3. GC -清理阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E6%A0%87%E8%AE%B0%E6%B8%85%E9%99%A4%E7%AE%97%E6%B3%95"><span class="nav-text">3.1 标记清除算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-1-%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B"><span class="nav-text">3.1.1 执行过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-2-%E7%BC%BA%E7%82%B9"><span class="nav-text">3.1.2 缺点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-3-%E6%B3%A8-%E6%B8%85%E9%99%A4%E5%88%B0%E5%BA%95%E6%8C%87%E7%9A%84%E5%95%A5"><span class="nav-text">3.1.3 注:清除到底指的啥</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E5%A4%8D%E5%88%B6%E7%AE%97%E6%B3%95"><span class="nav-text">3.2 复制算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-1-%E4%BC%98%E7%82%B9"><span class="nav-text">3.2.1 优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-2-%E7%BC%BA%E7%82%B9"><span class="nav-text">3.2.2 缺点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-3-%E6%B3%A8%E6%84%8F"><span class="nav-text">3.2.3 注意</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E6%A0%87%E8%AE%B0-%E5%8E%8B%E7%BC%A9-%E6%95%B4%E7%90%86-%E7%AE%97%E6%B3%95"><span class="nav-text">3.3 标记-压缩(整理) 算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-1-%E8%83%8C%E6%99%AF"><span class="nav-text">3.3.1 背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-2-%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B"><span class="nav-text">3.3.2 执行过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-3-%E4%BC%98%E7%82%B9"><span class="nav-text">3.3.3 优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-4-%E7%BC%BA%E7%82%B9"><span class="nav-text">3.3.4 缺点</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E6%8B%93%E5%B1%95"><span class="nav-text">4. 垃圾收集拓展</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E5%A2%9E%E9%87%8F%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95"><span class="nav-text">4.1 增量收集算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E5%88%86%E5%8C%BA%E7%AE%97%E6%B3%95"><span class="nav-text">4.2 分区算法</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%9A%84%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5"><span class="nav-text">5. 垃圾回收的相关概念</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-System-gc"><span class="nav-text">5.1 System.gc()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E5%86%85%E5%AD%98%E6%BA%A2%E5%87%BA-Out-Of-Memory"><span class="nav-text">5.2 内存溢出(Out Of Memory)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2-Memory-Leak"><span class="nav-text">5.3 内存泄露(Memory Leak)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-4-%E5%B9%B6%E5%8F%91%E5%92%8C%E5%B9%B6%E8%A1%8C"><span class="nav-text">5.4 并发和并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-5-%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%9A%84%E5%B9%B6%E5%8F%91%E4%B8%8E%E5%B9%B6%E8%A1%8C"><span class="nav-text">5.5 垃圾回收的并发与并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-6-%E5%AE%89%E5%85%A8%E7%82%B9-Safe-Point"><span class="nav-text">5.6 安全点 Safe Point</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-7-%E5%AE%89%E5%85%A8%E5%8C%BA%E5%9F%9F-Safe-Region"><span class="nav-text">5.7 安全区域 Safe Region</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E5%9B%9B%E7%A7%8D%E5%BC%95%E7%94%A8"><span class="nav-text">6. 四种引用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E6%A6%82%E6%8B%AC%E7%9A%84%E8%AF%B4%E4%B8%80%E4%B8%8B%E5%9B%9B%E7%A7%8D%E5%BC%95%E7%94%A8%EF%BC%9A"><span class="nav-text">6.1 概括的说一下四种引用：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-%E5%BC%BA%E5%BC%95%E7%94%A8"><span class="nav-text">6.2 强引用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-3-%E8%BD%AF%E5%BC%95%E7%94%A8-Soft-Reference"><span class="nav-text">6.3 软引用 Soft Reference</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-4-%E5%BC%B1%E5%BC%95%E7%94%A8-Weak-Reference"><span class="nav-text">6.4 弱引用 Weak Reference</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-5-%E8%99%9A%E5%BC%95%E7%94%A8-Phantom-Reference"><span class="nav-text">6.5 虚引用 Phantom Reference</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-6-%E4%BB%A3%E7%A0%81"><span class="nav-text">6.6 代码</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

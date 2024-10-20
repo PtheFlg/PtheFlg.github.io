@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false,"b2t":true,"scrollpercent":20},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="同步与互斥">
+<meta property="og:type" content="article">
+<meta property="og:title" content="06.同步与互斥">
+<meta property="og:url" content="http://example.com/2023/06/30/OS-06-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/index.html">
+<meta property="og:site_name" content="PtheF-Hexo-Blog">
+<meta property="og:description" content="同步与互斥">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619155340.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619155551.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619155612.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619161255.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619161837.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619162402.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619163002.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619163913.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619164705.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619164818.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619165144.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619165217.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619170359.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619170747.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619172000.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619173559.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619173733.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619195303.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619225251.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619225436.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619225644.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619230248.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619230421.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619231036.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620104904.png">
+<meta property="og:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230620104938.png">
+<meta property="article:published_time" content="2023-06-30T03:06:27.000Z">
+<meta property="article:modified_time" content="2023-07-21T10:14:21.019Z">
+<meta property="article:author" content="PtheF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/pthef/imgrepo/raw/master/20230619155340.png">
+
+<link rel="canonical" href="http://example.com/2023/06/30/OS-06-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>06.同步与互斥 | PtheF-Hexo-Blog</title>
+  <meta name="referrer" content="no-referrer"/>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">PtheF-Hexo-Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">有点意思</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/30/OS-06-%E5%90%8C%E6%AD%A5%E4%B8%8E%E4%BA%92%E6%96%A5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/hexo_avatar.jpeg">
+      <meta itemprop="name" content="Author">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="PtheF-Hexo-Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          06.同步与互斥
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-30 11:06:27" itemprop="dateCreated datePublished" datetime="2023-06-30T11:06:27+08:00">2023-06-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-07-21 18:14:21" itemprop="dateModified" datetime="2023-07-21T18:14:21+08:00">2023-07-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>同步与互斥</p>
+<span id="more"></span>
+
+<h1 id="1-进程同步"><a href="#1-进程同步" class="headerlink" title="1. 进程同步"></a>1. 进程同步</h1><p>同步说的就是如何解决进程异步的问题，众所周知操作系统的各个进程异步执行，谁先谁后不可预知，但是有些时候我们又需要控制进程的执行顺序，比如在管道通信中，写肯定得发生在读之前，这就是进程同步要解决的问题。</p>
+<h1 id="2-进程互斥"><a href="#2-进程互斥" class="headerlink" title="2. 进程互斥"></a>2. 进程互斥</h1><p>在一个时间段内只允许一个进程使用的资源我们称之为临界资源，比如打印机这种资源，一个进程用了另一个进程就不能用了。</p>
+<p>对于临界资源的访问必须互斥的进行。互斥，或者称为间接制约关系。进程互斥指的就是访问临界资源时，另一个想要访问该临界资源的进程必须等待。</p>
+<p>对临界资源的访问，可以在逻辑上分为下面四个部分：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619155340.png" alt="image.png"></p>
+<p>如果一个进程暂时不能进入临界区，那么该进程是否应该一直占着处理机？这个进程有没有可能一直进不了临界区？这都是互斥要考虑的东西。需要遵循下面四个原则：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619155551.png" alt="image.png"></p>
+<p>总结：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619155612.png" alt="image.png"></p>
+<h1 id="3-互斥的软件实现"><a href="#3-互斥的软件实现" class="headerlink" title="3. 互斥的软件实现"></a>3. 互斥的软件实现</h1><p>如果两个进程使用打印机，但是不上锁，不涉及到互斥，会出现的问题就是，进程A使用打印机打印了一半时间片用完，然后CPU就去处理进程B，进程B也会获得打印机资源开始打印，然后A和B打印的东西就混在一起了。</p>
+<p>为了解决这个问题，可以在代码层面实现互斥。</p>
+<h2 id="3-1-单标志法"><a href="#3-1-单标志法" class="headerlink" title="3.1 单标志法"></a>3.1 单标志法</h2><p>核心思想：代码会规定现在只能哪个进程来访问临界区（注意：是访问临界区代码，执行临界区代码的时候肯定已经拿到了临界资源的锁），指定的进程访问完临界资源后，会把临界区的访问权限给另一个进程。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 当前只有0进程可以执行临界区</span></span><br><span class="line"><span class="type">int</span> turn = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// P1进程</span></span><br><span class="line"><span class="keyword">while</span>(turn != <span class="number">0</span>);</span><br><span class="line">critical section;</span><br><span class="line">turn = <span class="number">1</span>;</span><br><span class="line">remainder section;</span><br><span class="line"></span><br><span class="line"><span class="comment">// P2 进程</span></span><br><span class="line"><span class="keyword">while</span>(turn != <span class="number">1</span>);</span><br><span class="line">critical section;</span><br><span class="line">turn = <span class="number">0</span>;</span><br><span class="line">remainder section;</span><br></pre></td></tr></table></figure>
+
+<p>如果进程P2先上处理机，就会卡死在while循环，因为发现turn 确实不等于1，说明自己不能访问临界资源，等到P2的时间片用完了，P1执行，P1就不会卡while，而是会往下执行，最后将 turn 改为1，供P2执行。</p>
+<p>这个算法体现了一个谦让的思路，两个进程其中一个只要执行完了临界区，就会把临界区的访问权谦让出去。但是如果P2谦让给了P1，P1因为某种原因迟迟不执行临界区，那么P2也就没发使用临界区，这就<strong>违背了空闲让进</strong>的原则。</p>
+<h2 id="3-2-双标志先检查"><a href="#3-2-双标志先检查" class="headerlink" title="3.2 双标志先检查"></a>3.2 双标志先检查</h2><p>核心思想：设置一个布尔型数组 flag[]，数组中各个元素用来表示<strong>各个进程想要进入临界区的意愿</strong>，比如 <code>flag[0] = true</code> 就表示0号进程想要访问临界区。那么每个进程访问临界区之前都要先检查当前其他进程有没有想要进入临界区的意思，如果没有，把自己的 flag 设置为true，然后开始访问临界区。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619161255.png" alt="image.png"></p>
+<p>4 和 8 就是退出区。</p>
+<p>但是有个问题，就是这种算法的进入区代码分两步：检查和上锁，是非原子性的，并发情况下很可能出现错误，导致两个进程全都进入了临界区。违反了忙则等待。</p>
+<h2 id="3-3-双标志后检查"><a href="#3-3-双标志后检查" class="headerlink" title="3.3 双标志后检查"></a>3.3 双标志后检查</h2><p>这个和前面的几乎一样，只是进入区的代码有调整，之前是先检查后上锁，结果会出现锁失效，那么这里就让他先上锁后检查：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619161837.png" alt="image.png"></p>
+<p>结果这会更完蛋，每个进程先上锁，然后检查，如果检查发现不能进入临界区他也不会释放锁，这就会导致死锁了。违背了 “空闲让进”和“有限等待”，会产生饥饿。</p>
+<h2 id="3-4-Peterson-算法"><a href="#3-4-Peterson-算法" class="headerlink" title="3.4 Peterson 算法"></a>3.4 Peterson 算法</h2><p>这种算法是单标志法和双标志法的结合。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619162402.png" alt="image.png"></p>
+<p>就是说一个线程想要进入临界区首先要加锁，加完锁以后还要客气一下执行谦让动作，表明可以让对方进程优先进入。如果这个时候因为并发的原因另一个进程也加了锁，并且也谦让了，相当于该进程的临界区使用权就被让回来了，就可以正常进入临界区。</p>
+<p>可以这么理解，谁最后谦让了，谁就会失去行动的优先权。对方进程就会进入临界区。</p>
+<p>算法的前三句是进入区。遵循了前三个原则，但是没有遵循<strong>让权等待</strong>。也就是进程会不停的检查自己有没有进入临界区的资格，会占用CPU。</p>
+<h2 id="3-5-总结"><a href="#3-5-总结" class="headerlink" title="3.5 总结"></a>3.5 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619163002.png" alt="image.png"></p>
+<h1 id="4-互斥的硬件实现"><a href="#4-互斥的硬件实现" class="headerlink" title="4. 互斥的硬件实现"></a>4. 互斥的硬件实现</h1><h2 id="4-1-中断屏蔽方法"><a href="#4-1-中断屏蔽方法" class="headerlink" title="4.1 中断屏蔽方法"></a>4.1 中断屏蔽方法</h2><p>这个就是使用“关&#x2F;开中断指令”实现，之前说过，执行了关中断指令，后面的指令就不会执行例行检查，所以就一定不会发生进程切换，可以保证原子性。</p>
+<p>可以咋办？先执行关中断指令，然后访问临界区，最后执行开中断指令，这样就不会被打断。</p>
+<p>优点：简单，高效。</p>
+<p>缺点：不适合多核处理机；只适合操作系统内核进程，不适合用户进程。</p>
+<h2 id="4-2-TestAndSet指令"><a href="#4-2-TestAndSet指令" class="headerlink" title="4.2 TestAndSet指令"></a>4.2 TestAndSet指令</h2><p>简称TS指令，也叫 TestAndSetLock，或者TSL指令。该指令用硬件实现，执行的过程不允许被中断，只能一气呵成。用C语言表达的话就是：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619163913.png" alt="image.png"></p>
+<p>TSL 指令就是说给lock上锁（不管锁原本啥样），同时返回原来的锁状态。当一个进程要访问一个加了锁的资源时，执行TSL指令就会得到true，就不能进入临界区。当另一个进程释放了锁，让lock&#x3D;false时，再执行TSL指令就会得到false，同时自己也会给它上锁。</p>
+<p>优点：实现简单，无需像软件实现方法那样严格检查是否会有逻辑漏洞；适用于多处理机环境。</p>
+<p>缺点：不满足让权等待，进程会不停的检查锁的状态，占用CPU。</p>
+<h2 id="4-3-Swap-指令"><a href="#4-3-Swap-指令" class="headerlink" title="4.3 Swap 指令"></a>4.3 Swap 指令</h2><p>也叫Exchange指令，其实就是交换，也是由硬件实现，而且也是原子性的指令。思想就是：通过这个原子性的指令，将锁的状态给它换出来，然后检查，如果发现换出来个false，说明锁被释放，自己就可以进入临界区。同时也会将true给换进去，代表加锁。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619164705.png" alt="image.png"></p>
+<p>当条件允许，也就是lock为false时，old为true，交换后old为false，lock为true，就相当于自己进程持有了锁。</p>
+<h2 id="4-4-总结"><a href="#4-4-总结" class="headerlink" title="4.4 总结"></a>4.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619164818.png" alt="image.png"></p>
+<h1 id="5-互斥锁"><a href="#5-互斥锁" class="headerlink" title="5. 互斥锁"></a>5. 互斥锁</h1><p>这个好像不是个重点，截个图完事儿：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619165144.png" alt="image.png"></p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619165217.png" alt="image.png"></p>
+<h1 id="6-信号量机制"><a href="#6-信号量机制" class="headerlink" title="6. 信号量机制"></a>6. 信号量机制</h1><p>之前的方法里面，比如双标志先检查法，进入区的检查和上锁两步不能一气呵成，就导致两个进程可能会同时进入。而且，所有的解决方案都无法实现让权等待。</p>
+<p>为了解决这几个问题，就提出了信号量机制。</p>
+<p>用户进程可以通过使用操作系统提供的一对原语来对信号量进行操作，从而可以很方便的实现了进程互斥、进程同步。</p>
+<p>信号量其实就是一个变量（可以是整数，也可以是很复杂的记录行变量），可以<font color='red'>用一个信号量来表示系统中某种资源的数量</font>，比如：系统中只有一台打印机，就可以给打印机设置初始值为1的信号量。</p>
+<p>操作系统提供了一对原语：wait(S)和signal(S)，可以类比成两个函数，信号量S就是传入的一个参数。</p>
+<p>wait和signal操作常被简称为 PV操作，因此也经常把 wait(S) 和 signal(S) 写作P(S) 和 V(S)。</p>
+<h2 id="6-1-整型信号量"><a href="#6-1-整型信号量" class="headerlink" title="6.1 整型信号量"></a>6.1 整型信号量</h2><p>用一个整数型变量作为信号量，用来表示系统中某种资源的数量。普通的整数可以进行运行，而整数型信号量只能做三个操作：初始化、P操作、V操作。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619170359.png" alt="image.png"></p>
+<p>我们会发现它其实就是先检查后上锁，但是原子性的，所以更安全。但是这种仍旧是自旋锁，不满足“让权等待”，会发生忙等。</p>
+<p>这里有个问题，就是wait原语里面一直自旋，难道不会一直占用CPU？我们姑且认为不会。</p>
+<h2 id="6-2-记录型信号量"><a href="#6-2-记录型信号量" class="headerlink" title="6.2 记录型信号量"></a>6.2 记录型信号量</h2><p>为了解决忙等的问题，人们又提出了“记录行信号量”，用记录型数据结构表示信号量。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619170747.png" alt="image.png"></p>
+<p>就是说如果发现资源不够不能上锁，就会主动阻塞当前进程，将其挂在信号量的阻塞队列上。等其他进程调用V操作释放资源的时候会主动去唤醒之前阻塞的进程，就不会发生忙等，符合“让权等待”。很有monitor那味。</p>
+<h2 id="6-3-总结"><a href="#6-3-总结" class="headerlink" title="6.3 总结"></a>6.3 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619172000.png"></p>
+<h1 id="7-信号量机制实现互斥、同步、前驱"><a href="#7-信号量机制实现互斥、同步、前驱" class="headerlink" title="7. 信号量机制实现互斥、同步、前驱"></a>7. 信号量机制实现互斥、同步、前驱</h1><h2 id="7-1-进程互斥"><a href="#7-1-进程互斥" class="headerlink" title="7.1 进程互斥"></a>7.1 进程互斥</h2><p>这个很简单，初始化一个为1的信号量mutex，每个进程要访问临界区都要执行P（wait）操作，成功进入临界区并执行完以后，需要执行V操作释放mutex。</p>
+<p>这个mutex就可以理解成进程临界区的名额只能有一个，P了以后就占用了这个名额。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 一般默认的都是记录型信号量</span></span><br><span class="line">semaphore mutex = <span class="number">1</span>; <span class="comment">// 做题的话就用这种方式定义信号量就行了</span></span><br><span class="line"></span><br><span class="line">P1() &#123;</span><br><span class="line">	P(mutex);</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">	V(mutex);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">P2() &#123;</span><br><span class="line">	P(mutex);</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">	V(mutex);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="7-2-进程同步"><a href="#7-2-进程同步" class="headerlink" title="7.2 进程同步"></a>7.2 进程同步</h2><p>我们要控制几个进程的执行顺序，比如：P1 要执行code 1 2 3 ，P2要执行 code 4 5 6，我们要求P2必须在P1执行完code2之后执行，怎么做？</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">semaphore s = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">P1() &#123;</span><br><span class="line">	code <span class="number">1</span>;</span><br><span class="line">	code <span class="number">2</span>;</span><br><span class="line">	V(s);</span><br><span class="line">	code <span class="number">3</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">P2() &#123;</span><br><span class="line">	P(s);</span><br><span class="line">	code <span class="number">4</span>;</span><br><span class="line">	code <span class="number">5</span>;</span><br><span class="line">	code <span class="number">6</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里千万注意，信号量要初始化为0，要是初始化为1的话，P2执行 value–，然后发现 value &#x3D;&#x3D; 0 满足 value &gt;&#x3D; 0，P2直接就进去了。</p>
+<p>简单说，前操作之后执行V，后操作之前执行P。</p>
+<h2 id="7-3-前驱关系"><a href="#7-3-前驱关系" class="headerlink" title="7.3 前驱关系"></a>7.3 前驱关系</h2><p>就是更为复杂的前驱关系，多个进程需要协同前进。其实非常的简单，每一种前驱关系都设定一个信号量，然后两两成对的前V后P即可。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619173559.png" alt="image.png"></p>
+<h2 id="7-4-总结"><a href="#7-4-总结" class="headerlink" title="7.4 总结"></a>7.4 总结</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619173733.png" alt="image.png"></p>
+<h1 id="8-相关问题"><a href="#8-相关问题" class="headerlink" title="8. 相关问题"></a>8. 相关问题</h1><h2 id="8-1-生产者-消费者"><a href="#8-1-生产者-消费者" class="headerlink" title="8.1 生产者-消费者"></a>8.1 生产者-消费者</h2><p>这个问题很经典啊，就是说有一个缓冲区，生产者往缓冲区写数据，消费者从缓冲区读数据。如果缓冲区满了，生产者阻塞，如果缓冲区空了，消费者阻塞。同时，生产者和消费者不为一，所以各个角色都要互斥的访问缓冲区。</p>
+<p>分析：这就是我们之前说的进程同步，缓冲区没空，然后消费者拿数据；反过来，缓冲区没满，则生产者放数据。这就是两个信号量，生产者生产数据，则缓冲区没空，生产者V，消费者P；消费者获取数据，证明缓冲区没满，消费者V，生产者P。这里的没空和没满，就是两个信号量，两个信号量full和empty分别记录缓冲区中数据的个数和缓冲区空位个数。</p>
+<p>进程内如何判空？信号量同时记录着资源的剩余数量，所以释放锁的时候给信号量+1，就可以代表缓冲区内的数据个数，同理，获取锁的时候信号量-1，如果&lt;0，证明缓冲区里面没有数据了，阻塞。</p>
+<p>不要考虑什么时候阻塞，而是考虑不阻塞时，先干什么，后干什么。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">semaphore mutex = <span class="number">1</span>;</span><br><span class="line">semaphore full = <span class="number">0</span>;</span><br><span class="line">semaphore empty = n;</span><br><span class="line"></span><br><span class="line">Producer() &#123;</span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">		P(empty);</span><br><span class="line"></span><br><span class="line">		P(mutex);</span><br><span class="line">		<span class="comment">// 生产数据</span></span><br><span class="line">		V(mutex);</span><br><span class="line"></span><br><span class="line">		V(full);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Consumer() &#123;</span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">		P(full);</span><br><span class="line"></span><br><span class="line">		P(mutex);</span><br><span class="line">		<span class="comment">// 获取数据</span></span><br><span class="line">		V(mutex);</span><br><span class="line"></span><br><span class="line">		V(empty);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619195303.png" alt="image.png"></p>
+<h2 id="8-2-多生产-多消费"><a href="#8-2-多生产-多消费" class="headerlink" title="8.2 多生产-多消费"></a>8.2 多生产-多消费</h2><p>多个生产者生产不同类型的消息，多个消费者对应的消费不同类型的消息，举个例子：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619225251.png" alt="image.png"></p>
+<p>分析：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619225436.png" alt="image.png"></p>
+<p>实现：</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619225644.png" alt="image.png"></p>
+<p>这里有个点：即便是不设置 mutex互斥信号量，依然可以正常运作。因为 apple orange 和 plate 三个同步信号量在同一时间只能有一个是1，所以各个进程一上来的P操作就可以防止其他线程进入临界区。如果plate的值是2，也就是盘子可以放两个水果的话，dad和mom可就有可能同时操作盘子了。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619230248.png" alt="image.png"></p>
+<h2 id="8-3-吸烟者问题"><a href="#8-3-吸烟者问题" class="headerlink" title="8.3 吸烟者问题"></a>8.3 吸烟者问题</h2><p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619230421.png" alt="image.png"></p>
+<p>将桌子看作一个缓冲区，容量为1，原材料两两为一个组合，同时要注意轮流这个事儿，他给的解决办法是设置一个i让他%更新。</p>
+<p><img src="https://gitee.com/pthef/imgrepo/raw/master/20230619231036.png" alt="image.png"></p>
+<h2 id="8-4-读者-写者问题"><a href="#8-4-读者-写者问题" class="headerlink" title="8.4 读者-写者问题"></a>8.4 读者-写者问题</h2><p>这个玩意是真的难，说一下：有一个共享文件，写进程（可以是多个）往文件里写，读进程（可以是多个）从文件里读，如何实现同步互斥。</p>
+<p>说一下要求：</p>
+<ul>
+<li>读进程之间不需要互斥，多个读进程可以同时访问文件</li>
+<li>写进程之间需要互斥，否则可能会导致覆盖</li>
+<li>写进程写完之前不允许读进程读，还得让所有已有的读写进程退出。</li>
+</ul>
+<h3 id="8-4-1-简单实现"><a href="#8-4-1-简单实现" class="headerlink" title="8.4.1 简单实现"></a>8.4.1 简单实现</h3><p>最简单的就是弄个文件的信号量进行同步：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">semaphore file = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">writer() &#123;</span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">		P(file);</span><br><span class="line">		<span class="comment">// write...</span></span><br><span class="line">		V(file);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">reader() &#123;</span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">		P(file);</span><br><span class="line">		<span class="comment">// read...</span></span><br><span class="line">		V(file);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>但是这样无法让读进程同时进入，读进程之间也会阻塞，咋办？可以这样，让第一个进来的reader上锁，后来的reader可以跳过上锁，让最后一个reader释放锁：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> count = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">reader() &#123;</span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">		<span class="keyword">if</span>(count == <span class="number">0</span>) P(file);</span><br><span class="line">		count++;</span><br><span class="line">		<span class="comment">// read...</span></span><br><span class="line">		count--;</span><br><span class="line">		<span class="keyword">if</span>(count == <span class="number">0</span>) V(file);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是这又有个问题：代码的进入区有三条语句，判断，上锁，count自增，不保证原子性，就有可能发生冲突，咋办？那就让他保证原子性，给这三条语句上互斥锁：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">semaphore mutex = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">reader() &#123;</span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">		P(mutex);</span><br><span class="line">		<span class="keyword">if</span>(count == <span class="number">0</span>) P(file);</span><br><span class="line">		count++;</span><br><span class="line">		V(mutex);</span><br><span class="line">		<span class="comment">// read...</span></span><br><span class="line">		P(mutex);</span><br><span class="line">		count--;</span><br><span class="line">		<span class="keyword">if</span>(count == <span class="number">0</span>) V(file);</span><br><span class="line">		V(mutex);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-4-2-写优先"><a href="#8-4-2-写优先" class="headerlink" title="8.4.2 写优先"></a>8.4.2 写优先</h3><p>上面这种又会出现一个问题，如果有源源不断的读进程，那么file就一直不会被释放，锁进程就会饥饿，如何解决饥饿的问题？</p>
+<p>再弄一个信号量，实现“写优先”（并不是真正的写优先，只是暂时能解决问题）</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">semaphore w = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">writer() &#123; <span class="keyword">while</span>(<span class="number">1</span>)&#123;</span><br><span class="line">	P(w);  <span class="comment">// 获取w锁，表明现在有writer要写，新来的reader先等等。   </span></span><br><span class="line">	P(file);</span><br><span class="line">	<span class="comment">// write...</span></span><br><span class="line">	V(file);</span><br><span class="line">	V(w); &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">reader() &#123;</span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">		P(w); <span class="comment">// 读之前看看有没有writer正在写或者想要写</span></span><br><span class="line">		mutex&#123; <span class="comment">// 只是省事儿这么写，考试别这么写</span></span><br><span class="line">			<span class="keyword">if</span>(count == <span class="number">0</span>) P(file);</span><br><span class="line">			count++;</span><br><span class="line">		&#125;</span><br><span class="line">		V(w);  <span class="comment">// 在read之前释放w，保证reader进程并发</span></span><br><span class="line">		<span class="comment">// read...</span></span><br><span class="line">		mutex&#123;</span><br><span class="line">			count--;</span><br><span class="line">			<span class="keyword">if</span>(count == <span class="number">0</span>) V(file);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这回就变成啥了？首先如果是两个reader进来，reader1获取了w，然后reader2阻塞，reader1在读之前释放了w，然后reader2就会唤醒，可以同时read。</p>
+<p>如果是一个writer多个reader的话，reader1经过了前面正在进行read，这个时候writer进来，持有了w锁，然后准备写（但是不能写，因为reader1还持有file锁），然后reader2也来了，尝试获取w失败，就会阻塞，count就不会自增，相当于强制reader读完以后释放file锁，然后writer写，写完了唤醒reader2去读。</p>
+<p>这种算法并不能真正实现写优先，而是相对公平的先来先服务原则，这种算法也叫读写公平法。</p>
+<h2 id="8-5-哲学家进餐"><a href="#8-5-哲学家进餐" class="headerlink" title="8.5 哲学家进餐"></a>8.5 哲学家进餐</h2><h1 id="9-管程"><a href="#9-管程" class="headerlink" title="9. 管程"></a>9. 管程</h1><p> 这个东西就是一种比较牛逼的数据结构，它里面提供了进程安全（线程安全）的一些方法，比如insert方法，往队列中插入元素，remove方法，从队列中拿出元素等，完了里面还提供了 condition 条件变量，简单说就是阻塞队列。<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620104904.png" alt="image.png"></p>
+<p>感觉这个管程也不是重点，提一句得了。<br><img src="https://gitee.com/pthef/imgrepo/raw/master/20230620104938.png" alt="image.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-05-%E8%B0%83%E5%BA%A6/" rel="prev" title="05.调度">
+      <i class="fa fa-chevron-left"></i> 05.调度
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/30/OS-07-%E6%AD%BB%E9%94%81/" rel="next" title="07.死锁">
+      07.死锁 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E8%BF%9B%E7%A8%8B%E5%90%8C%E6%AD%A5"><span class="nav-text">1. 进程同步</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5"><span class="nav-text">2. 进程互斥</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E4%BA%92%E6%96%A5%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%AE%9E%E7%8E%B0"><span class="nav-text">3. 互斥的软件实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E5%8D%95%E6%A0%87%E5%BF%97%E6%B3%95"><span class="nav-text">3.1 单标志法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E5%8F%8C%E6%A0%87%E5%BF%97%E5%85%88%E6%A3%80%E6%9F%A5"><span class="nav-text">3.2 双标志先检查</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E5%8F%8C%E6%A0%87%E5%BF%97%E5%90%8E%E6%A3%80%E6%9F%A5"><span class="nav-text">3.3 双标志后检查</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-Peterson-%E7%AE%97%E6%B3%95"><span class="nav-text">3.4 Peterson 算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-%E6%80%BB%E7%BB%93"><span class="nav-text">3.5 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E4%BA%92%E6%96%A5%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%AE%9E%E7%8E%B0"><span class="nav-text">4. 互斥的硬件实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E4%B8%AD%E6%96%AD%E5%B1%8F%E8%94%BD%E6%96%B9%E6%B3%95"><span class="nav-text">4.1 中断屏蔽方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-TestAndSet%E6%8C%87%E4%BB%A4"><span class="nav-text">4.2 TestAndSet指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-Swap-%E6%8C%87%E4%BB%A4"><span class="nav-text">4.3 Swap 指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E6%80%BB%E7%BB%93"><span class="nav-text">4.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E4%BA%92%E6%96%A5%E9%94%81"><span class="nav-text">5. 互斥锁</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6"><span class="nav-text">6. 信号量机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E6%95%B4%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F"><span class="nav-text">6.1 整型信号量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-%E8%AE%B0%E5%BD%95%E5%9E%8B%E4%BF%A1%E5%8F%B7%E9%87%8F"><span class="nav-text">6.2 记录型信号量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-3-%E6%80%BB%E7%BB%93"><span class="nav-text">6.3 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%9C%BA%E5%88%B6%E5%AE%9E%E7%8E%B0%E4%BA%92%E6%96%A5%E3%80%81%E5%90%8C%E6%AD%A5%E3%80%81%E5%89%8D%E9%A9%B1"><span class="nav-text">7. 信号量机制实现互斥、同步、前驱</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#7-1-%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5"><span class="nav-text">7.1 进程互斥</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-2-%E8%BF%9B%E7%A8%8B%E5%90%8C%E6%AD%A5"><span class="nav-text">7.2 进程同步</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-3-%E5%89%8D%E9%A9%B1%E5%85%B3%E7%B3%BB"><span class="nav-text">7.3 前驱关系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-4-%E6%80%BB%E7%BB%93"><span class="nav-text">7.4 总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#8-%E7%9B%B8%E5%85%B3%E9%97%AE%E9%A2%98"><span class="nav-text">8. 相关问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#8-1-%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85"><span class="nav-text">8.1 生产者-消费者</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-2-%E5%A4%9A%E7%94%9F%E4%BA%A7-%E5%A4%9A%E6%B6%88%E8%B4%B9"><span class="nav-text">8.2 多生产-多消费</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-3-%E5%90%B8%E7%83%9F%E8%80%85%E9%97%AE%E9%A2%98"><span class="nav-text">8.3 吸烟者问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-4-%E8%AF%BB%E8%80%85-%E5%86%99%E8%80%85%E9%97%AE%E9%A2%98"><span class="nav-text">8.4 读者-写者问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#8-4-1-%E7%AE%80%E5%8D%95%E5%AE%9E%E7%8E%B0"><span class="nav-text">8.4.1 简单实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-4-2-%E5%86%99%E4%BC%98%E5%85%88"><span class="nav-text">8.4.2 写优先</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-5-%E5%93%B2%E5%AD%A6%E5%AE%B6%E8%BF%9B%E9%A4%90"><span class="nav-text">8.5 哲学家进餐</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#9-%E7%AE%A1%E7%A8%8B"><span class="nav-text">9. 管程</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Author"
+      src="/images/hexo_avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Author</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/PtheF" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;PtheF" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Author</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
